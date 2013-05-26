@@ -106,3 +106,11 @@ bool_t mmc_lld_is_write_protected(MMCDriver *mmcp) {
  */
 void boardInit(void) {
 }
+
+void boardEthRst(void) {
+  volatile  int i;
+  palClearPad(GPIOE, GPIOE_ETH_RMII_NRST);
+  for ( i = 0; i < 20000; i++);
+  palSetPad(GPIOE, GPIOE_ETH_RMII_NRST);
+  for (i = 0; i < 20000; i++);
+}

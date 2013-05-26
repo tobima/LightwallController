@@ -90,7 +90,7 @@
  * @brief   Enables the MAC subsystem.
  */
 #if !defined(HAL_USE_MAC) || defined(__DOXYGEN__)
-#define HAL_USE_MAC                 FALSE
+#define HAL_USE_MAC                 TRUE
 #endif
 
 /**
@@ -139,7 +139,7 @@
  * @brief   Enables the SPI subsystem.
  */
 #if !defined(HAL_USE_SPI) || defined(__DOXYGEN__)
-#define HAL_USE_SPI                 TRUE
+#define HAL_USE_SPI                 FALSE
 #endif
 
 /**
