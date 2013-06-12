@@ -1,3 +1,6 @@
 [submodule "Firmware/ChibiOS"]
 	path = Firmware/ChibiOS
 	url = https://github.com/mabl/ChibiOS.git
+[submodule "Firmware/lib/fc"]
+	path = Firmware/lib/fc
+	url = https://github.com/C3MA/fc_c.git

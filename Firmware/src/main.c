@@ -14,17 +14,296 @@
     limitations under the License.
 */
 
+#include <stdio.h>
+#include <string.h>
+
 #include "ch.h"
 #include "hal.h"
-#include "test.h"
+
+#include "chprintf.h"
+#include "shell.h"
 
 #include "lwipthread.h"
+#include "web/web.h"
+#include "dmx/dmx.h"
+
+#include "ff.h"
+
+/*===========================================================================*/
+/* Card insertion monitor.                                                   */
+/*===========================================================================*/
+
+#define POLLING_INTERVAL                10
+#define POLLING_DELAY                   10
+
+/**
+ * @brief   Card monitor timer.
+ */
+static VirtualTimer tmr;
+
+/**
+ * @brief   Debounce counter.
+ */
+static unsigned cnt;
+
+/**
+ * @brief   Card event sources.
+ */
+static EventSource inserted_event, removed_event;
+
+/**
+ * @brief   Insertion monitor timer callback function.
+ *
+ * @param[in] p         pointer to the @p BaseBlockDevice object
+ *
+ * @notapi
+ */
+static void tmrfunc(void *p) {
+  BaseBlockDevice *bbdp = p;
+
+  chSysLockFromIsr();
+  if (cnt > 0) {
+    if (blkIsInserted(bbdp)) {
+      if (--cnt == 0) {
+        chEvtBroadcastI(&inserted_event);
+      }
+    }
+    else
+      cnt = POLLING_INTERVAL;
+  }
+  else {
+    if (!blkIsInserted(bbdp)) {
+      cnt = POLLING_INTERVAL;
+      chEvtBroadcastI(&removed_event);
+    }
+  }
+  chVTResetI(&tmr);
+  chVTSetI(&tmr, MS2ST(POLLING_DELAY), tmrfunc, bbdp);
+  chSysUnlockFromIsr();
+}
+
+/**
+ * @brief   Polling monitor start.
+ *
+ * @param[in] p         pointer to an object implementing @p BaseBlockDevice
+ *
+ * @notapi
+ */
+static void tmr_init(void *p) {
+  chEvtInit(&inserted_event);
+  chEvtInit(&removed_event);
+  chSysLock();
+  cnt = POLLING_INTERVAL;
+  chVTResetI(&tmr);
+  chVTSetI(&tmr, MS2ST(POLLING_DELAY), tmrfunc, p);
+  chSysUnlock();
+}
+
+/*===========================================================================*/
+/* FatFs related.                                                            */
+/*===========================================================================*/
+
+/**
+ * @brief FS object.
+ */
+static FATFS SDC_FS;
+
+/* FS mounted and ready.*/
+static bool_t fs_ready = FALSE;
+
+/* Generic large buffer.*/
+static uint8_t fbuff[1024];
+
+static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
+  FRESULT res;
+  FILINFO fno;
+  DIR dir;
+  int i;
+  char *fn;
+
+#if _USE_LFN
+  fno.lfname = 0;
+  fno.lfsize = 0;
+#endif
+  res = f_opendir(&dir, path);
+  if (res == FR_OK) {
+    i = strlen(path);
+    for (;;) {
+      res = f_readdir(&dir, &fno);
+      if (res != FR_OK || fno.fname[0] == 0)
+        break;
+      if (fno.fname[0] == '.')
+        continue;
+      fn = fno.fname;
+      if (fno.fattrib & AM_DIR) {
+        path[i++] = '/';
+        strcpy(&path[i], fn);
+        res = scan_files(chp, path);
+        if (res != FR_OK)
+          break;
+        path[--i] = 0;
+      }
+      else {
+        chprintf(chp, "%s/%s\r\n", path, fn);
+      }
+    }
+  }
+  return res;
+}
+
+
+/*===========================================================================*/
+/* Command line related.                                                     */
+/*===========================================================================*/
+
+#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
+
+static void cmd_mem(BaseSequentialStream *chp, int argc, char *argv[]) {
+  size_t n, size;
+
+  (void)argv;
+  if (argc > 0) {
+    chprintf(chp, "Usage: mem\r\n");
+    return;
+  }
+  n = chHeapStatus(NULL, &size);
+  chprintf(chp, "core free memory : %u bytes\r\n", chCoreStatus());
+  chprintf(chp, "heap fragments   : %u\r\n", n);
+  chprintf(chp, "heap free total  : %u bytes\r\n", size);
+}
+
+static void cmd_threads(BaseSequentialStream *chp, int argc, char *argv[]) {
+  static const char *states[] = {THD_STATE_NAMES};
+  Thread *tp;
+
+  (void)argv;
+  if (argc > 0) {
+    chprintf(chp, "Usage: threads\r\n");
+    return;
+  }
+  chprintf(chp, "    addr    stack prio refs     state     time      name\r\n");
+  tp = chRegFirstThread();
+  do {
+    chprintf(chp, "%.8lx %.8lx %4lu %4lu %9s %8lu %15s\r\n",
+            (uint32_t)tp, (uint32_t)tp->p_ctx.r13,
+            (uint32_t)tp->p_prio, (uint32_t)(tp->p_refs - 1),
+            states[tp->p_state], (uint32_t)tp->p_time, tp->p_name);
+    tp = chRegNextThread(tp);
+  } while (tp != NULL);
+}
+
+static void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
+  FRESULT err;
+  uint32_t clusters;
+  FATFS *fsp;
+
+  (void)argv;
+  if (argc > 0) {
+    chprintf(chp, "Usage: tree\r\n");
+    return;
+  }
+  if (!fs_ready) {
+    chprintf(chp, "File System not mounted\r\n");
+    return;
+  }
+  err = f_getfree("/", &clusters, &fsp);
+  if (err != FR_OK) {
+    chprintf(chp, "FS: f_getfree() failed. %lu\r\n", err);
+    return;
+  }
+  
+  chprintf(chp,
+           "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
+           clusters, (uint32_t)SDC_FS.csize,
+           clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
+  fbuff[0] = 0;
+  scan_files(chp, (char *)fbuff);
+}
+
+static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
+  FIL fp;
+  uint8_t buffer[32];
+  int br;
+  
+  if(argc < 1)
+    return;
+  
+  if(f_open(&fp, (TCHAR*) *argv, FA_READ) != FR_OK)
+    return;
+  
+  do {
+    if(f_read(&fp, (TCHAR*) buffer, 32,(UINT*) &br) != FR_OK)
+      return;
+    
+    chSequentialStreamWrite(chp, buffer, br);
+  } while (!f_eof(&fp));
+  
+  f_close(&fp);
+  
+  chprintf(chp, "\r\n");
+}
+
+static const ShellCommand commands[] = {
+  {"mem", cmd_mem},
+  {"tree", cmd_tree},
+  {"threads", cmd_threads},
+  {"cat", cmd_cat},
+  {NULL, NULL}
+};
+
+static const ShellConfig shell_cfg1 = {
+  (BaseSequentialStream *)&SD6,
+  commands
+};
+
+/*===========================================================================*/
+/* Main and generic code.                                                    */
+/*===========================================================================*/
+
+/*
+ * Card insertion event.
+ */
+static void InsertHandler(eventid_t id) {
+  FRESULT err;
+  uint32_t clusters;
+  FATFS *fsp;
+
+  (void)id;
+  /*
+   * On insertion SDC initialization and FS mount.
+   */
+  if (sdcConnect(&SDCD1))
+  {
+    if (sdcConnect(&SDCD1))
+      return;
+  }
+
+  err = f_mount(0, &SDC_FS);
+  f_getfree("/", &clusters, &fsp);
+  if (err != FR_OK) {
+    sdcDisconnect(&SDCD1);
+    return;
+  }
+  fs_ready = TRUE;
+}
+
+/*
+ * Card removal event.
+ */
+static void RemoveHandler(eventid_t id) {
+
+  (void)id;
+  sdcDisconnect(&SDCD1);
+  fs_ready = FALSE;
+}
 
 /*
  * This is a periodic thread that does absolutely nothing except flashing
  * a LED.
  */
 static WORKING_AREA(waThread1, 128);
+
+__attribute__((noreturn))
 static msg_t Thread1(void *arg) {
 
   (void)arg;
@@ -41,7 +320,11 @@ static msg_t Thread1(void *arg) {
  * Application entry point.
  */
 int main(void) {
-
+  static const evhandler_t evhndl[] = {
+    InsertHandler,
+    RemoveHandler
+  };
+  struct EventListener el0, el1;
   /*
    * System initializations.
    * - HAL initialization, this also initializes the configured device drivers
@@ -53,20 +336,29 @@ int main(void) {
   chSysInit();
 
   /*
+   * Shell manager initialization.
+   */
+  shellInit();
+  
+  /*
    * Activates the serial driver 6 using the driver default configuration.
    */
   sdStart(&SD6, NULL);
   
-  chprintf(&SD6, "Hallo\r\n");
   /*
-   * If the user button is pressed after the reset then the test suite is
-   * executed immediately before activating the various device drivers in
-   * order to not alter the benchmark scores.
+   * Activates the SDC driver 1 using default configuration.
    */
-  if (palReadPad(GPIOA, GPIOA_BUTTON))
-    TestThread(&SD6);
-
-   /*
+  sdcStart(&SDCD1, NULL);
+  
+  
+  /*
+   * Activates the card insertion monitor.
+   */
+  tmr_init(&SDCD1);
+  
+  DMXInit();
+  
+  /*
    * Creates the example thread.
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
@@ -74,8 +366,25 @@ int main(void) {
    /*
    * Creates the LWIP threads (it changes priority internally).
    */
-  chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 1,
+  chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,
                     lwip_thread, NULL);
+  
+  /*
+   * Creates the HTTP thread.
+   */
+  chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 1,
+                    http_server, NULL);
+  
+  /*
+   * Creates the DMX thread.
+   */
+  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1,
+                    dmxthread, NULL);
+  
+  
+  chEvtRegister(&inserted_event, &el0, 0);
+  chEvtRegister(&removed_event, &el1, 1);
+  shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
   
   /*
    * Normal main() thread activity, in this demo it does nothing except
@@ -83,9 +392,8 @@ int main(void) {
    * pressed the test procedure is launched with output on the serial
    * driver 2.
    */
-  while (TRUE) {
-    if (palReadPad(GPIOA, GPIOA_BUTTON))
-      TestThread(&SD6);
-    chThdSleepMilliseconds(500);
+  while (TRUE) {  
+    chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
+    //chThdSleepMilliseconds(500);
   }
 }
