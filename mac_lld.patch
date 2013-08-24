@@ -1,0 +1,55 @@
+diff --git a/os/hal/platforms/STM32/mac_lld.c b/os/hal/platforms/STM32/mac_lld.c
+index c1244aa..eff28aa 100644
+--- a/os/hal/platforms/STM32/mac_lld.c
++++ b/os/hal/platforms/STM32/mac_lld.c
+@@ -295,21 +295,21 @@ void mac_lld_start(MACDriver *macp) {
+     td[i].tdes0 = STM32_TDES0_TCH;
+   macp->txptr = (stm32_eth_tx_descriptor_t *)td;
+ 
+-  /* MAC clocks activation and commanded reset procedure.*/
+-  rccEnableETH(FALSE);
++  /* MAC clocks activation.*/
++  rccEnableETH(FALSE);
++
++  /* PHY in power up mode.*/
++  mii_write(macp, MII_BMCR, mii_read(macp, MII_BMCR) & ~BMCR_PDOWN);
++
++  /* MAC commanded reset procedure.*/
+   ETH->DMABMR |= ETH_DMABMR_SR;
+   while(ETH->DMABMR & ETH_DMABMR_SR)
+     ;
+-
++  
+   /* ISR vector enabled.*/
+   nvicEnableVector(ETH_IRQn,
+                    CORTEX_PRIORITY_MASK(STM32_MAC_ETH1_IRQ_PRIORITY));
+ 
+-#if STM32_MAC_ETH1_CHANGE_PHY_STATE
+-  /* PHY in power up mode.*/
+-  mii_write(macp, MII_BMCR, mii_read(macp, MII_BMCR) & ~BMCR_PDOWN);
+-#endif
+-
+   /* MAC configuration.*/
+   ETH->MACFFR    = 0;
+   ETH->MACFCR    = 0;
+@@ -362,10 +362,6 @@ void mac_lld_start(MACDriver *macp) {
+ void mac_lld_stop(MACDriver *macp) {
+ 
+   if (macp->state != MAC_STOP) {
+-#if STM32_MAC_ETH1_CHANGE_PHY_STATE
+-    /* PHY in power down mode until the driver will be restarted.*/
+-    mii_write(macp, MII_BMCR, mii_read(macp, MII_BMCR) | BMCR_PDOWN);
+-#endif
+ 
+     /* MAC and DMA stopped.*/
+     ETH->MACCR    = 0;
+@@ -373,6 +369,9 @@ void mac_lld_stop(MACDriver *macp) {
+     ETH->DMAIER   = 0;
+     ETH->DMASR    = ETH->DMASR;
+ 
++    /* PHY in power down mode until the driver will be restarted.*/
++    mii_write(macp, MII_BMCR, mii_read(macp, MII_BMCR) | BMCR_PDOWN);
++
+     /* MAC clocks stopped.*/
+     rccDisableETH(FALSE);
+ 
