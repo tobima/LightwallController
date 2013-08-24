@@ -4,3 +4,6 @@
 [submodule "Firmware/lib/fc"]
 	path = Firmware/lib/fc
 	url = https://github.com/C3MA/fc_c.git
+[submodule "Firmware/board"]
+	path = Firmware/board
+	url = https://github.com/tobima/CH_board_element14_STM32F4DIS-BB.git
