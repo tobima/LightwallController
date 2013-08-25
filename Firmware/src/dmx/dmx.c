@@ -76,9 +76,11 @@ static const UARTConfig uart3cfg = {
   0
 };
 
-    static const GPTConfig gpt2cfg = { 200000, /* 100KHz timer clock.*/
-      gpt2cb /* Timer callback.*/
-    };
+static const GPTConfig gpt2cfg = { 
+  200000, /* 100KHz timer clock.*/
+  gpt2cb, /* Timer callback.*/
+  0
+};
 
 void DMXInit(void) {
   chSemInit(&sem, 1);
