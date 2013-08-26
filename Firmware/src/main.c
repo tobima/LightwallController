@@ -26,6 +26,7 @@
 #include "lwipthread.h"
 #include "web/web.h"
 #include "dmx/dmx.h"
+#include "fcs/fcs.h"
 
 #include "ff.h"
 
@@ -220,6 +221,34 @@ static void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
   scan_files(chp, (char *)fbuff);
 }
 
+static void cmd_fcs(BaseSequentialStream *chp, int argc, char *argv[]) {
+	FRESULT err;
+	uint32_t clusters;
+	FATFS *fsp;
+	
+	(void)argv;
+	if (argc > 0) {
+		chprintf(chp, "Usage: tree\r\n");
+		return;
+	}
+	if (!fs_ready) {
+		chprintf(chp, "File System not mounted\r\n");
+		return;
+	}
+	err = f_getfree("/", &clusters, &fsp);
+	if (err != FR_OK) {
+		chprintf(chp, "FS: f_getfree() failed. %lu\r\n", err);
+		return;
+	}
+	
+	chprintf(chp,
+			 "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
+			 clusters, (uint32_t)SDC_FS.csize,
+			 clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
+	fbuff[0] = 0;
+	fcs_scan_files(chp, (char *)fbuff);
+}
+
 static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
   FIL fp;
   uint8_t buffer[32];
@@ -248,6 +277,7 @@ static const ShellCommand commands[] = {
   {"tree", cmd_tree},
   {"threads", cmd_threads},
   {"cat", cmd_cat},
+  {"fcs", cmd_fcs},
   {NULL, NULL}
 };
 
