@@ -27,6 +27,8 @@
 #include "web/web.h"
 #include "dmx/dmx.h"
 
+#include "ifconfig.h"
+
 #include "ff.h"
 
 /*===========================================================================*/
@@ -248,6 +250,7 @@ static const ShellCommand commands[] = {
   {"tree", cmd_tree},
   {"threads", cmd_threads},
   {"cat", cmd_cat},
+  {"ifconfig", cmd_ifconfig},
   {NULL, NULL}
 };
 

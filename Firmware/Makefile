@@ -90,7 +90,7 @@ CSRC = $(PORTSRC) \
        $(CHIBIOS)/os/various/evtimer.c \
        $(CHIBIOS)/os/various/chprintf.c \
        $(CHIBIOS)/os/various/shell.c \
-       src/web/web.c src/dmx/dmx.c src/main.c 
+       src/web/web.c src/dmx/dmx.c src/main.c src/ifconfig.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
