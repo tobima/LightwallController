@@ -1,9 +1,13 @@
 *~
-build/
 .dep/
 
 # Object files
 *.o
+*.elf
+*.bin
+*.hex
+*.dmp
+*.map
 
 # Libraries
 *.lib
