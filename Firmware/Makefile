@@ -74,6 +74,15 @@ include $(CHIBIOS)/os/kernel/kernel.mk
 include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
 include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
 
+# Init custom extensions
+LIBSRC =
+LIBINC =
+
+# Include some custom extensions:
+APP_LIBS = lib
+include $(APP_LIBS)/fc/chibios.mk
+
+
 # Define linker script file here
 LDSCRIPT= $(PORTLD)/STM32F407xG.ld
 #LDSCRIPT= $(PORTLD)/STM32F407xG_CCM.ld
@@ -90,7 +99,12 @@ CSRC = $(PORTSRC) \
        $(CHIBIOS)/os/various/evtimer.c \
        $(CHIBIOS)/os/various/chprintf.c \
        $(CHIBIOS)/os/various/shell.c \
-       src/web/web.c src/dmx/dmx.c src/main.c src/ifconfig.c src/fcs/fcs.c
+       $(LIBSRC) \
+       src/web/web.c \
+       src/dmx/dmx.c \
+       src/main.c \
+       src/ifconfig.c \
+       src/fcs/fcs.c
 
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -120,7 +134,7 @@ TCPPSRC =
 # List ASM source files here
 ASMSRC = $(PORTASM)
 
-INCDIR = $(PORTINC) $(KERNINC) $(TESTINC) \
+INCDIR = $(PORTINC) $(KERNINC) $(LIBINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) \
          $(LWINC)  \
          $(FATFSINC) \
