@@ -28,6 +28,8 @@
 #include "dmx/dmx.h"
 #include "fcs/fcs.h"
 
+#include "ifconfig.h"
+
 #include "ff.h"
 
 /*===========================================================================*/
@@ -277,7 +279,11 @@ static const ShellCommand commands[] = {
   {"tree", cmd_tree},
   {"threads", cmd_threads},
   {"cat", cmd_cat},
+<<<<<<< HEAD
   {"fcs", cmd_fcs},
+=======
+  {"ifconfig", cmd_ifconfig},
+>>>>>>> ad7b0f82549c0b4934326f45e5a70d507d46ebba
   {NULL, NULL}
 };
 
