@@ -1,5 +1,5 @@
-[submodule "Firmware/ChibiOS"]
-	path = Firmware/ChibiOS
+[submodule "Firmware/lib/ChibiOS"]
+	path = Firmware/lib/ChibiOS
 	url = https://github.com/mabl/ChibiOS.git
 [submodule "Firmware/lib/fc"]
 	path = Firmware/lib/fc
