@@ -30,6 +30,8 @@
 
 #include "ifconfig.h"
 
+#include "fcseq.h"
+
 #include "ff.h"
 
 /*===========================================================================*/
@@ -274,11 +276,34 @@ static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
   chprintf(chp, "\r\n");
 }
 
+static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
+{
+  fcsequence_t seq;
+  fcseq_ret_t ret; 
+  if(argc < 1)
+  {
+    chprintf(chp, "One parameter with the file to read is necessary!\r\n");
+    return;
+  }
+  
+  ret = fcseq_load(argv[0], &seq);
+
+  if (ret != FCSEQ_RET_OK)
+  {
+	chprintf(chp, "Could not read %s\r\nError code is %d\r\n", argv[0], ret);
+	chprintf(chp, "Unable to load sequnce (%s:%d)\r\n", __FILE__, __LINE__);
+	return;
+  }
+
+  chprintf(chp, "=== Meta information ===\nfps: %d, width: %d, height: %d\n",seq.fps,seq.width,seq.height);
+}
+
 static const ShellCommand commands[] = {
   {"mem", cmd_mem},
   {"tree", cmd_tree},
   {"threads", cmd_threads},
   {"cat", cmd_cat},
+  {"fcat", cmd_fcat},
   {"fcs", cmd_fcs},
   {"ifconfig", cmd_ifconfig},
   {NULL, NULL}
