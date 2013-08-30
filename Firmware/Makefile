@@ -228,3 +228,7 @@ ifeq ($(USE_FWLIB),yes)
 endif
 
 include $(CHIBIOS)/os/ports/GCC/ARMCMx/rules.mk
+
+# Added a target for programming the STM32
+flash:	build/ch.bin
+	st-flash write build/ch.bin 0x8000000
