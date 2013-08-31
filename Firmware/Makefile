@@ -187,8 +187,7 @@ CPPWARN = -Wall -Wextra
 #
 
 # List all default C defines here, like -D_DEBUG=1
-DDEFS = -D_CHIBIOS
-
+DDEFS = 
 # List all default ASM defines here, like -D_DEBUG=1
 DADEFS =
 
@@ -210,7 +209,7 @@ DLIBS =
 #
 
 # List all user C define here, like -D_DEBUG=1
-UDEFS =
+UDEFS = -D_CHIBIOS 
 
 # Define ASM defines here
 UADEFS =

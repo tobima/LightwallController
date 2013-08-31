@@ -279,13 +279,13 @@ static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
 static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 {
   fcsequence_t seq;
-  fcseq_ret_t ret; 
+  fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
   if(argc < 1)
   {
     chprintf(chp, "One parameter with the file to read is necessary!\r\n");
     return;
   }
-  
+ 
   ret = fcseq_load(argv[0], &seq);
 
   if (ret != FCSEQ_RET_OK)
