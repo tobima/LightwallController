@@ -31,6 +31,7 @@
 #include "ifconfig.h"
 
 #include "fcseq.h"
+#include "customHwal.h"
 
 #include "ff.h"
 
@@ -286,7 +287,9 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
     return;
   }
  
-  ret = fcseq_load(argv[0], &seq);
+	hwal_init(chp);
+	
+	ret = fcseq_load(argv[0], &seq);
 
   if (ret != FCSEQ_RET_OK)
   {
