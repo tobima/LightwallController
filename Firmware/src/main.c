@@ -281,13 +281,15 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 {
   fcsequence_t seq;
   fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
+  int x, y, ypos;
+	
   if(argc < 1)
   {
     chprintf(chp, "One parameter with the file to read is necessary!\r\n");
     return;
   }
  
-	/* hwal_init(chp); No Debug output for the sequence library */
+	hwal_init(chp); /* No Debug output for the sequence library */
 	
 	ret = fcseq_load(argv[0], &seq);
 
@@ -300,6 +302,31 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 
   chprintf(chp, "=== Meta information ===\r\n"
 		   "fps: %d, width: %d, height: %d\r\n",seq.fps,seq.width,seq.height);
+	
+	uint8_t rgb24[seq.width * seq.height * 3];
+
+	/* parse */
+	ret = fcseq_nextFrame(&seq, rgb24);
+
+	while (ret == FCSEQ_RET_OK) {
+		
+		chprintf(chp, "==============================\r\n");
+		for (y=0; y < seq.height; y++)
+		{
+			ypos = y * seq.width * 3;
+			for(x=0; x < seq.width; x++)
+			{
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
+				chprintf(chp, "|");
+			}
+			chprintf(chp, "\r\n");
+		}
+		
+		/* parse */
+		ret = fcseq_nextFrame(&seq, rgb24);
+		}
 }
 
 static const ShellCommand commands[] = {
