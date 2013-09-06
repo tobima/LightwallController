@@ -287,7 +287,7 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
     return;
   }
  
-	hwal_init(chp);
+	/* hwal_init(chp); No Debug output for the sequence library */
 	
 	ret = fcseq_load(argv[0], &seq);
 
