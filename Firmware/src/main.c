@@ -298,7 +298,8 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 	return;
   }
 
-  chprintf(chp, "=== Meta information ===\nfps: %d, width: %d, height: %d\n",seq.fps,seq.width,seq.height);
+  chprintf(chp, "=== Meta information ===\r\n"
+		   "fps: %d, width: %d, height: %d\r\n",seq.fps,seq.width,seq.height);
 }
 
 static const ShellCommand commands[] = {
