@@ -289,8 +289,9 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
     return;
   }
  
+#if 0
 	hwal_init(chp); /* No Debug output for the sequence library */
-	
+#endif	
 	ret = fcseq_load(argv[0], &seq);
 
   if (ret != FCSEQ_RET_OK)
@@ -309,7 +310,6 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 	ret = fcseq_nextFrame(&seq, rgb24);
 
 	while (ret == FCSEQ_RET_OK) {
-		
 		chprintf(chp, "==============================\r\n");
 		for (y=0; y < seq.height; y++)
 		{
