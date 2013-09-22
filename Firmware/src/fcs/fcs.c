@@ -4,13 +4,15 @@
 #include "chprintf.h"
 
 #define FC_SEQUENCE_EXTENSION ".fcs"
+#define FC_SEQUENCE_EXTENSION_UPPER ".FCS"
 
 int isFcSequence(char* path)
 {
 	char* point;
 	/* seach for the dot, describing the extension */
 	if((point = strrchr(path,'.')) != NULL ) {
-		if(strcmp(point,FC_SEQUENCE_EXTENSION) == 0) {
+		if ( (strcmp(point, FC_SEQUENCE_EXTENSION) == 0)
+		    || (strcmp(point, FC_SEQUENCE_EXTENSION_UPPER) == 0)) {
 			return 1;
 		}
 	}
