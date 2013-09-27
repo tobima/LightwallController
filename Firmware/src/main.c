@@ -278,6 +278,84 @@ static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
   chprintf(chp, "\r\n");
 }
 
+static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
+{
+#define DMX_USAGE_HELP "Possible commands are:\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\n"
+	
+	if(argc < 1)
+	{
+		chprintf(chp, "Usage <command> (parameter)\r\n");	  
+		chprintf(chp, DMX_USAGE_HELP);
+		return;
+	}
+	
+	if(argc >= 1)
+	{
+		if (strcmp(argv[0], "write") == 0)
+		{
+			if (argc < 3)
+			{
+				chprintf(chp, "Usage: dmx write (offset) (value)\r\n");
+			}
+			else
+			{
+				int offset = atoi(argv[1]);
+				int value = atoi(argv[2]);
+				
+				if (dmx_buffer.length < offset)
+				{
+					chprintf(chp, "Increased Universe from %d to %d bytes.\r\n", dmx_buffer.length, offset + 1);
+					dmx_buffer.length = offset + 1;
+				}
+				
+				dmx_buffer.buffer[offset] = value;
+			    chprintf(chp, "Set DMX at %d with %2X (%d)\r\n", offset, value, value);
+			}
+		}
+		else if (strcmp(argv[0], "fill") == 0)
+		{
+			if (argc < 4)
+			{
+				chprintf(chp, "Usage: dmx fill (start offset) (end) (value)\r\n");
+			}
+			else
+			{
+				int offset = atoi(argv[1]);
+				int end = atoi(argv[2]);
+				int value = atoi(argv[3]);
+				int length;
+				
+				/* swap, if the user cannot determine the lower number */
+				if (end < offset)
+				{
+					int tmp = offset;
+					offset = end;
+					end = tmp;
+				}
+				
+				if (dmx_buffer.length < end)
+				{
+					chprintf(chp, "Increased Universe from %d to %d bytes.\r\n", dmx_buffer.length, offset + 1);
+					dmx_buffer.length = offset + 1;
+				}
+				
+				length = end - offset;
+				for (; offset < end; offset++) {					
+					dmx_buffer.buffer[offset] = value;	
+				}
+			    chprintf(chp, "Filled DMX with %2X (%d times)\r\n", value, length);
+			}
+		}
+		else if (strcmp(argv[0], "help") == 0)
+		{
+			chprintf(chp, "Possible commands are:\r\n"
+					 DMX_USAGE_HELP);
+		}
+	}
+	
+
+}
+
 static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 {
   fcsequence_t seq;
@@ -379,6 +457,7 @@ static const ShellCommand commands[] = {
   {"cat", cmd_cat},
   {"fcat", cmd_fcat},
   {"fcs", cmd_fcs},
+  {"dmx", cmd_dmx_modify},
   {"ifconfig", cmd_ifconfig},
   {NULL, NULL}
 };
