@@ -20,7 +20,6 @@
 
 #include "ch.h"
 #include "hal.h"
-#include "lwip/mem.h"
 
 #include "chprintf.h"
 #include "shell.h"
@@ -164,7 +163,7 @@ static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
 /* Command line related.                                                     */
 /*===========================================================================*/
 
-#define SHELL_WA_SIZE   THD_WA_SIZE(4096)
+#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
 
 static void cmd_mem(BaseSequentialStream *chp, int argc, char *argv[]) {
   size_t n, size;
@@ -300,9 +299,9 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 	chprintf(chp, "Extract frame with index %d\r\n", singleframe); 
   }
 	
-/*#if 0*/
+#if 0
 	hwal_init(chp); /* No Debug output for the sequence library */
-/* #endif */
+#endif
 	
 	ret = fcseq_load(argv[0], &seq);
 
@@ -316,7 +315,7 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
   chprintf(chp, "=== Meta information ===\r\n"
 		   "fps: %d, width: %d, height: %d\r\n",seq.fps,seq.width,seq.height);
 	
-	rgb24 = (uint8_t*) mem_malloc(seq.width * seq.height * 3);
+	rgb24 = (uint8_t*) chHeapAlloc(NULL, (seq.width * seq.height * 3) );
 	chprintf(chp, "Allocated buffer at %x with %d bytes\r\n", rgb24, (seq.width * seq.height * 3) );
 
 	
@@ -359,7 +358,7 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 			dmx_buffer.length = seq.width * seq.height * 3;
 			memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
 			chprintf(chp, "Filled DMX with %d bytes\r\n", dmx_buffer.length);
-			mem_free(rgb24);
+			chHeapFree(rgb24);
 			return; /* The DMX buffer has new input -> exit */			
 		}
 		
@@ -370,7 +369,7 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 		frame_index++;
 	}
 	
-	mem_free(rgb24);
+	chHeapFree(rgb24);
 }
 
 static const ShellCommand commands[] = {
@@ -507,7 +506,7 @@ int main(void) {
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 1,
                     http_server, NULL);
-  
+
   /*
    * Creates the DMX thread.
    */
