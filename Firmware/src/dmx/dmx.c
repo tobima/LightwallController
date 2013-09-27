@@ -4,18 +4,23 @@
 #include "dmx.h"
 
 /**
- * Stack area for the http thread.
+ * Stack area for the dmx thread.
  */
 WORKING_AREA(wa_dmx, DMX_THREAD_STACK_SIZE);
+
+/**
+ * Interface, to fill new data on the DMX line.
+ * YOU have to secure, that only one source is filling this buffer.
+ */
 DMXBuffer dmx_buffer;
 
 
-    /*
-    * GPT3 callback.
-    */
-    static void gpt2cb(GPTDriver *gptp) {
-       (void) gptp;
-    }
+/*
+* GPT3 callback.
+*/
+static void gpt2cb(GPTDriver *gptp) {
+   (void) gptp;
+}
     
 static Semaphore sem;
     
@@ -63,7 +68,10 @@ static void rxchar(UARTDriver *uartp, uint16_t c) {
 static void rxend(UARTDriver *uartp) {
   (void)uartp;
 }
-    
+
+/**
+ * Use the third UART to spread DMX into the world.
+ */
 static const UARTConfig uart3cfg = {
   txend1,
   txend2,
@@ -84,7 +92,7 @@ static const GPTConfig gpt2cfg = {
 
 void DMXInit(void) {
   chSemInit(&sem, 1);
-  gptStart(&GPTD2, &gpt2cfg);
+  gptStart(&GPTD2, &gpt2cfg); // Another
   uartStart (&UARTD3, &uart3cfg);
   
   dmx_buffer.length = 513;
@@ -93,7 +101,7 @@ void DMXInit(void) {
 }
 
 /**
- * HTTP server thread.
+ * DMX thread.
  */
 __attribute__((noreturn))
 msg_t dmxthread(void *arg) {
