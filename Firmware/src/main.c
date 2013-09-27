@@ -16,9 +16,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "ch.h"
 #include "hal.h"
+#include "lwip/mem.h"
 
 #include "chprintf.h"
 #include "shell.h"
@@ -162,7 +164,7 @@ static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
 /* Command line related.                                                     */
 /*===========================================================================*/
 
-#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
+#define SHELL_WA_SIZE   THD_WA_SIZE(4096)
 
 static void cmd_mem(BaseSequentialStream *chp, int argc, char *argv[]) {
   size_t n, size;
@@ -282,16 +284,26 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
   fcsequence_t seq;
   fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
   int x, y, ypos;
+  int frame_index = 0;
+  int singleframe = -1; /* position of the frame to load */
+  uint8_t* rgb24;
 	
   if(argc < 1)
   {
-    chprintf(chp, "One parameter with the file to read is necessary!\r\n");
+	chprintf(chp, "Usage <filename> (Frame to display)\r\n");	  
+    chprintf(chp, "One parameter with the file to read is necessary, then all frames are displayed!\r\n");
     return;
   }
- 
-#if 0
+  else if(argc >= 2)
+  {
+	singleframe = atoi(argv[1]);
+	chprintf(chp, "Extract frame with index %d\r\n", singleframe); 
+  }
+	
+/*#if 0*/
 	hwal_init(chp); /* No Debug output for the sequence library */
-#endif	
+/* #endif */
+	
 	ret = fcseq_load(argv[0], &seq);
 
   if (ret != FCSEQ_RET_OK)
@@ -304,29 +316,61 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
   chprintf(chp, "=== Meta information ===\r\n"
 		   "fps: %d, width: %d, height: %d\r\n",seq.fps,seq.width,seq.height);
 	
-	uint8_t rgb24[seq.width * seq.height * 3];
+	rgb24 = (uint8_t*) mem_malloc(seq.width * seq.height * 3);
+	chprintf(chp, "Allocated buffer at %x with %d bytes\r\n", rgb24, (seq.width * seq.height * 3) );
 
+	
 	/* parse */
 	ret = fcseq_nextFrame(&seq, rgb24);
 
-	while (ret == FCSEQ_RET_OK) {
-		chprintf(chp, "==============================\r\n");
-		for (y=0; y < seq.height; y++)
+	if (ret != FCSEQ_RET_OK)
+	{
+		chprintf(chp, "Reading the first frame failed with error code %d.\r\n", ret );
+		return;
+	}
+	
+	/* loop to print something on the commandline */
+	while (ret == FCSEQ_RET_OK)
+	{
+	
+		/* print all frames or the single requested one */
+		if (singleframe == frame_index || singleframe < 0)
 		{
-			ypos = y * seq.width * 3;
-			for(x=0; x < seq.width; x++)
+			chprintf(chp, "=============== %d ===============\r\n", frame_index);
+			for (y=0; y < seq.height; y++)
 			{
-				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
-				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
-				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
-				chprintf(chp, "|");
+				ypos = y * seq.width * 3;
+				for(x=0; x < seq.width; x++)
+				{
+					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
+					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
+					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
+					chprintf(chp, "|");
+				}
+				chprintf(chp, "\r\n");
 			}
-			chprintf(chp, "\r\n");
+		}
+	
+
+		/* only sent something to DMX on the single frame debug mode */
+		if (singleframe == frame_index)
+		{
+			/* Set the DMX buffer */
+			dmx_buffer.length = seq.width * seq.height * 3;
+			memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
+			chprintf(chp, "Filled DMX with %d bytes\r\n", dmx_buffer.length);
+			mem_free(rgb24);
+			return; /* The DMX buffer has new input -> exit */			
 		}
 		
-		/* parse */
+		/* parse the next */
 		ret = fcseq_nextFrame(&seq, rgb24);
-		}
+		
+		/* Move the count */
+		frame_index++;
+	}
+	
+	mem_free(rgb24);
 }
 
 static const ShellCommand commands[] = {
