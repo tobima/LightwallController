@@ -95,9 +95,8 @@ void DMXInit(void) {
   gptStart(&GPTD2, &gpt2cfg); // Another
   uartStart (&UARTD3, &uart3cfg);
   
-  dmx_buffer.length = 513;
-  dmx_buffer.buffer[0] = 0x00;
-  dmx_buffer.buffer[1] = 0xff;
+  /* Set the initial length of DMX to one */
+  dmx_buffer.length = 1;
 }
 
 /**
@@ -108,7 +107,8 @@ msg_t dmxthread(void *arg) {
   (void)arg;
   chRegSetThreadName("dmx");
   
-  while(1) {
+  while(1)
+  {
     /* Send Reset. */
     palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_OUTPUT | PAL_STM32_OTYPE_PUSHPULL |PAL_STM32_PUDR_PULLDOWN);
     palClearPad(GPIOD, GPIOD_DMX_BREAK);

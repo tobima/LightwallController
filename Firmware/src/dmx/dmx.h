@@ -9,8 +9,10 @@
 #define DMX_THREAD_PRIORITY     (LOWPRIO + 3)
 #endif
 
+#define DMX_BUFFER_MAX	513
+
 typedef struct  {
-  uint8_t            buffer [513];
+  uint8_t            buffer [DMX_BUFFER_MAX];
   uint16_t           length;
 } DMXBuffer;
 
