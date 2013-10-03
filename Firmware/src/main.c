@@ -309,7 +309,7 @@ static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 				}
 				
 				dmx_buffer.buffer[offset] = value;
-			    chprintf(chp, "Set DMX at %d with %2X (%d)\r\n", offset, value, value);
+			    chprintf(chp, "Set DMX at %d with 0x%2X (%d)\r\n", offset, value, value);
 			}
 		}
 		else if (strcmp(argv[0], "fill") == 0)
@@ -335,8 +335,8 @@ static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 				
 				if (dmx_buffer.length < end)
 				{
-					chprintf(chp, "Increased Universe from %d to %d bytes.\r\n", dmx_buffer.length, offset + 1);
-					dmx_buffer.length = offset + 1;
+					chprintf(chp, "Increased Universe from %d to %d bytes.\r\n", dmx_buffer.length, end + 1);
+					dmx_buffer.length = end + 1;
 				}
 				
 				length = end - offset;
