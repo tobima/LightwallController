@@ -144,8 +144,34 @@ void handler(void)
 	}
 }
 
+
+CH_IRQ_HANDLER(myIRQ)
+{
+	CH_IRQ_PROLOGUE();
+	
+	/* IRQ handling code, preemptable if the architecture supports it.*/
+	static uint8_t out = 0;
+	
+	
+	/* set the pin */
+    if (out)
+    {
+        palSetPad(GPIOD, GPIOD_LED5);       /* Red  */
+        out = 0;
+    }
+    else
+    {
+        palClearPad(GPIOD, GPIOD_LED5);     /* Red.  */
+        out = 1;
+    }
+	
+	/* More IRQ handling code, again preemptable.*/
+	
+	CH_IRQ_EPILOGUE();
+}
+
 static Semaphore sem;
-  
+
 void DMXInit(void)
 {
   chSemInit(&sem, 1);
