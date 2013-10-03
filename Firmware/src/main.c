@@ -280,7 +280,7 @@ static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 {
-#define DMX_USAGE_HELP "Possible commands are:\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\n"
+#define DMX_USAGE_HELP "Possible commands are:\r\nshow\tprint content\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\n"
 	
 	if(argc < 1)
 	{
@@ -345,6 +345,15 @@ static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 				}
 			    chprintf(chp, "Filled DMX with %2X (%d times)\r\n", value, length);
 			}
+		}
+		else if (strcmp(argv[0], "show") == 0)
+		{
+			int i;
+			chprintf(chp, "DMX is filled with %d byte\r\n", dmx_buffer.length);
+			for (i = 0; i < dmx_buffer.length; i++) {					
+				chprintf(chp, "%.2X", dmx_buffer.buffer[i]);	
+			}
+			chprintf(chp, "\r\n");			
 		}
 		else if (strcmp(argv[0], "help") == 0)
 		{
