@@ -280,7 +280,7 @@ static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
 
 static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 {
-#define DMX_USAGE_HELP "Possible commands are:\r\nshow\tprint content\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\n"
+#define DMX_USAGE_HELP "Possible commands are:\r\nshow\tprint content\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\nshrink (size)\tUpdate the length of the universe\r\n"
 	
 	if(argc < 1)
 	{
@@ -354,6 +354,19 @@ static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 				chprintf(chp, "%.2X", dmx_buffer.buffer[i]);	
 			}
 			chprintf(chp, "\r\n");			
+		}
+		else if (strcmp(argv[0], "shrink") == 0)
+		{
+			if (argc < 2)
+			{
+				chprintf(chp, "Usage: dmx shrink (universe size)\r\n");
+			}
+			else
+			{
+				int size = atoi(argv[1]);
+				chprintf(chp, "Update size of the universe from %d to %d bytes.\r\n", dmx_buffer.length, size);
+				dmx_buffer.length = size;
+			}
 		}
 		else if (strcmp(argv[0], "help") == 0)
 		{

@@ -12,8 +12,9 @@
 #define DMX_BUFFER_MAX	513
 
 typedef struct  {
-  uint8_t            buffer [DMX_BUFFER_MAX];
-  uint16_t           length;
+	uint8_t		startbyte;
+	uint8_t		buffer[DMX_BUFFER_MAX];
+	uint16_t	length;
 } DMXBuffer;
 
 extern DMXBuffer dmx_buffer;
