@@ -102,6 +102,7 @@ CSRC = $(PORTSRC) \
        $(LIBSRC) \
        src/web/web.c \
        src/dmx/dmx.c \
+       src/dmx/dmx_cmd.c \
        src/main.c \
        src/ifconfig.c \
        src/fcs/fcs.c
