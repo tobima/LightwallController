@@ -13,14 +13,93 @@ WORKING_AREA(wa_dmx, DMX_THREAD_STACK_SIZE);
  * YOU have to secure, that only one source is filling this buffer.
  */
 DMXBuffer dmx_buffer;
+										   
+
+static Semaphore sem;		
+
+/*
+ * GPT3 callback.
+ */
+static void gpt2cb(GPTDriver *gptp) {
+     (void) gptp;
+}
+    
+
+    
+/*
+ * This callback is invoked when a transmission buffer has been completely
+ * read by the driver.
+ */
+static void txend1(UARTDriver *uartp) {
+    (void)uartp;
+  }
+
+/*
+ * This callback is invoked when a transmission has physically completed.
+ */
+static void txend2(UARTDriver *uartp) {
+    (void)uartp;
+    
+    chSysLockFromIsr();
+    if (chSemGetCounterI(&sem) < 0)
+	      chSemSignalI(&sem);
+    chSysUnlockFromIsr();
+  }
+
+/*
+ * This callback is invoked on a receive error, the errors mask is passed
+ * as parameter.
+ */
+static void rxerr(UARTDriver *uartp, uartflags_t e) {
+    (void)uartp;
+    (void)e;
+  }
+
+/*
+ * This callback is invoked when a character is received but the application
+ * was not ready to receive it, the character is passed as parameter.
+ */
+static void rxchar(UARTDriver *uartp, uint16_t c) {
+    (void)uartp;
+    (void)c;
+  }
 
 
+/*
+ * This callback is invoked when a receive buffer has been completely written.
+ */
+static void rxend(UARTDriver *uartp)
+{
+	 (void)uartp;
+}
 
-static Semaphore sem;
+/**
+  * Use the third UART to spread DMX into the world.
+  */
+static const UARTConfig uart3cfg = {
+	 txend1,
+	 txend2,
+	 rxend,
+	 rxchar,
+	 rxerr,
+	 250000 /* 250kbaud */,
+	 0,
+	 USART_CR2_STOP2_BITS | USART_CR2_LINEN,
+	 0
+};
+
+static const GPTConfig gpt2cfg = { 
+	 200000, /* 100KHz timer clock.*/
+	 gpt2cb, /* Timer callback.*/
+	 0
+};
 
 void DMXInit(void)
 {
-  chSemInit(&sem, 1);
+	chSemInit(&sem, 1);
+	gptStart(&GPTD2, &gpt2cfg); // Another
+	uartStart (&UARTD3, &uart3cfg);
+	
 	
   /* Set the initial length of DMX to one */
   dmx_buffer.length = 1;
