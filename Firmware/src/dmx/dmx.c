@@ -113,6 +113,20 @@ msg_t dmxthread(void *arg) {
   (void)arg;
   chRegSetThreadName("dmx");
 	
+  /* Analysis:
+   *
+   *	Min		Max		Custom	Working reference
+   * 1: 88		-		126 us	180
+   * 2: 8		1s		14 us	
+   * 3: 43,12	44,48	32 us
+   * 4: 3,92	4,08	14 
+   *
+   * More values from the working reference:
+   * between to frames: 22 us
+   * 78 us = start bit & start byte
+   *
+   * Source for numbers: http://www.soundlight.de/techtips/dmx512/dmx512.htm
+   */
   
   while(1)
   {
