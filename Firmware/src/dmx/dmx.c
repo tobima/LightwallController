@@ -89,7 +89,7 @@ static const UARTConfig uart3cfg = {
 };
 
 static const GPTConfig gpt2cfg = { 
-	 200000, /* 100KHz timer clock.*/
+	 200000, /* 200KHz timer clock.*/
 	 gpt2cb, /* Timer callback.*/
 	 0
 };
@@ -119,7 +119,7 @@ msg_t dmxthread(void *arg) {
    * 1: 88		-		126 us	180
    * 2: 8		1s		14 us	
    * 3: 43,12	44,48	32 us
-   * 4: 3,92	4,08	14 
+   * 8: 0		1s		14 us 
    *
    * More values from the working reference:
    * between to frames: 22 us
@@ -133,11 +133,15 @@ msg_t dmxthread(void *arg) {
     /* Send Reset. */
     palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_OUTPUT | PAL_STM32_OTYPE_PUSHPULL |PAL_STM32_PUDR_PULLDOWN);
     palClearPad(GPIOD, GPIOD_DMX_BREAK);
-    gptPolledDelay(&GPTD2, 25);
+    gptPolledDelay(&GPTD2, 25); /* wait for 125 us */
     palSetPad(GPIOD, GPIOD_DMX_BREAK);
     palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_INPUT | PAL_STM32_PUDR_FLOATING);
-    gptPolledDelay(&GPTD2, 2);
-    
+    gptPolledDelay(&GPTD2, 2); /* Mark and Reset of 10 us */
+	  
+    /* Send the startbyte */
+	uartStartSend(&UARTD3, (size_t) 1, (void*) &(dmx_buffer.startbyte));
+	  
+	/* send the universe */
     uartStartSend(&UARTD3, (size_t) (dmx_buffer.length), (void*) &(dmx_buffer.buffer));
     
     chSemWait(&sem);
