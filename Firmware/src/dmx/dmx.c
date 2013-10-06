@@ -84,7 +84,7 @@ static const UARTConfig uart3cfg = {
 	 rxerr,
 	 250000 /* 250kbaud */,
 	 0,
-	 USART_CR2_STOP2_BITS | USART_CR2_LINEN,
+	 USART_CR2_STOP2_BITS,
 	 0
 };
 
