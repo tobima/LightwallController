@@ -286,14 +286,18 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
   int x, y, ypos;
   int frame_index = 0;
   int sleeptime;
+  int fixSleepTimer = -1;
   uint8_t* rgb24;
 	
   if(argc < 1)
   {
-	  sleeptime = (1000);
-	  chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
 	chprintf(chp, "Usage <filename>\r\n");
     return;
+  }
+  else if(argc >= 2)
+  {
+    fixSleepTimer = atoi(argv[1]);
+    chprintf(chp, "Sleeptime was set FIX to %d ms\r\n", fixSleepTimer);  
   }
 	
 #if 0
@@ -318,9 +322,8 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 		return;
 	}
 	
+	/* Allocation some space for the RGB buffer */
 	rgb24 = (uint8_t*) chHeapAlloc(NULL, (seq.width * seq.height * 3) );
-	chprintf(chp, "Allocated buffer at %x with %d bytes\r\n", rgb24, (seq.width * seq.height * 3) );
-
 	
 	/* parse */
 	ret = fcseq_nextFrame(&seq, rgb24);
@@ -334,28 +337,36 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 	/* loop to print something on the commandline */
 	while (ret == FCSEQ_RET_OK)
 	{
-			chprintf(chp, "=============== %d ===============\r\n", frame_index);
-			for (y=0; y < seq.height; y++)
+#if 0
+		chprintf(chp, "=============== %d ===============\r\n", frame_index);
+		for (y=0; y < seq.height; y++)
+		{
+			ypos = y * seq.width * 3;
+			for(x=0; x < seq.width; x++)
 			{
-				ypos = y * seq.width * 3;
-				for(x=0; x < seq.width; x++)
-				{
-					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
-					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
-					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
-					chprintf(chp, "|");
-				}
-				chprintf(chp, "\r\n");
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
+				chprintf(chp, "|");
 			}
-	
-			/* Set the DMX buffer */
-			dmx_buffer.length = seq.width * seq.height * 3;
-			memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
-			chprintf(chp, "Filled DMX with %d bytes\r\n", dmx_buffer.length);
+			chprintf(chp, "\r\n");
+		}
+#endif
+
+		/* Set the DMX buffer */
+		dmx_buffer.length = seq.width * seq.height * 3;
+		memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
 		
-		sleeptime = (1000 / seq.fps);
+		if (fixSleepTimer > 0)
+		{
+			sleeptime = fixSleepTimer;
+		}
+		else
+		{
+			sleeptime = (1000 / seq.fps);
+		}
+		
 		chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
-		chprintf(chp, "Sleeping DONE for %d ms\r\n", sleeptime);
 		/* parse the next */
 		ret = fcseq_nextFrame(&seq, rgb24);
 		
