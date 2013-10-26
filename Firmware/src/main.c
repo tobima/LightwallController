@@ -28,6 +28,7 @@
 #include "web/web.h"
 #include "dmx/dmx.h"
 #include "netshell/netshell.h"
+#include "dmx/dmx_cmd.h"
 #include "fcs/fcs.h"
 
 #include "ifconfig.h"
@@ -279,103 +280,25 @@ static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
   chprintf(chp, "\r\n");
 }
 
-static void cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
-{
-#define DMX_USAGE_HELP "Possible commands are:\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\n"
-	
-	if(argc < 1)
-	{
-		chprintf(chp, "Usage <command> (parameter)\r\n");	  
-		chprintf(chp, DMX_USAGE_HELP);
-		return;
-	}
-	
-	if(argc >= 1)
-	{
-		if (strcmp(argv[0], "write") == 0)
-		{
-			if (argc < 3)
-			{
-				chprintf(chp, "Usage: dmx write (offset) (value)\r\n");
-			}
-			else
-			{
-				int offset = atoi(argv[1]);
-				int value = atoi(argv[2]);
-				
-				if (dmx_buffer.length < offset)
-				{
-					chprintf(chp, "Increased Universe from %d to %d bytes.\r\n", dmx_buffer.length, offset + 1);
-					dmx_buffer.length = offset + 1;
-				}
-				
-				dmx_buffer.buffer[offset] = value;
-			    chprintf(chp, "Set DMX at %d with %2X (%d)\r\n", offset, value, value);
-			}
-		}
-		else if (strcmp(argv[0], "fill") == 0)
-		{
-			if (argc < 4)
-			{
-				chprintf(chp, "Usage: dmx fill (start offset) (end) (value)\r\n");
-			}
-			else
-			{
-				int offset = atoi(argv[1]);
-				int end = atoi(argv[2]);
-				int value = atoi(argv[3]);
-				int length;
-				
-				/* swap, if the user cannot determine the lower number */
-				if (end < offset)
-				{
-					int tmp = offset;
-					offset = end;
-					end = tmp;
-				}
-				
-				if (dmx_buffer.length < end)
-				{
-					chprintf(chp, "Increased Universe from %d to %d bytes.\r\n", dmx_buffer.length, offset + 1);
-					dmx_buffer.length = offset + 1;
-				}
-				
-				length = end - offset;
-				for (; offset < end; offset++) {					
-					dmx_buffer.buffer[offset] = value;	
-				}
-			    chprintf(chp, "Filled DMX with %2X (%d times)\r\n", value, length);
-			}
-		}
-		else if (strcmp(argv[0], "help") == 0)
-		{
-			chprintf(chp, "Possible commands are:\r\n"
-					 DMX_USAGE_HELP);
-		}
-	}
-	
-
-}
-
 static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 {
   fcsequence_t seq;
   fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
   int x, y, ypos;
   int frame_index = 0;
-  int singleframe = -1; /* position of the frame to load */
+  int sleeptime;
+  int fixSleepTimer = -1;
   uint8_t* rgb24;
 	
   if(argc < 1)
   {
-	chprintf(chp, "Usage <filename> (Frame to display)\r\n");	  
-    chprintf(chp, "One parameter with the file to read is necessary, then all frames are displayed!\r\n");
+	chprintf(chp, "Usage <filename>\r\n");
     return;
   }
   else if(argc >= 2)
   {
-	singleframe = atoi(argv[1]);
-	chprintf(chp, "Extract frame with index %d\r\n", singleframe); 
+    fixSleepTimer = atoi(argv[1]);
+    chprintf(chp, "Sleeptime was set FIX to %d ms\r\n", fixSleepTimer);  
   }
 	
 #if 0
@@ -394,9 +317,14 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
   chprintf(chp, "=== Meta information ===\r\n"
 		   "fps: %d, width: %d, height: %d\r\n",seq.fps,seq.width,seq.height);
 	
+	if (seq.fps == 0)
+	{
+		chprintf(chp, "The FPS could NOT be extracted! Stopping\r\n");
+		return;
+	}
+	
+	/* Allocation some space for the RGB buffer */
 	rgb24 = (uint8_t*) chHeapAlloc(NULL, (seq.width * seq.height * 3) );
-	chprintf(chp, "Allocated buffer at %x with %d bytes\r\n", rgb24, (seq.width * seq.height * 3) );
-
 	
 	/* parse */
 	ret = fcseq_nextFrame(&seq, rgb24);
@@ -410,37 +338,36 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 	/* loop to print something on the commandline */
 	while (ret == FCSEQ_RET_OK)
 	{
-	
-		/* print all frames or the single requested one */
-		if (singleframe == frame_index || singleframe < 0)
+#if 0
+		chprintf(chp, "=============== %d ===============\r\n", frame_index);
+		for (y=0; y < seq.height; y++)
 		{
-			chprintf(chp, "=============== %d ===============\r\n", frame_index);
-			for (y=0; y < seq.height; y++)
+			ypos = y * seq.width * 3;
+			for(x=0; x < seq.width; x++)
 			{
-				ypos = y * seq.width * 3;
-				for(x=0; x < seq.width; x++)
-				{
-					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
-					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
-					chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
-					chprintf(chp, "|");
-				}
-				chprintf(chp, "\r\n");
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
+				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
+				chprintf(chp, "|");
 			}
+			chprintf(chp, "\r\n");
 		}
-	
+#endif
 
-		/* only sent something to DMX on the single frame debug mode */
-		if (singleframe == frame_index)
+		/* Set the DMX buffer */
+		dmx_buffer.length = seq.width * seq.height * 3;
+		memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
+		
+		if (fixSleepTimer > 0)
 		{
-			/* Set the DMX buffer */
-			dmx_buffer.length = seq.width * seq.height * 3;
-			memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
-			chprintf(chp, "Filled DMX with %d bytes\r\n", dmx_buffer.length);
-			chHeapFree(rgb24);
-			return; /* The DMX buffer has new input -> exit */			
+			sleeptime = fixSleepTimer;
+		}
+		else
+		{
+			sleeptime = (1000 / seq.fps);
 		}
 		
+		chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
 		/* parse the next */
 		ret = fcseq_nextFrame(&seq, rgb24);
 		
