@@ -104,7 +104,9 @@ CSRC = $(PORTSRC) \
        src/dmx/dmx.c \
        src/main.c \
        src/ifconfig.c \
-       src/fcs/fcs.c
+       src/fcs/fcs.c \
+       src/netstream/netstream.c \
+       src/netshell/netshell.c
 
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

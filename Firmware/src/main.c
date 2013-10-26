@@ -27,6 +27,7 @@
 #include "lwipthread.h"
 #include "web/web.h"
 #include "dmx/dmx.h"
+#include "netshell/netshell.h"
 #include "fcs/fcs.h"
 
 #include "ifconfig.h"
@@ -585,6 +586,12 @@ int main(void) {
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 1,
                     http_server, NULL);
+
+  /*
+   * Creates the Net Shell thread.
+   */
+  chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
+                  server_thread, 23);
 
   /*
    * Creates the DMX thread.
