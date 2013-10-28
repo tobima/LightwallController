@@ -29,6 +29,7 @@
 #include "dmx/dmx.h"
 #include "dmx/dmx_cmd.h"
 #include "fullcircle/fcs.h"
+#include "fullcircle/fcserverImpl.h"
 
 #include "ifconfig.h"
 
@@ -386,6 +387,7 @@ static const ShellCommand commands[] = {
   {"fcs", cmd_fcs},
   {"dmx", cmd_dmx_modify},
   {"ifconfig", cmd_ifconfig},
+  {"dynfc", fcsserverImpl_cmdline},
   {NULL, NULL}
 };
 
@@ -500,17 +502,23 @@ int main(void) {
    * Creates the example thread.
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-  
+  	
    /*
    * Creates the LWIP threads (it changes priority internally).
    */
   chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,
                     lwip_thread, NULL);
-  
+	
   /*
    * Creates the HTTP thread.
    */
-  chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 1,
+  chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
+					  fc_server, NULL);
+	
+  /*
+   * Creates the HTTP thread.
+   */
+  chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
                     http_server, NULL);
 
   /*

@@ -105,6 +105,7 @@ CSRC = $(PORTSRC) \
        src/dmx/dmx_cmd.c \
        src/main.c \
        src/ifconfig.c \
+	   src/fullcircle/fcserverImpl.c \
        src/fullcircle/fcs.c
 
 
