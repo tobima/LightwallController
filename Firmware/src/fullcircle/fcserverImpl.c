@@ -16,7 +16,12 @@ msg_t fc_server(void *p) {
 	chRegSetThreadName("dynfc-server");
 	(void)p;
 	
+	while(1)
+	{
 	
+		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
+	}
+		
 	return RDY_OK;
 }
 
