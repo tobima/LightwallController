@@ -105,7 +105,7 @@ CSRC = $(PORTSRC) \
        src/dmx/dmx_cmd.c \
        src/main.c \
        src/ifconfig.c \
-       src/fcs/fcs.c
+       src/fullcircle/fcs.c
 
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global

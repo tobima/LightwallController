@@ -28,7 +28,7 @@
 #include "web/web.h"
 #include "dmx/dmx.h"
 #include "dmx/dmx_cmd.h"
-#include "fcs/fcs.h"
+#include "fullcircle/fcs.h"
 
 #include "ifconfig.h"
 
