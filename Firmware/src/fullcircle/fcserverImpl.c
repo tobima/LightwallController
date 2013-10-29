@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include "fcserver.h"
 
-#define MB_SIZE		5
+#define MB_SIZE		1024
 
 static MAILBOX_DECL(mb1, wa_fc_server, MB_SIZE);
 
@@ -38,7 +38,7 @@ msg_t fc_server(void *p)
 	fcserver_t		server;
 	chRegSetThreadName("dynfc-server");
 	(void)p;
-		
+			
 	ret = fcserver_init(&server, &onNewImage, 10, 12);
 	if (ret != FCSERVER_RET_OK)
 	{
@@ -47,8 +47,7 @@ msg_t fc_server(void *p)
 	}
 
 	/* Put something in the mailbox */
-	chMBPostl(&mb1, "Server was successfull initialized");
-
+	chMBPost(&mb1, 'I', TIME_INFINITE);
 	
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
@@ -60,14 +59,16 @@ msg_t fc_server(void *p)
 	
 	/* clean everything */
 	fcserver_close(&server);
-		
+	chMBPost(&mb1, 'E', TIME_INFINITE);	
+	
 	return RDY_OK;
 }
 
 FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	FRESULT res = FR_OK;
-	msg_t msg1;
+	msg_t msg1, status;
+	int i, newMessages;
 	
 	if(argc < 1)
 	{
@@ -76,12 +77,28 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 		return res;
 	}
 	else if(argc >= 1)
-        {
-                if (strcmp(argv[0], "status") == 0)
-                {
-			chprintf(chp, "%d Messages found\r\n", chMBGetFreeCountI(&mb1));
-		
+    {
+		if (strcmp(argv[0], "status") == 0)
+		{
+			newMessages = chMBGetUsedCountI(&mb1);
+			chprintf(chp, "%d Messages found\r\n", newMessages );
+			for (i=0; i < newMessages; i++) {
+				status = chMBFetch(&mb1, &msg1, TIME_INFINITE);
+				if (status != RDY_OK)
+				{
+					chprintf(chp, "Failed accessing message queue: %d\r\n", status );
+				}
+				else
+				{
+					chSysLock();
+					chprintf(chp, "%c", (char) msg1 );
+					chSysUnlock();
+				}
+			}
+			chprintf(chp, "\r\n" );
 		}
+		
+	
 	}
 	
 	return res;
