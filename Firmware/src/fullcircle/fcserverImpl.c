@@ -39,6 +39,8 @@ msg_t fc_server(void *p)
 	chRegSetThreadName("dynfc-server");
 	(void)p;
 			
+	chMBInit(&mb1, (msg_t *)wa_fc_server, MB_SIZE);
+	
 	ret = fcserver_init(&server, &onNewImage, 10, 12);
 	if (ret != FCSERVER_RET_OK)
 	{
@@ -47,7 +49,9 @@ msg_t fc_server(void *p)
 	}
 
 	/* Put something in the mailbox */
-	chMBPost(&mb1, 'I', TIME_INFINITE);
+	chMBPostAheadI(&mb1, 'A');
+	chMBPostAheadI(&mb1, 'B');
+	chMBPostAheadI(&mb1, 'C');
 	
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
@@ -59,7 +63,6 @@ msg_t fc_server(void *p)
 	
 	/* clean everything */
 	fcserver_close(&server);
-	chMBPost(&mb1, 'E', TIME_INFINITE);	
 	
 	return RDY_OK;
 }
