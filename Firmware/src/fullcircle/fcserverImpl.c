@@ -7,6 +7,10 @@
 #include <unistd.h>
 #include "fcserver.h"
 
+#define MB_SIZE		5
+
+static MAILBOX_DECL(mb1, wa_fc_server, MB_SIZE);
+
 /******************************************************************************
  * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
  ******************************************************************************/
@@ -41,6 +45,10 @@ msg_t fc_server(void *p)
 		/* printf("Server initialization failed with returncode %d\n", ret); */
 		return FR_INT_ERR;
 	}
+
+	/* Put something in the mailbox */
+	chMBPostl(&mb1, "Server was successfull initialized");
+
 	
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
@@ -59,12 +67,21 @@ msg_t fc_server(void *p)
 FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	FRESULT res = FR_OK;
+	msg_t msg1;
 	
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage UNDEFINED\r\n");
+		chprintf(chp, "Usage {status}\r\n");
 		res = FR_INT_ERR;
 		return res;
+	}
+	else if(argc >= 1)
+        {
+                if (strcmp(argv[0], "status") == 0)
+                {
+			chprintf(chp, "%d Messages found\r\n", chMBGetFreeCountI(&mb1));
+		
+		}
 	}
 	
 	return res;
