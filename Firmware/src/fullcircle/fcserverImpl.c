@@ -7,9 +7,9 @@
 #include <unistd.h>
 #include "fcserver.h"
 
-#define MB_SIZE		1024
+#define MAILBOX_SIZE		1024
 
-static MAILBOX_DECL(mb1, wa_fc_server, MB_SIZE);
+static MAILBOX_DECL(mb1, wa_fc_server, MAILBOX_SIZE);
 
 /******************************************************************************
  * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
@@ -18,6 +18,13 @@ static MAILBOX_DECL(mb1, wa_fc_server, MB_SIZE);
 void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
 	/* printf("%d x %d\n", width, height); */
+}
+
+void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
+{
+	//printf("Callback client %d did %X\t[%d clients]\n", clientsocket, action, totalAmount);
+	chMBPostI(&mb1, (int) action);
+	chMBPostI(&mb1, (int) clientsocket);
 }
 
 /******************************************************************************
@@ -38,20 +45,18 @@ msg_t fc_server(void *p)
 	fcserver_t		server;
 	chRegSetThreadName("dynfc-server");
 	(void)p;
-			
-	chMBInit(&mb1, (msg_t *)wa_fc_server, MB_SIZE);
 	
-	ret = fcserver_init(&server, &onNewImage, 10, 12);
+	/* Prepare Mailbox to communicate with the others */
+	chMBInit(&mb1, (msg_t *)wa_fc_server, MAILBOX_SIZE);
+	
+	ret = fcserver_init(&server, &onNewImage, &onClientChange, 
+						10 /* width of wall */, 12 /* height of wall */);
+	
 	if (ret != FCSERVER_RET_OK)
 	{
 		/* printf("Server initialization failed with returncode %d\n", ret); */
 		return FR_INT_ERR;
 	}
-
-	/* Put something in the mailbox */
-	chMBPostAheadI(&mb1, 'A');
-	chMBPostAheadI(&mb1, 'B');
-	chMBPostAheadI(&mb1, 'C');
 	
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
@@ -93,9 +98,9 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 				}
 				else
 				{
-					chSysLock();
-					chprintf(chp, "%c", (char) msg1 );
-					chSysUnlock();
+					//chSysLock();
+					chprintf(chp, "%d", (char) msg1 );
+					//chSysUnlock();
 				}
 			}
 			chprintf(chp, "\r\n" );
