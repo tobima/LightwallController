@@ -51,7 +51,7 @@ msg_t fc_server(void *p)
 	(void)p;
 	
 	/* Prepare Mailbox to communicate with the others */
-	chMBInit(&mb1, (msg_t *)wa_fc_server, MAILBOX_SIZE);
+	chMBInit(&mb1, (msg_t *)buffer4mailbox, MAILBOX_SIZE);
 	
 	ret = fcserver_init(&server, &onNewImage, &onClientChange, 
 						10 /* width of wall */, 12 /* height of wall */);
@@ -84,7 +84,6 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	FRESULT res = FR_OK;
 	msg_t msg1, status;
-	char val = '?';
 	int i, newMessages;
 	
 	if(argc < 1)
