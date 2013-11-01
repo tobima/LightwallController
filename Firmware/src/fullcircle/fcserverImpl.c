@@ -8,7 +8,7 @@
 #include "fcserver.h"
 #include "customHwal.h"	/* Needed to activate debugging in server implementation */
 
-#define MAILBOX_SIZE		5
+#define MAILBOX_SIZE		10
 #define MAILBOX2_SIZE		5
 
 /* Mailbox, filled by the fc_server thread */
@@ -18,6 +18,8 @@ static MAILBOX_DECL(mailboxOut, buffer4mailbox, MAILBOX_SIZE);
 /* Mailbox, checked by the fc_server thread */
 static uint32_t buffer4mailbox2[MAILBOX2_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, MAILBOX2_SIZE);
+
+static BaseSequentialStream * debugShell = NULL;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -51,12 +53,18 @@ void handleInputMailbox(void)
 
 void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
-	/* printf("%d x %d\n", width, height); */
+	if (debugShell)
+	{
+		chprintf(debugShell, "%d x %d\n", width, height);
+	}
 }
 
 void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
-	//printf("Callback client %d did %X\t[%d clients]\n", clientsocket, action, totalAmount);
+	if (debugShell) {
+		chprintf(debugShell, "Callback client %d did %X\t[%d clients]\n", clientsocket, action, totalAmount);
+	}
+	
 	chSysLock();
 	chMBPostI(&mailboxOut, (uint32_t) action);
 	chMBPostI(&mailboxOut, (uint32_t) clientsocket);
