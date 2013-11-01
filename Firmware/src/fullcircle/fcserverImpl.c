@@ -8,6 +8,8 @@
 #include "fcserver.h"
 #include "customHwal.h"	/* Needed to activate debugging in server implementation */
 
+#include "dmx/dmx.h"
+
 #define MAILBOX_SIZE		10
 #define MAILBOX2_SIZE		5
 
@@ -22,6 +24,8 @@ static uint32_t buffer4mailbox2[MAILBOX2_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, MAILBOX2_SIZE);
 
 static BaseSequentialStream * debugShell = NULL;
+
+static uint32_t gServerActive = 0;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -54,6 +58,11 @@ void handleInputMailbox(void)
 					case 2:
 						FCS_PRINT("FC Server - silent mode\r\n");
 						debugShell = 0;
+						break;
+					case 3:
+						gServerActive = (uint32_t) msg2;
+						FCS_PRINT("DynFc Server - DMX is set %d\r\n", gServerActive);
+						break;
 					default:
 						break;
 				}
@@ -71,6 +80,12 @@ void handleInputMailbox(void)
 void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
 	FCS_PRINT("%d x %d\r\n", width, height);
+	
+	/*FIXME there is no MAPPING between positions and DMX addresses */
+	
+	/* Set the DMX buffer */
+	dmx_buffer.length = width * height * 3;
+	memcpy(dmx_buffer.buffer, rgb24Buffer, dmx_buffer.length);
 }
 
 void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
@@ -164,7 +179,7 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 	
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage {status, debugOn, debugOff}\r\n");
+		chprintf(chp, "Usage {status, debugOn, debugOff, on, off}\r\n");
 		res = FR_INT_ERR;
 		return res;
 	}
@@ -217,11 +232,20 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			chMBPostI(&mailboxIn, (uint32_t) 0);
 			chSysUnlock();
 		}
-		else if (strcmp(argv[0], "activate") == 0)
+		else if (strcmp(argv[0], "on") == 0)
 		{
+			chprintf(chp, "Activate DMX output\r\n");
 			chSysLock();
 			chMBPostI(&mailboxIn, (uint32_t) 3);
 			chMBPostI(&mailboxIn, (uint32_t) 1);
+			chSysUnlock();
+		}
+		else if (strcmp(argv[0], "off") == 0)
+		{
+			chprintf(chp, "Turn DMX output OFF\r\n");
+			chSysLock();
+			chMBPostI(&mailboxIn, (uint32_t) 3);
+			chMBPostI(&mailboxIn, (uint32_t) 0);
 			chSysUnlock();
 		}
 	}
