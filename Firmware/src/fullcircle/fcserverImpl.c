@@ -26,8 +26,8 @@ void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocke
 {
 	//printf("Callback client %d did %X\t[%d clients]\n", clientsocket, action, totalAmount);
 	chSysLock();
-	chMBPostI(&mb1, (char) action);
-	chMBPostI(&mb1, (char) 1);
+	chMBPostI(&mb1, (uint32_t) action);
+	chMBPostI(&mb1, (uint32_t) clientsocket);
 	chSysUnlock();
 }
 
@@ -61,11 +61,7 @@ msg_t fc_server(void *p)
 		/* printf("Server initialization failed with returncode %d\n", ret); */
 		return FR_INT_ERR;
 	}
-	
-	chSysLock();
-	chMBPostI(&mb1, 'I');
-	chSysUnlock();
-	
+		
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
 	do {
@@ -83,7 +79,7 @@ msg_t fc_server(void *p)
 FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	FRESULT res = FR_OK;
-	msg_t msg1, status;
+	msg_t msg1, msg2, status;
 	int i, newMessages;
 	
 	if(argc < 1)
@@ -99,7 +95,7 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			newMessages = chMBGetUsedCountI(&mb1);
 			
 			chprintf(chp, "%d Messages found\r\n", newMessages );
-			for (i=0; i < newMessages; i++) {
+			for (i=0; i < newMessages; i += 2) {
 				status = chMBFetch(&mb1, &msg1, TIME_INFINITE);
 				
 				if (status != RDY_OK)
@@ -108,12 +104,20 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 				}
 				else
 				{
-					chSysLock();
-					chprintf(chp, "%c", (char) msg1);
-					chSysUnlock();
+					status = chMBFetch(&mb1, &msg2, TIME_INFINITE);
+					if (status == RDY_OK)
+					{
+						chSysLock();
+						chprintf(chp, "%d = %d\r\n", (uint32_t) msg1, (uint32_t) msg2);
+						chSysUnlock();
+					}
+					else
+					{
+						chprintf(chp, "Could only extract key (%d)\r\n", (uint32_t) msg1);
+					}
+
 				}
 			}
-			chprintf(chp, "\r\n");
 		}
 		
 	
