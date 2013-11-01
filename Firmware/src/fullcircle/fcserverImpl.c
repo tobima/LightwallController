@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include "fcserver.h"
 
-#define MAILBOX_SIZE		1024
+#define MAILBOX_SIZE		5
 
 /* Mailbox, filled by the fc_server thread */
 static MAILBOX_DECL(mb1, wa_fc_server, MAILBOX_SIZE);
@@ -61,12 +61,9 @@ msg_t fc_server(void *p)
 		return FR_INT_ERR;
 	}
 	
-	fcserver_setactive(&server, 1 /* TRUE */);
+	chMBPost(&mb1, 'I', TIME_INFINITE);
 	
-	chSysLock();
-	chMBPostI(&mb1, 'X');
-	chMBPostI(&mb1, '1');
-	chSysUnlock();
+	fcserver_setactive(&server, 1 /* TRUE */);
 	
 	do {
 		ret = fcserver_process(&server);
@@ -84,7 +81,7 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	FRESULT res = FR_OK;
 	msg_t msg1, status;
-	char key, value = '?';
+	char val = '?';
 	int i, newMessages;
 	
 	if(argc < 1)
@@ -100,7 +97,7 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			newMessages = chMBGetUsedCountI(&mb1);
 			
 			chprintf(chp, "%d Messages found\r\n", newMessages );
-			for (i=0; i < newMessages; i+= 2) {
+			for (i=0; i < newMessages; i++) {
 				status = chMBFetch(&mb1, &msg1, TIME_INFINITE);
 				
 				if (status != RDY_OK)
@@ -109,22 +106,12 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 				}
 				else
 				{
-					/* Extract the first key of the message */
-					chSysLock();					
-					key = (char) msg1;
+					chSysLock();
+					chprintf(chp, "%c", (char) msg1);
 					chSysUnlock();
-					
-					/* Fetch the value */
-					status = chMBFetch(&mb1, &msg1, TIME_INFINITE);
-					if (status == RDY_OK)
-					{
-						chSysLock();					
-						value = (char) msg1;
-						chSysUnlock();
-					}
-					chprintf(chp, "%c = %c\r\n", key, value );
 				}
 			}
+			chprintf(chp, "\r\n");
 		}
 		
 	
