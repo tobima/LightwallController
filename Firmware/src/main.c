@@ -31,10 +31,10 @@
 #include "dmx/dmx_cmd.h"
 #include "fcs/fcs.h"
 
-#include "ifconfig.h"
-
 #include "fcseq.h"
 #include "customHwal.h"
+
+#include "cmd/cmd.h"
 
 #include "ff.h"
 
@@ -167,67 +167,6 @@ static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
 
 #define SHELL_WA_SIZE   THD_WA_SIZE(2048)
 
-static void cmd_mem(BaseSequentialStream *chp, int argc, char *argv[]) {
-  size_t n, size;
-
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: mem\r\n");
-    return;
-  }
-  n = chHeapStatus(NULL, &size);
-  chprintf(chp, "core free memory : %u bytes\r\n", chCoreStatus());
-  chprintf(chp, "heap fragments   : %u\r\n", n);
-  chprintf(chp, "heap free total  : %u bytes\r\n", size);
-}
-
-static void cmd_threads(BaseSequentialStream *chp, int argc, char *argv[]) {
-  static const char *states[] = {THD_STATE_NAMES};
-  Thread *tp;
-
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: threads\r\n");
-    return;
-  }
-  chprintf(chp, "    addr    stack prio refs     state     time      name\r\n");
-  tp = chRegFirstThread();
-  do {
-    chprintf(chp, "%.8lx %.8lx %4lu %4lu %9s %8lu %15s\r\n",
-            (uint32_t)tp, (uint32_t)tp->p_ctx.r13,
-            (uint32_t)tp->p_prio, (uint32_t)(tp->p_refs - 1),
-            states[tp->p_state], (uint32_t)tp->p_time, tp->p_name);
-    tp = chRegNextThread(tp);
-  } while (tp != NULL);
-}
-
-static void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
-  FRESULT err;
-  uint32_t clusters;
-  FATFS *fsp;
-
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: tree\r\n");
-    return;
-  }
-  if (!fs_ready) {
-    chprintf(chp, "File System not mounted\r\n");
-    return;
-  }
-  err = f_getfree("/", &clusters, &fsp);
-  if (err != FR_OK) {
-    chprintf(chp, "FS: f_getfree() failed. %lu\r\n", err);
-    return;
-  }
-  
-  chprintf(chp,
-           "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
-           clusters, (uint32_t)SDC_FS.csize,
-           clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
-  fbuff[0] = 0;
-  scan_files(chp, (char *)fbuff);
-}
 
 static void cmd_fcs(BaseSequentialStream *chp, int argc, char *argv[]) {
 	FRESULT err;
@@ -257,28 +196,7 @@ static void cmd_fcs(BaseSequentialStream *chp, int argc, char *argv[]) {
 	fcs_scan_files(chp, (char *)fbuff);
 }
 
-static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
-  FIL fp;
-  uint8_t buffer[32];
-  int br;
-  
-  if(argc < 1)
-    return;
-  
-  if(f_open(&fp, (TCHAR*) *argv, FA_READ) != FR_OK)
-    return;
-  
-  do {
-    if(f_read(&fp, (TCHAR*) buffer, 32,(UINT*) &br) != FR_OK)
-      return;
-    
-    chSequentialStreamWrite(chp, buffer, br);
-  } while (!f_eof(&fp));
-  
-  f_close(&fp);
-  
-  chprintf(chp, "\r\n");
-}
+
 
 static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 {

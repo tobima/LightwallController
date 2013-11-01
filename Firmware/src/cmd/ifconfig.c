@@ -1,7 +1,6 @@
 #include "lwip/netif.h"
 #include "chprintf.h"
 #include "ch.h"
-#include "ifconfig.h"
 
 void cmd_ifconfig(BaseSequentialStream *chp, int argc, char *argv[]) {
   struct netif* netif_et0 = netif_default;
