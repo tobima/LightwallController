@@ -1,11 +1,15 @@
-nih is released under the New BSD license (see LICENSE.txt). Go to the project
+/* inih -- simple .INI file parser
+
+inih is released under the New BSD license (see LICENSE.txt). Go to the project
 home page for more info:
 
 http://code.google.com/p/inih/
 
 */
 
-#include <stdio.h>
+
+#include "ch.h"
+#include <ff.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -57,7 +61,7 @@ static char* strncpy0(char* dest, const char* src, size_t size)
 }
 
 /* See documentation in header file. */
-int ini_parse_file(FILE* file,
+int ini_parse_file(FIL* file,
                    int (*handler)(void*, const char*, const char*,
                                   const char*),
                    void* user)
@@ -79,14 +83,14 @@ int ini_parse_file(FILE* file,
     int error = 0;
 
 #if !INI_USE_STACK
-    line = (char*)malloc(INI_MAX_LINE);
+    line = (char*)chHeapAlloc(NULL, INI_MAX_LINE);
     if (!line) {
         return -2;
     }
 #endif
 
     /* Scan through file line by line */
-    while (fgets(line, INI_MAX_LINE, file) != NULL) {
+    while (f_gets(line, INI_MAX_LINE, file) != NULL) {
         lineno++;
 
         start = line;
@@ -151,25 +155,28 @@ int ini_parse_file(FILE* file,
     }
 
 #if !INI_USE_STACK
-    free(line);
+    chHeapFree(line);
 #endif
 
     return error;
 }
+
+char ini_error[128];
 
 /* See documentation in header file. */
 int ini_parse(const char* filename,
               int (*handler)(void*, const char*, const char*, const char*),
               void* user)
 {
-    FILE* file;
+    FIL file;
     int error;
-
-    file = fopen(filename, "r");
-    if (!file)
+    
+    if ( f_open(&file, (TCHAR*) filename, FA_READ) != FR_OK) {
+      strncpy0(ini_error, "f_open", 7);
         return -1;
-    error = ini_parse_file(file, handler, user);
-    fclose(file);
+    }
+    error = ini_parse_file(&file, handler, user);
+    f_close(&file);
     return error;
 }
 

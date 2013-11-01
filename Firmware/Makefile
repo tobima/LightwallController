@@ -110,7 +110,9 @@ CSRC = $(PORTSRC) \
        src/cmd/cmd_threads.c \
        src/cmd/ifconfig.c \
        src/cmd/cmd_mem.c \
-       src/cmd/cmd_cat.c 
+       src/cmd/cmd_cat.c \
+       src/ini/ini.c \
+       src/conf/conf.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
