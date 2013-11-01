@@ -70,7 +70,27 @@ void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
 	if (debugShell) {
-		chprintf(debugShell, "Callback client %d did %X\t[%d clients]\r\n", clientsocket, action, totalAmount);
+		chprintf(debugShell, "Callback client %d did %X '", clientsocket, action);
+		switch (action) {
+			case FCCLIENT_STATUS_WAITING:
+				chprintf(debugShell, "waiting for a GO");
+				break;
+			case FCCLIENT_STATUS_CONNECTED:
+				chprintf(debugShell, "is CONNECTED to the wall");
+				break;
+			case FCCLIENT_STATUS_DISCONNECTED:
+				chprintf(debugShell, "has left");	
+				break;
+			case FCCLIENT_STATUS_INITING:
+				chprintf(debugShell, "found this server");	
+				break;
+			case FCCLIENT_STATUS_TOOMUTCH:
+				chprintf(debugShell, "is one too mutch");	
+				break;
+			default:
+				break;
+		}
+		chprintf(debugShell, "'\t[%d clients]\r\n", totalAmount);
 	}
 	
 	chSysLock();
