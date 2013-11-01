@@ -11,6 +11,8 @@
 #define MAILBOX_SIZE		10
 #define MAILBOX2_SIZE		5
 
+#define FCS_PRINT( ... )	if (debugShell) { chprintf(debugShell, __VA_ARGS__); }
+
 /* Mailbox, filled by the fc_server thread */
 static uint32_t buffer4mailbox[MAILBOX_SIZE];
 static MAILBOX_DECL(mailboxOut, buffer4mailbox, MAILBOX_SIZE);
@@ -43,12 +45,19 @@ void handleInputMailbox(void)
 			if (status == RDY_OK)
 			{
 				chSysLock();
-				if ((uint32_t) msg1 == 1)
-				{
-					debugShell = (BaseSequentialStream *) msg2;
-					chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
-					hwal_init((BaseSequentialStream *) msg2); /* No Debug output for the sequence library */
+				switch ((uint32_t) msg1) {
+					case 1:
+						debugShell = (BaseSequentialStream *) msg2;
+						chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
+						hwal_init((BaseSequentialStream *) msg2); /* No Debug output for the sequence library */
+						break;
+					case 2:
+						FCS_PRINT("FC Server - silent mode\r\n");
+						debugShell = 0;
+					default:
+						break;
 				}
+				
 				chSysUnlock();
 			}
 		}
@@ -61,10 +70,7 @@ void handleInputMailbox(void)
 
 void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
-	if (debugShell)
-	{
-		chprintf(debugShell, "%d x %d\r\n", width, height);
-	}
+	FCS_PRINT("%d x %d\r\n", width, height);
 }
 
 void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
@@ -142,9 +148,7 @@ msg_t fc_server(void *p)
 		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
 	} while ( ret == FCSERVER_RET_OK);
 	
-	if (debugShell) {
-		chprintf(debugShell, "FATAL error, closing thread\r\n");
-	}
+	FCS_PRINT("FATAL error, closing thread\r\n");
 	
 	/* clean everything */
 	fcserver_close(&server);
@@ -160,7 +164,7 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 	
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage {status, debugOn}\r\n");
+		chprintf(chp, "Usage {status, debugOn, debugOff}\r\n");
 		res = FR_INT_ERR;
 		return res;
 	}
@@ -198,10 +202,26 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 		else if (strcmp(argv[0], "debugOn") == 0)
 		{
 			/* Activate the debugging */
-			chprintf(chp, "Activate the debugging for fullcircle server\r\n");
+			chprintf(chp, "Activate the logging for fullcircle server\r\n");
 			chSysLock();
 			chMBPostI(&mailboxIn, (uint32_t) 1);
 			chMBPostI(&mailboxIn, (uint32_t) chp);
+			chSysUnlock();
+		}
+		else if (strcmp(argv[0], "debugOff") == 0)
+		{
+			/* Activate the debugging */
+			chprintf(chp, "Deactivate the logging for fullcircle server\r\n");
+			chSysLock();
+			chMBPostI(&mailboxIn, (uint32_t) 2);
+			chMBPostI(&mailboxIn, (uint32_t) 0);
+			chSysUnlock();
+		}
+		else if (strcmp(argv[0], "activate") == 0)
+		{
+			chSysLock();
+			chMBPostI(&mailboxIn, (uint32_t) 3);
+			chMBPostI(&mailboxIn, (uint32_t) 1);
 			chSysUnlock();
 		}
 	}
