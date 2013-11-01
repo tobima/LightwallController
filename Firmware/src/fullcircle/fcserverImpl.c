@@ -28,21 +28,29 @@ static BaseSequentialStream * debugShell = NULL;
 void handleInputMailbox(void)
 {
 	msg_t msg1, msg2, status;
+	int newMessages;
 	
-	/* First retrieve the given pointer */
-	status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
-	if (status == RDY_OK)
+	/* Use nonblocking function to count incoming messages */
+	newMessages = chMBGetUsedCountI(&mailboxIn);
+	
+	if (newMessages >= 2)
 	{
-		status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
+		/* First retrieve the given pointer */
+		status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
 		if (status == RDY_OK)
 		{
-			chSysLock();
-			if ((uint32_t) msg1 == 1)
+			status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
+			if (status == RDY_OK)
 			{
-				chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
-				hwal_init((BaseSequentialStream *) msg2); /* No Debug output for the sequence library */
+				chSysLock();
+				if ((uint32_t) msg1 == 1)
+				{
+					debugShell = (BaseSequentialStream *) msg2;
+					chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
+					hwal_init((BaseSequentialStream *) msg2); /* No Debug output for the sequence library */
+				}
+				chSysUnlock();
 			}
-			chSysUnlock();
 		}
 	}
 }
@@ -55,14 +63,14 @@ void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
 	if (debugShell)
 	{
-		chprintf(debugShell, "%d x %d\n", width, height);
+		chprintf(debugShell, "%d x %d\r\n", width, height);
 	}
 }
 
 void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
 	if (debugShell) {
-		chprintf(debugShell, "Callback client %d did %X\t[%d clients]\n", clientsocket, action, totalAmount);
+		chprintf(debugShell, "Callback client %d did %X\t[%d clients]\r\n", clientsocket, action, totalAmount);
 	}
 	
 	chSysLock();
@@ -107,12 +115,26 @@ msg_t fc_server(void *p)
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
 	do {
+		if (debugShell) {
+			chprintf(debugShell, "... ");
+		}
 		handleInputMailbox();
 		
+		
+		if (debugShell) {
+			chprintf(debugShell, "...");
+		}
 		ret = fcserver_process(&server);
 		
+		if (debugShell) {
+			chprintf(debugShell, "(OK)\r\n");
+		}
 		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
 	} while ( ret == FCSERVER_RET_OK);
+	
+	if (debugShell) {
+		chprintf(debugShell, "FATAL error, closing thread\r\n");
+	}
 	
 	/* clean everything */
 	fcserver_close(&server);
