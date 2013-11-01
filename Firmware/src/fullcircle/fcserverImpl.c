@@ -33,7 +33,7 @@ void handleInputMailbox(void)
 	/* Use nonblocking function to count incoming messages */
 	newMessages = chMBGetUsedCountI(&mailboxIn);
 	
-	if (newMessages >= 2)
+	if (newMessages >= 2 || debugShell == NULL/* block here until the debugging is activated*/)
 	{
 		/* First retrieve the given pointer */
 		status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
@@ -115,20 +115,10 @@ msg_t fc_server(void *p)
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
 	do {
-		if (debugShell) {
-			chprintf(debugShell, "... ");
-		}
 		handleInputMailbox();
 		
-		
-		if (debugShell) {
-			chprintf(debugShell, "...");
-		}
 		ret = fcserver_process(&server);
 		
-		if (debugShell) {
-			chprintf(debugShell, "(OK)\r\n");
-		}
 		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
 	} while ( ret == FCSERVER_RET_OK);
 	
