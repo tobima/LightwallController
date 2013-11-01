@@ -9,6 +9,7 @@
 
 #define MAILBOX_SIZE		1024
 
+/* Mailbox, filled by the fc_server thread */
 static MAILBOX_DECL(mb1, wa_fc_server, MAILBOX_SIZE);
 
 /******************************************************************************
@@ -23,8 +24,10 @@ void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
 	//printf("Callback client %d did %X\t[%d clients]\n", clientsocket, action, totalAmount);
-	chMBPostI(&mb1, (int) action);
-	chMBPostI(&mb1, (int) clientsocket);
+	chSysLock();
+	chMBPostI(&mb1, (char) action);
+	chMBPostI(&mb1, (char) 1);
+	chSysUnlock();
 }
 
 /******************************************************************************
@@ -60,6 +63,11 @@ msg_t fc_server(void *p)
 	
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
+	chSysLock();
+	chMBPostI(&mb1, 'X');
+	chMBPostI(&mb1, '1');
+	chSysUnlock();
+	
 	do {
 		ret = fcserver_process(&server);
 		
@@ -76,6 +84,7 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	FRESULT res = FR_OK;
 	msg_t msg1, status;
+	char key, value = '?';
 	int i, newMessages;
 	
 	if(argc < 1)
@@ -89,21 +98,33 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 		if (strcmp(argv[0], "status") == 0)
 		{
 			newMessages = chMBGetUsedCountI(&mb1);
+			
 			chprintf(chp, "%d Messages found\r\n", newMessages );
-			for (i=0; i < newMessages; i++) {
+			for (i=0; i < newMessages; i+= 2) {
 				status = chMBFetch(&mb1, &msg1, TIME_INFINITE);
+				
 				if (status != RDY_OK)
 				{
 					chprintf(chp, "Failed accessing message queue: %d\r\n", status );
 				}
 				else
 				{
-					//chSysLock();
-					chprintf(chp, "%d", (char) msg1 );
-					//chSysUnlock();
+					/* Extract the first key of the message */
+					chSysLock();					
+					key = (char) msg1;
+					chSysUnlock();
+					
+					/* Fetch the value */
+					status = chMBFetch(&mb1, &msg1, TIME_INFINITE);
+					if (status == RDY_OK)
+					{
+						chSysLock();					
+						value = (char) msg1;
+						chSysUnlock();
+					}
+					chprintf(chp, "%c = %c\r\n", key, value );
 				}
 			}
-			chprintf(chp, "\r\n" );
 		}
 		
 	
