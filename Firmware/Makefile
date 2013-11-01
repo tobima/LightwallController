@@ -212,6 +212,8 @@ DLIBS =
 
 # List all user C define here, like -D_DEBUG=1
 UDEFS = -D_CHIBIOS 
+# Fullcricle (fc_c) specific:
+UDEFS += -DPRINT_DEBUG
 
 # Define ASM defines here
 UADEFS =

@@ -6,6 +6,7 @@
 
 #include <unistd.h>
 #include "fcserver.h"
+#include "customHwal.h"	/* Needed to activate debugging in server implementation */
 
 #define MAILBOX_SIZE		5
 #define MAILBOX2_SIZE		5
@@ -18,6 +19,31 @@ static MAILBOX_DECL(mailboxOut, buffer4mailbox, MAILBOX_SIZE);
 static uint32_t buffer4mailbox2[MAILBOX2_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, MAILBOX2_SIZE);
 
+/******************************************************************************
+ * LOCAL FUNCTIONS
+ ******************************************************************************/
+
+void handleInputMailbox(void)
+{
+	msg_t msg1, msg2, status;
+	
+	/* First retrieve the given pointer */
+	status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
+	if (status == RDY_OK)
+	{
+		status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
+		if (status == RDY_OK)
+		{
+			chSysLock();
+			if ((uint32_t) msg1 == 1)
+			{
+				chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
+				hwal_init((BaseSequentialStream *) msg2); /* No Debug output for the sequence library */
+			}
+			chSysUnlock();
+		}
+	}
+}
 
 /******************************************************************************
  * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
@@ -53,7 +79,6 @@ msg_t fc_server(void *p)
 {		
 	fcserver_ret_t	ret;
 	fcserver_t		server;
-	msg_t msg1, msg2, status;
 	
 	chRegSetThreadName("dynfc-server");
 	(void)p;
@@ -74,28 +99,11 @@ msg_t fc_server(void *p)
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
 	do {
+		handleInputMailbox();
+		
 		ret = fcserver_process(&server);
 		
 		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
-		
-		/* ===== test the shell printing ===== */
-		/* First retrieve the given pointer */
-		status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
-		if (status == RDY_OK)
-		{
-			status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
-			if (status == RDY_OK)
-			{
-				chSysLock();
-				if ((uint32_t) msg1 == 1)
-				{
-					chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
-					
-				}
-				chSysUnlock();
-			}
-		}
-		
 	} while ( ret == FCSERVER_RET_OK);
 	
 	/* clean everything */
@@ -153,7 +161,7 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			chprintf(chp, "Activate the debugging for fullcircle server\r\n");
 			chSysLock();
 			chMBPostI(&mailboxIn, (uint32_t) 1);
-			chMBPostI(&mailboxIn, chp);
+			chMBPostI(&mailboxIn, (uint32_t) chp);
 			chSysUnlock();
 		}
 	}
