@@ -35,7 +35,7 @@ void handleInputMailbox(void)
 	/* Use nonblocking function to count incoming messages */
 	newMessages = chMBGetUsedCountI(&mailboxIn);
 	
-	if (newMessages >= 2 || debugShell == NULL/* block here until the debugging is activated*/)
+	if (newMessages >= 2)
 	{
 		/* First retrieve the given pointer */
 		status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
