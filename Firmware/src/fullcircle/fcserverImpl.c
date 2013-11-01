@@ -10,7 +10,8 @@
 #define MAILBOX_SIZE		5
 
 /* Mailbox, filled by the fc_server thread */
-static MAILBOX_DECL(mb1, wa_fc_server, MAILBOX_SIZE);
+static uint32_t buffer4mailbox[MAILBOX_SIZE];
+static MAILBOX_DECL(mb1, buffer4mailbox, MAILBOX_SIZE);
 
 /******************************************************************************
  * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
@@ -61,7 +62,9 @@ msg_t fc_server(void *p)
 		return FR_INT_ERR;
 	}
 	
-	chMBPost(&mb1, 'I', TIME_INFINITE);
+	chSysLock();
+	chMBPostI(&mb1, 'I');
+	chSysUnlock();
 	
 	fcserver_setactive(&server, 1 /* TRUE */);
 	
