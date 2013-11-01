@@ -120,9 +120,14 @@ static FATFS SDC_FS;
 /* FS mounted and ready.*/
 static bool_t fs_ready = FALSE;
 
+/*===========================================================================*/
+/* Command line related.                                                     */
+/*===========================================================================*/
+
+#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
+
 /* Generic large buffer.*/
 static uint8_t fbuff[1024];
-
 static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
   FRESULT res;
   FILINFO fno;
@@ -160,13 +165,33 @@ static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
   return res;
 }
 
+void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
+  FRESULT err;
+  uint32_t clusters;
+  FATFS *fsp;
 
-/*===========================================================================*/
-/* Command line related.                                                     */
-/*===========================================================================*/
-
-#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
-
+  (void)argv;
+  if (argc > 0) {
+    chprintf(chp, "Usage: tree\r\n");
+    return;
+  }
+  if (!fs_ready) {
+    chprintf(chp, "File System not mounted\r\n");
+    return;
+  }
+  err = f_getfree("/", &clusters, &fsp);
+  if (err != FR_OK) {
+    chprintf(chp, "FS: f_getfree() failed. %lu\r\n", err);
+    return;
+  }
+  
+  chprintf(chp,
+           "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
+           clusters, (uint32_t)SDC_FS.csize,
+           clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
+  fbuff[0] = 0;
+  scan_files(chp, (char *)fbuff);
+}
 
 static void cmd_fcs(BaseSequentialStream *chp, int argc, char *argv[]) {
 	FRESULT err;
@@ -196,10 +221,7 @@ static void cmd_fcs(BaseSequentialStream *chp, int argc, char *argv[]) {
 	fcs_scan_files(chp, (char *)fbuff);
 }
 
-
-
-static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
-{
+static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[]) {
   fcsequence_t seq;
   fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
   int x, y, ypos;
@@ -435,8 +457,8 @@ int main(void) {
   /*
    * Creates the Net Shell thread.
    */
-  chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
-                  server_thread, 23);
+  //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
+  //                server_thread, NULL);
 
   /*
    * Creates the DMX thread.
