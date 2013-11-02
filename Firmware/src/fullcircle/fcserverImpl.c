@@ -13,7 +13,7 @@
 #define MAILBOX_SIZE		10
 #define MAILBOX2_SIZE		5
 
-#define FCS_PRINT( ... )	if (debugShell) { chprintf(debugShell, __VA_ARGS__); }
+#define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
 /* Mailbox, filled by the fc_server thread */
 static uint32_t buffer4mailbox[MAILBOX_SIZE];
@@ -23,7 +23,7 @@ static MAILBOX_DECL(mailboxOut, buffer4mailbox, MAILBOX_SIZE);
 static uint32_t buffer4mailbox2[MAILBOX2_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, MAILBOX2_SIZE);
 
-static BaseSequentialStream * debugShell = NULL;
+static BaseSequentialStream * gDebugShell = NULL;
 
 static uint32_t gServerActive = 0;
 
@@ -51,17 +51,17 @@ void handleInputMailbox(void)
 				chSysLock();
 				switch ((uint32_t) msg1) {
 					case 1:
-						debugShell = (BaseSequentialStream *) msg2;
+						gDebugShell = (BaseSequentialStream *) msg2;
 						chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
-						hwal_init((BaseSequentialStream *) msg2); /* No Debug output for the sequence library */
+						hwal_init((BaseSequentialStream *) msg2);
 						break;
 					case 2:
 						FCS_PRINT("FC Server - silent mode\r\n");
-						debugShell = 0;
+						gDebugShell = 0;
 						break;
 					case 3:
 						gServerActive = (uint32_t) msg2;
-						FCS_PRINT("DynFc Server - DMX is set %d\r\n", gServerActive);
+						FCS_PRINT("DynFc Server - DMX is set to %d\r\n", gServerActive);
 						break;
 					default:
 						break;
@@ -90,28 +90,28 @@ void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 
 void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
-	if (debugShell) {
-		chprintf(debugShell, "Callback client %d did %X '", clientsocket, action);
+	if (gDebugShell) {
+		chprintf(gDebugShell, "Callback client %d did %X '", clientsocket, action);
 		switch (action) {
 			case FCCLIENT_STATUS_WAITING:
-				chprintf(debugShell, "waiting for a GO");
+				chprintf(gDebugShell, "waiting for a GO");
 				break;
 			case FCCLIENT_STATUS_CONNECTED:
-				chprintf(debugShell, "is CONNECTED to the wall");
+				chprintf(gDebugShell, "is CONNECTED to the wall");
 				break;
 			case FCCLIENT_STATUS_DISCONNECTED:
-				chprintf(debugShell, "has left");	
+				chprintf(gDebugShell, "has left");	
 				break;
 			case FCCLIENT_STATUS_INITING:
-				chprintf(debugShell, "found this server");	
+				chprintf(gDebugShell, "found this server");	
 				break;
 			case FCCLIENT_STATUS_TOOMUTCH:
-				chprintf(debugShell, "is one too mutch");	
+				chprintf(gDebugShell, "is one too mutch");	
 				break;
 			default:
 				break;
 		}
-		chprintf(debugShell, "'\t[%d clients]\r\n", totalAmount);
+		chprintf(gDebugShell, "'\t[%d clients]\r\n", totalAmount);
 	}
 	
 	chSysLock();
