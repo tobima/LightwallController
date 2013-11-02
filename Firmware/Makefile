@@ -104,10 +104,16 @@ CSRC = $(PORTSRC) \
        src/dmx/dmx.c \
        src/dmx/dmx_cmd.c \
        src/main.c \
-       src/ifconfig.c \
+       src/cmd/ifconfig.c \
 	   src/fullcircle/fcserverImpl.c \
-       src/fullcircle/fcs.c
-
+       src/fcs/fcs.c \
+       src/netstream/netstream.c \
+       src/netshell/netshell.c \
+       src/cmd/cmd_threads.c \
+       src/cmd/cmd_mem.c \
+       src/cmd/cmd_cat.c \
+       src/ini/ini.c \
+       src/conf/conf.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -213,7 +219,7 @@ DLIBS =
 # List all user C define here, like -D_DEBUG=1
 UDEFS = -D_CHIBIOS 
 # Fullcricle (fc_c) specific:
-UDEFS += -DPRINT_DEBUG
+#UDEFS += -DPRINT_DEBUG
 
 # Define ASM defines here
 UADEFS =

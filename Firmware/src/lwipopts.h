@@ -1115,7 +1115,7 @@
  * LWIP_NETIF_API==1: Support netif api (in netifapi.c)
  */
 #ifndef LWIP_NETIF_API
-#define LWIP_NETIF_API                  0
+#define LWIP_NETIF_API                  1
 #endif
 
 /**

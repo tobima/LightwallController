@@ -20,6 +20,7 @@
 
 #include "ch.h"
 #include "hal.h"
+#include "ini/ini.h"
 
 #include "chprintf.h"
 #include "shell.h"
@@ -27,14 +28,18 @@
 #include "lwipthread.h"
 #include "web/web.h"
 #include "dmx/dmx.h"
+#include "netshell/netshell.h"
 #include "dmx/dmx_cmd.h"
 #include "fullcircle/fcs.h"
 #include "fullcircle/fcserverImpl.h"
 
-#include "ifconfig.h"
+#include "conf/conf.h"
 
+#include "lwip/netif.h"
 #include "fcseq.h"
 #include "customHwal.h"
+
+#include "cmd/cmd.h"
 
 #include "ff.h"
 
@@ -49,6 +54,8 @@
  * @brief   Card monitor timer.
  */
 static VirtualTimer tmr;
+
+static configuration_t config;
 
 /**
  * @brief   Debounce counter.
@@ -120,9 +127,30 @@ static FATFS SDC_FS;
 /* FS mounted and ready.*/
 static bool_t fs_ready = FALSE;
 
+static void print_fsusage() {
+   uint32_t clusters;
+    FATFS *fsp;
+    DIR dir;
+    
+    if(f_getfree("/", &clusters, &fsp)== FR_OK) {
+      chprintf(
+        (BaseSequentialStream *)&SD6,
+        "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
+        clusters, (uint32_t)SDC_FS.csize,
+        clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
+        
+        f_opendir(&dir, "fc/conf");
+    }
+}
+
+/*===========================================================================*/
+/* Command line related.                                                     */
+/*===========================================================================*/
+
+#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
+
 /* Generic large buffer.*/
 static uint8_t fbuff[1024];
-
 static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
   FRESULT res;
   FILINFO fno;
@@ -160,48 +188,7 @@ static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
   return res;
 }
 
-
-/*===========================================================================*/
-/* Command line related.                                                     */
-/*===========================================================================*/
-
-#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
-
-static void cmd_mem(BaseSequentialStream *chp, int argc, char *argv[]) {
-  size_t n, size;
-
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: mem\r\n");
-    return;
-  }
-  n = chHeapStatus(NULL, &size);
-  chprintf(chp, "core free memory : %u bytes\r\n", chCoreStatus());
-  chprintf(chp, "heap fragments   : %u\r\n", n);
-  chprintf(chp, "heap free total  : %u bytes\r\n", size);
-}
-
-static void cmd_threads(BaseSequentialStream *chp, int argc, char *argv[]) {
-  static const char *states[] = {THD_STATE_NAMES};
-  Thread *tp;
-
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: threads\r\n");
-    return;
-  }
-  chprintf(chp, "    addr    stack prio refs     state     time      name\r\n");
-  tp = chRegFirstThread();
-  do {
-    chprintf(chp, "%.8lx %.8lx %4lu %4lu %9s %8lu %15s\r\n",
-            (uint32_t)tp, (uint32_t)tp->p_ctx.r13,
-            (uint32_t)tp->p_prio, (uint32_t)(tp->p_refs - 1),
-            states[tp->p_state], (uint32_t)tp->p_time, tp->p_name);
-    tp = chRegNextThread(tp);
-  } while (tp != NULL);
-}
-
-static void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
+void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
   FRESULT err;
   uint32_t clusters;
   FATFS *fsp;
@@ -257,31 +244,7 @@ static void cmd_fcs(BaseSequentialStream *chp, int argc, char *argv[]) {
 	fcs_scan_files(chp, (char *)fbuff);
 }
 
-static void cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]) {
-  FIL fp;
-  uint8_t buffer[32];
-  int br;
-  
-  if(argc < 1)
-    return;
-  
-  if(f_open(&fp, (TCHAR*) *argv, FA_READ) != FR_OK)
-    return;
-  
-  do {
-    if(f_read(&fp, (TCHAR*) buffer, 32,(UINT*) &br) != FR_OK)
-      return;
-    
-    chSequentialStreamWrite(chp, buffer, br);
-  } while (!f_eof(&fp));
-  
-  f_close(&fp);
-  
-  chprintf(chp, "\r\n");
-}
-
-static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
-{
+static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[]) {
   fcsequence_t seq;
   fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
   int x, y, ypos;
@@ -378,6 +341,7 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 	chHeapFree(rgb24);
 }
 
+
 static const ShellCommand commands[] = {
   {"mem", cmd_mem},
   {"tree", cmd_tree},
@@ -437,6 +401,13 @@ static void RemoveHandler(eventid_t id) {
   fs_ready = FALSE;
 }
 
+static struct EventListener el0, el1;
+
+static const evhandler_t evhndl[] = {
+    InsertHandler,
+    RemoveHandler
+  };
+
 /*
  * This is a periodic thread that does absolutely nothing except flashing
  * a LED.
@@ -460,11 +431,7 @@ static msg_t Thread1(void *arg) {
  * Application entry point.
  */
 int main(void) {
-  static const evhandler_t evhndl[] = {
-    InsertHandler,
-    RemoveHandler
-  };
-  struct EventListener el0, el1;
+
   /*
    * System initializations.
    * - HAL initialization, this also initializes the configured device drivers
@@ -475,42 +442,123 @@ int main(void) {
   halInit();
   chSysInit();
 
-  /*
-   * Shell manager initialization.
-   */
-  shellInit();
-  
+    
   /*
    * Activates the serial driver 6 using the driver default configuration.
    */
   sdStart(&SD6, NULL);
+  
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    "\x1b[1J\x1b[0;0HStarting ChibiOS\r\n");
+  
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    "Initialazing SDCARD driver ...");
   
   /*
    * Activates the SDC driver 1 using default configuration.
    */
   sdcStart(&SDCD1, NULL);
   
-  
   /*
    * Activates the card insertion monitor.
    */
-  tmr_init(&SDCD1);
+  tmr_init(&SDCD1);  
+  
+  chEvtRegister(&inserted_event, &el0, 0);
+  chEvtRegister(&removed_event, &el1, 1);
+  
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    " Done\r\n");
+
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    "Initialazing DMX driver ...");
   
   DMXInit();
+  
+  /*
+   * Creates the DMX thread.
+   */
+  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1,
+                    dmxthread, NULL);
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    " Done\r\n");
+  
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    "Start blinker thread ...");
   
   /*
    * Creates the example thread.
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-  	
+  
+	
+  /** 
+   * Booting ...
+   * - search for configuration on SD-card
+   */
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    " Done\r\n");
+  
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    "Searching filesystem ...");
+  
+  chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
+  chThdSleepMilliseconds(500);
+  chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
+  
+  if (!fs_ready) {
+    chprintf(
+      (BaseSequentialStream *)&SD6,
+      "\x1b[31m Failed!\r\n\x1b[0m");
+    chprintf(
+      (BaseSequentialStream *)&SD6,
+     "File System not mounted\r\n");
+  } else {
+    chprintf(
+      (BaseSequentialStream *)&SD6,
+      "\x1b[32m OK\r\n\x1b[0m");
+    
+    print_fsusage();
+  }
+  
+  int use_config = 0;
+  if (fs_ready) {
+    chprintf(
+      (BaseSequentialStream *)&SD6,
+      "Loading network configuration from SDcard ...");
+    
+    use_config = (conf_load(&config)==0)?1:0;
+    
+    if (use_config) {
+     chprintf(
+      (BaseSequentialStream *)&SD6,
+      "\x1b[32m OK\r\n\x1b[0m");
+    }
+    else {
+      chprintf(
+      (BaseSequentialStream *)&SD6,
+      "\x1b[31m Failed!\r\n\x1b[0m");
+    }
+     
+  }
+  
    /*
    * Creates the LWIP threads (it changes priority internally).
    */
-  chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,
-                    lwip_thread, NULL);
+  chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,                    
+                    lwip_thread, 
+					(use_config)?&(config.network):NULL);
 	
   /*
-   * Creates the HTTP thread.
+   * Creates the dynamic fullcircle thread.
    */
   chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
 					  fc_server, NULL);
@@ -522,14 +570,25 @@ int main(void) {
                     http_server, NULL);
 
   /*
-   * Creates the DMX thread.
+   * Creates the Net Shell thread.
    */
-  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1,
-                    dmxthread, NULL);
+  //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
+  //                server_thread, NULL);
+
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    "Initialazing Shell...");
   
+  /*
+   * Shell manager initialization.
+   */
+  shellInit();
   
-  chEvtRegister(&inserted_event, &el0, 0);
-  chEvtRegister(&removed_event, &el1, 1);
+  chprintf(
+    (BaseSequentialStream *)&SD6,
+    "Done\r\nCreate new Shell\r\n");
+  
+
   shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
   
   /*
