@@ -75,13 +75,14 @@ include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
 include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
 
 # Init custom extensions
-LIBSRC =
+LIBSRC = 
 LIBINC =
 
 # Include some custom extensions:
 APP_LIBS = lib
 include $(APP_LIBS)/fc/chibios.mk
-
+APP = src
+include $(APP)/src.mk
 
 # Define linker script file here
 LDSCRIPT= $(PORTLD)/STM32F407xG.ld
@@ -100,19 +101,7 @@ CSRC = $(PORTSRC) \
        $(CHIBIOS)/os/various/chprintf.c \
        $(CHIBIOS)/os/various/shell.c \
        $(LIBSRC) \
-       src/web/web.c \
-       src/dmx/dmx.c \
-       src/dmx/dmx_cmd.c \
-       src/main.c \
-       src/fcs/fcs.c \
-       src/netstream/netstream.c \
-       src/netshell/netshell.c \
-       src/cmd/cmd_threads.c \
-       src/cmd/ifconfig.c \
-       src/cmd/cmd_mem.c \
-       src/cmd/cmd_cat.c \
-       src/ini/ini.c \
-       src/conf/conf.c
+       $(APPSRC)
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -146,7 +135,7 @@ INCDIR = $(PORTINC) $(KERNINC) $(LIBINC) \
          $(LWINC)  \
          $(FATFSINC) \
          $(CHIBIOS)/os/various \
-         src
+         $(APPINC)
 
 #
 # Project, sources and paths
