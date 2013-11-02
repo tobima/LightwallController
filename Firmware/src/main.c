@@ -339,12 +339,7 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[]) {
 	chHeapFree(rgb24);
 }
 
-static void cmd_foo(BaseSequentialStream *chp, int argc, char *argv[]) {
-  configuration_t foo;
-  chprintf(chp, "%s\r\n", ini_error);
-  int res = conf_load(&foo);
-  chprintf(chp, "%d %d\r\n", res, foo.network.address);
-}
+
 static const ShellCommand commands[] = {
   {"mem", cmd_mem},
   {"tree", cmd_tree},
@@ -354,7 +349,6 @@ static const ShellCommand commands[] = {
   {"fcs", cmd_fcs},
   {"dmx", cmd_dmx_modify},
   {"ifconfig", cmd_ifconfig},
-  {"foo",cmd_foo},
   {NULL, NULL}
 };
 

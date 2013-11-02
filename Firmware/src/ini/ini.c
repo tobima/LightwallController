@@ -15,10 +15,6 @@ http://code.google.com/p/inih/
 
 #include "ini.h"
 
-#if !INI_USE_STACK
-#include <stdlib.h>
-#endif
-
 #define MAX_SECTION 50
 #define MAX_NAME 50
 
