@@ -6,6 +6,7 @@ System
 
 Based on the following hardware:
 - ARM-Cortex-M4 STM32F407
+- STM32F4DIS-BB (Base Board with Ethernet, RS232, MicroSD card slot)
 
 Adaption to the Hardware could be found in the `Hardware folder` ;-)
 
