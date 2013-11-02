@@ -3,7 +3,7 @@ APPSRC = src/web/web.c \
        src/dmx/dmx.c \
        src/dmx/dmx_cmd.c \
        src/main.c \
-       src/fcs/fcs.c \
+       src/fullcircle/fcs.c \
        src/netstream/netstream.c \
        src/netshell/netshell.c \
        src/cmd/cmd_threads.c \
@@ -12,7 +12,8 @@ APPSRC = src/web/web.c \
        src/cmd/cmd_cat.c \
        src/ini/ini.c \
        src/conf/conf.c \
-       src/fullcircle/fcserverImpl.c \
+       src/fullcircle/fcserverImpl.c 
 
 # Required include directories
-APPINC = ${APP}
+APPINC = ${APP} \
+       src/fullcircle
