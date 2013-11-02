@@ -17,3 +17,9 @@ APPSRC = src/web/web.c \
 # Required include directories
 APPINC = ${APP} \
        src/fullcircle
+
+# List all user C define here
+APPDEFS =
+
+# Fullcricle (fc_c) specific:
+#APPDEFS += -DPRINT_DEBUG
