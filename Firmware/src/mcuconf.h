@@ -281,4 +281,4 @@
 /*
  * Default IPv4 address
  */
-#define LWIP_IPADDR(p)                      IP4_ADDR(p, 192, 168, 0, 23)
+#define LWIP_IPADDR(p)                      IP4_ADDR(p, 10, 23, 42, 88)

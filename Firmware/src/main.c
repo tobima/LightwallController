@@ -30,7 +30,9 @@
 #include "dmx/dmx.h"
 #include "netshell/netshell.h"
 #include "dmx/dmx_cmd.h"
-#include "fcs/fcs.h"
+#include "fullcircle/fcs.h"
+#include "fullcircle/fcserverImpl.h"
+
 #include "conf/conf.h"
 
 #include "lwip/netif.h"
@@ -349,6 +351,7 @@ static const ShellCommand commands[] = {
   {"fcs", cmd_fcs},
   {"dmx", cmd_dmx_modify},
   {"ifconfig", cmd_ifconfig},
+  {"dynfc", fcsserverImpl_cmdline},
   {NULL, NULL}
 };
 
@@ -494,6 +497,11 @@ int main(void) {
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
   
+	
+  /** 
+   * Booting ...
+   * - search for configuration on SD-card
+   */
   chprintf(
     (BaseSequentialStream *)&SD6,
     " Done\r\n");
@@ -545,15 +553,20 @@ int main(void) {
    /*
    * Creates the LWIP threads (it changes priority internally).
    */
-  chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,
+  chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,                    
                     lwip_thread, 
-		    (use_config)?&(config.network):NULL);
-  
-  
+					(use_config)?&(config.network):NULL);
+	
+  /*
+   * Creates the dynamic fullcircle thread.
+   */
+  chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
+					  fc_server, NULL);
+	
   /*
    * Creates the HTTP thread.
    */
-  chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 1,
+  chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
                     http_server, NULL);
 
   /*

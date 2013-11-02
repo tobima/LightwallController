@@ -4,6 +4,7 @@
 
 
 #ifndef FCS_CMD_H
+#define FCS_CMD_H
 
 FRESULT fcs_scan_files(BaseSequentialStream *chp, char *path);
 

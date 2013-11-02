@@ -8,6 +8,7 @@
 *.hex
 *.dmp
 *.map
+/Firmware/build/
 
 # Libraries
 *.lib
@@ -23,3 +24,10 @@
 *.exe
 *.out
 *.app
+
+# Eagle Files
+*.b#*
+*.s#*
+
+# Temporary Mac-files
+.DS_Store

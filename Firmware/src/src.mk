@@ -11,7 +11,8 @@ APPSRC = src/web/web.c \
        src/cmd/cmd_mem.c \
        src/cmd/cmd_cat.c \
        src/ini/ini.c \
-       src/conf/conf.c
+       src/conf/conf.c \
+       src/fullcircle/fcserverImpl.c \
 
 # Required include directories
 APPINC = ${APP}
