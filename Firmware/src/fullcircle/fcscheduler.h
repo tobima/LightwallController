@@ -36,10 +36,10 @@ extern "C" {
  *  @brief This structure contains information about the physical wall
  */
 typedef struct  {
-	int	width;	/**< Horizontal count of boxes the phyical installation */
-	int	height;	/**< Vertical count of boxes the phyical installation */
+	int			width;			/**< Horizontal count of boxes the phyical installation */
+	int			height;			/**< Vertical count of boxes the phyical installation */
+	uint32_t	*pLookupTable;	/**< Memory to the Loopuptable, must be freed after usage */
 } wallconf_t;
-
 
 /**
  * Debug interface for the commandline
