@@ -1,3 +1,12 @@
+/* @file fcserverImpl.h
+ * @brief Dynamic fullcircle implementation for Chibios
+ * @author Ollo
+ *
+ * @date 26.09.2013
+ * @defgroup LightwallController
+ *
+ */
+
 #include "ch.h"
 #include "hal.h"
 #include "ff.h"

@@ -125,19 +125,19 @@ void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocke
  ******************************************************************************/
 
 /**
- * Stack area for the http thread.
+ * Stack area for the dynamic fullcircle thread.
  */
 WORKING_AREA(wa_fc_server, FCSERVERIMPL_THREAD_STACK_SIZE);
 
 /**
- * HTTP server thread.
+ * Dynamic fullcircle server thread.
  */
 msg_t fc_server(void *p)
 {		
 	fcserver_ret_t	ret;
 	fcserver_t		server;
 	
-	chRegSetThreadName("dynfc-server");
+	chRegSetThreadName("fcdynserver");
 	(void)p;
 	
 	/* Prepare Mailbox to communicate with the others */

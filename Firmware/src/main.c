@@ -32,6 +32,7 @@
 #include "dmx/dmx_cmd.h"
 #include "fullcircle/fcs.h"
 #include "fullcircle/fcserverImpl.h"
+#include "fullcircle/fcscheduler.h"
 
 #include "conf/conf.h"
 
@@ -351,7 +352,8 @@ static const ShellCommand commands[] = {
   {"fcs", cmd_fcs},
   {"dmx", cmd_dmx_modify},
   {"ifconfig", cmd_ifconfig},
-  {"dynfc", fcsserverImpl_cmdline},
+  {"fcdyn", fcsserverImpl_cmdline},
+  {"fcsched", fcscheduler_cmdline},
   {NULL, NULL}
 };
 
@@ -562,6 +564,12 @@ int main(void) {
    */
   chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
 					  fc_server, NULL);
+	
+	/*
+	 * Creates the scheduler thread.
+	 */
+	chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
+					  fc_scheduler, NULL);
 	
   /*
    * Creates the HTTP thread.
