@@ -1,0 +1,6 @@
+;Network config
+[ms0]
+macid = c2:af:51:03:cf:44
+address = 10.23.42.88
+netmask = 255.255.255.0
+gateway = 10.23.42.1
