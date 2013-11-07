@@ -37,14 +37,15 @@ int fcstatic_open_sdcard(void)
 	return 1;
 }
 
-int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength)
+int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength, char *pLastFilename)
 {
 	FRESULT res;
 	FILINFO fno;
 	DIR dir;
 	int i;
 	char *fn;
-	
+	int	checkedResult = 0; /* Status, if the last filename was passed */
+		
 #if _USE_LFN
 	fno.lfname = 0;
 	fno.lfsize = 0;
@@ -63,7 +64,7 @@ int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength)
 			{
 				path[i++] = '/';
 				strcpy(&path[i], fn);
-				res = fcstatic_getnext_file(path, length, pFilelength);
+				res = fcstatic_getnext_file(path, length, pFilelength, pLastFilename);
 				if (res != FR_OK)
 					break;
 				path[--i] = 0;
@@ -71,8 +72,12 @@ int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength)
 			else
 			{
 				/* search for fullcircle files */
-				if (isFcSequence(fn))
+				if (isFcSequence(fn) && (checkedResult 
+										 || pLastFilename == NULL 
+										 || (*pFilelength) == 0)
+					)
 				{
+					/* found a new file, present it to the user */
 					if (strlen(fn) + i >= length)
 					{
 						/* The given memory is not big enough */
@@ -86,6 +91,16 @@ int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength)
 						return 1;
 					}
 				}
+				/* Search for the last filename */
+				else if (isFcSequence(fn) && pLastFilename != NULL)
+				{
+					if (strcmp(fn, pLastFilename) == 0)
+					{
+						/* found the last result, store status, to take the next file */
+						checkedResult = 1; 
+					}
+				}
+
 			}
 		}
 	}

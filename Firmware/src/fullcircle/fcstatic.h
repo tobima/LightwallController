@@ -28,11 +28,12 @@ int fcstatic_open_sdcard(void);
  * @param[in,out]	path		ingoing path to search in; output: complete found file
  * @param[in]		length		The maximum path for the file (length of filename in byte)
  * @param[in,out]	pFilelength	length of the filename appended at last in path
+ * @param[in]		pLastFilename	the last result or NULL
  *
  * @return 0 on errors (no file found)
  * @return -1 when the found path does not fit into filename
  * @return 1 if a file was found
  */
-int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength);
+int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength, char *pLastFilename);
 
 #endif /* End of FCSTATIC_H */

@@ -124,7 +124,8 @@ WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
 msg_t fc_scheduler(void *p)
 {
 	int res, resOpen;
-	char filename[FILENAME_LENGTH];
+	char path[FILENAME_LENGTH];	
+	char *filename = NULL;
 	uint32_t filenameLength = 0;
 	
 	chRegSetThreadName("fcscheduler");
@@ -132,20 +133,20 @@ msg_t fc_scheduler(void *p)
 			
 	/* Prepare Mailbox to communicate with the others */
 	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
-	filename[0] = 0;
+	path[0] = 0;
 	
 	resOpen = fcstatic_open_sdcard();
 	/* initialize the folder to search in */
 	char* root = FCSCHED_FILE_ROOT;
-	hwal_memcpy(filename, root, strlen(FCSCHED_FILE_ROOT));
-	
-	
+	hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
+		
 	do {
 		fcsched_handleInputMailbox();
 		if (resOpen)
 		{
-			res = fcstatic_getnext_file(filename, FILENAME_LENGTH, &filenameLength);
-			FCSHED_PRINT("File[%d] found '%s' (|name|=%d)\r\n", res, filename, filenameLength);
+			res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);
+			FCSHED_PRINT("File[%d] found '%s' (|name|=%d)\r\n", res, path, filenameLength);
+			/*FIXME extract filename from path for the next cycle */
 		}
 		else
 		{
