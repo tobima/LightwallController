@@ -13,7 +13,7 @@
 #include "fcstatic.h"
 
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
-#define FCSCHED_FILE_ROOT			"fc/conf/static\0"	/**< Folder on the sdcard to check */
+#define FCSCHED_FILE_ROOT			"fc/static"	/**< Folder on the sdcard to check */
 
 #define	FILENAME_LENGTH	512	/**< Including the absolut path to the file */
 
@@ -135,6 +135,7 @@ msg_t fc_scheduler(void *p)
 	filename[0] = 0;
 	
 	resOpen = fcstatic_open_sdcard();
+	/* initialize the folder to search in */
 	char* root = FCSCHED_FILE_ROOT;
 	hwal_memcpy(filename, root, strlen(FCSCHED_FILE_ROOT));
 	

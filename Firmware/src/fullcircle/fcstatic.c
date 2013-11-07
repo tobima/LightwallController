@@ -80,8 +80,9 @@ int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength)
 					}
 					else
 					{
+						path[i++] = '/';
 						hwal_memcpy(path + i, fn, strlen(fn));
-						(*pFilelength) = strlen(fn);
+						(*pFilelength) = strlen(fn) + 1 /* space for the slash */;
 						return 1;
 					}
 				}
