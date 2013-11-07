@@ -1,7 +1,8 @@
-#include "fcs.h"
-#include <stdio.h>
+
+#include "fcstatic.h"
+#include "ff.h"
 #include <string.h>
-#include "chprintf.h"
+#include "hwal.h"	/* Needed for memcpy */
 
 #define FC_SEQUENCE_EXTENSION ".fcs"
 #define FC_SEQUENCE_EXTENSION_UPPER ".FCS"
@@ -12,7 +13,8 @@ int isFcSequence(char* path)
 	/* seach for the dot, describing the extension */
 	if((point = strrchr(path,'.')) != NULL ) {
 		if ( (strcmp(point, FC_SEQUENCE_EXTENSION) == 0)
-		    || (strcmp(point, FC_SEQUENCE_EXTENSION_UPPER) == 0)) {
+		    || (strcmp(point, FC_SEQUENCE_EXTENSION_UPPER) == 0))
+		{
 			return 1;
 		}
 	}
@@ -21,7 +23,7 @@ int isFcSequence(char* path)
 	return 0;
 }
 
-FRESULT fcs_scan_files(BaseSequentialStream *chp, char *path)
+int fcstatic_getnext_file(char* filename, uint32_t length, char *path)
 {
 	FRESULT res;
 	FILINFO fno;
@@ -47,7 +49,7 @@ FRESULT fcs_scan_files(BaseSequentialStream *chp, char *path)
 			{
 				path[i++] = '/';
 				strcpy(&path[i], fn);
-				res = fcs_scan_files(chp, path);
+				res = fcstatic_getnext_file(filename, length, path);
 				if (res != FR_OK)
 					break;
 				path[--i] = 0;
@@ -57,10 +59,19 @@ FRESULT fcs_scan_files(BaseSequentialStream *chp, char *path)
 				/* search for fullcircle files */
 				if (isFcSequence(fn))
 				{
-					chprintf(chp, "%s/%s\r\n", path, fn);
+					if (strlen(fn) + i >= length)
+					{
+						/* The given memory is not big enough */
+						return -1;
+					}
+					else
+					{
+						hwal_memcpy(filename, path, i);
+						hwal_memcpy(filename + i, fn, strlen(fn));
+					}
 				}
 			}
 		}
 	}
-	return res;
+	return 0;
 }

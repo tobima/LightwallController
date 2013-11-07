@@ -30,7 +30,6 @@
 #include "dmx/dmx.h"
 #include "netshell/netshell.h"
 #include "dmx/dmx_cmd.h"
-#include "fullcircle/fcs.h"
 #include "fullcircle/fcserverImpl.h"
 #include "fullcircle/fcscheduler.h"
 
@@ -152,6 +151,7 @@ static void print_fsusage() {
 
 /* Generic large buffer.*/
 static uint8_t fbuff[1024];
+
 static FRESULT scan_files(BaseSequentialStream *chp, char *path) {
   FRESULT res;
   FILINFO fno;
@@ -215,34 +215,6 @@ void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
            clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
   fbuff[0] = 0;
   scan_files(chp, (char *)fbuff);
-}
-
-static void cmd_fcs(BaseSequentialStream *chp, int argc, char *argv[]) {
-	FRESULT err;
-	uint32_t clusters;
-	FATFS *fsp;
-	
-	(void)argv;
-	if (argc > 0) {
-		chprintf(chp, "Usage: tree\r\n");
-		return;
-	}
-	if (!fs_ready) {
-		chprintf(chp, "File System not mounted\r\n");
-		return;
-	}
-	err = f_getfree("/", &clusters, &fsp);
-	if (err != FR_OK) {
-		chprintf(chp, "FS: f_getfree() failed. %lu\r\n", err);
-		return;
-	}
-	
-	chprintf(chp,
-			 "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
-			 clusters, (uint32_t)SDC_FS.csize,
-			 clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
-	fbuff[0] = 0;
-	fcs_scan_files(chp, (char *)fbuff);
 }
 
 static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[]) {
@@ -348,10 +320,9 @@ static const ShellCommand commands[] = {
   {"tree", cmd_tree},
   {"threads", cmd_threads},
   {"cat", cmd_cat},
-  {"fcat", cmd_fcat},
-  {"fcs", cmd_fcs},
-  {"dmx", cmd_dmx_modify},
   {"ifconfig", cmd_ifconfig},
+  {"fcat", cmd_fcat},
+  {"dmx", cmd_dmx_modify},
   {"fcdyn", fcsserverImpl_cmdline},
   {"fcsched", fcscheduler_cmdline},
   {NULL, NULL}
