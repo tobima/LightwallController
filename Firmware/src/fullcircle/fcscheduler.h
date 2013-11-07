@@ -32,6 +32,14 @@ extern "C" {
 }
 #endif
 
+/** @var wallconf_t
+ *  @brief This structure contains information about the physical wall
+ */
+typedef struct  {
+	int	width;	/**< Horizontal count of boxes the phyical installation */
+	int	height;	/**< Vertical count of boxes the phyical installation */
+} wallconf_t;
+
 
 /**
  * Debug interface for the commandline
