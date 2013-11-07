@@ -13,7 +13,7 @@
 #include "fcstatic.h"
 
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
-#define FCSCHED_FILE_ROOT			"\0"	/**< Folder on the sdcard to check */
+#define FCSCHED_FILE_ROOT			"fc/conf/static\0"	/**< Folder on the sdcard to check */
 
 #define	FILENAME_LENGTH	512	/**< Including the absolut path to the file */
 
@@ -161,15 +161,12 @@ msg_t fc_scheduler(void *p)
 	return RDY_OK;
 }
 
-FRESULT fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
+void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
-	FRESULT res = FR_OK;
-	
 	if(argc < 1)
 	{
 		chprintf(chp, "Usage {debug, debugOn, debugOff}\r\n");
-		res = FR_INT_ERR;
-		return res;
+		return;
 	}
 	else if(argc >= 1)
     {
@@ -220,5 +217,4 @@ FRESULT fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 		}
 	}
 	
-	return res;
 }

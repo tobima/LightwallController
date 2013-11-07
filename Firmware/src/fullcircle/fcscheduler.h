@@ -44,6 +44,6 @@ typedef struct  {
 /**
  * Debug interface for the commandline
  */
-FRESULT fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
+void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
 
 #endif /* End of _FCSCHEDULER_H */

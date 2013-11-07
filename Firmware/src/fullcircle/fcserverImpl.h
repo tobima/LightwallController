@@ -37,6 +37,6 @@ extern "C" {
 /**
  * Debug interface for the commandline
  */
-FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
+void fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
 
 #endif /* End of FCSERVER_IMPL_H */

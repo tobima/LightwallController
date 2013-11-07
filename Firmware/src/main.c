@@ -30,13 +30,14 @@
 #include "dmx/dmx.h"
 #include "netshell/netshell.h"
 #include "dmx/dmx_cmd.h"
+#include "fcseq.h"
 #include "fullcircle/fcserverImpl.h"
 #include "fullcircle/fcscheduler.h"
 
 #include "conf/conf.h"
 
 #include "lwip/netif.h"
-#include "fcseq.h"
+#include "hwal.h"	/* Needed for memcpy */
 #include "customHwal.h"
 
 #include "cmd/cmd.h"
@@ -213,7 +214,9 @@ void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
            "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
            clusters, (uint32_t)SDC_FS.csize,
            clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
-  fbuff[0] = 0;
+  char *pRoot = "fc/conf/static\0";
+  hwal_memcpy(fbuff, pRoot, strlen(pRoot));
+  fbuff[strlen(pRoot)] = 0;
   scan_files(chp, (char *)fbuff);
 }
 

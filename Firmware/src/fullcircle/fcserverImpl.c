@@ -175,17 +175,15 @@ msg_t fc_server(void *p)
 	return RDY_OK;
 }
 
-FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
+void fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
-	FRESULT res = FR_OK;
 	msg_t msg1, msg2, status;
 	int i, newMessages;
 	
 	if(argc < 1)
 	{
 		chprintf(chp, "Usage {status, debugOn, debugOff, on, off}\r\n");
-		res = FR_INT_ERR;
-		return res;
+		return;
 	}
 	else if(argc >= 1)
     {
@@ -253,6 +251,4 @@ FRESULT fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			chSysUnlock();
 		}
 	}
-	
-	return res;
 }
