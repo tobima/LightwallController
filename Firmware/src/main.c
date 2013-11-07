@@ -195,9 +195,8 @@ void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
   uint32_t clusters;
   FATFS *fsp;
 
-  (void)argv;
-  if (argc > 0) {
-    chprintf(chp, "Usage: tree\r\n");
+  if (argc > 1) {
+    chprintf(chp, "Usage: tree {root path}\r\n");
     return;
   }
   if (!fs_ready) {
@@ -214,10 +213,18 @@ void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
            "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
            clusters, (uint32_t)SDC_FS.csize,
            clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
-  char *pRoot = "fc/conf/static\0";
-  hwal_memcpy(fbuff, pRoot, strlen(pRoot));
-  fbuff[strlen(pRoot)] = 0;
-  scan_files(chp, (char *)fbuff);
+	
+	
+	if (argc > 0) {
+		chprintf(chp, "Searching in %s\r\n", argv[0]);		
+		hwal_memcpy((char *) fbuff, argv[0], strlen(argv[0]));
+		fbuff[strlen(argv[0])] = 0;
+	}
+	else
+	{
+		fbuff[0] = 0;
+	}	
+	scan_files(chp, (char *)fbuff);
 }
 
 static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[]) {
