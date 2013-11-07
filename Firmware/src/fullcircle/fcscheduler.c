@@ -9,13 +9,65 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define FCSCHED_CONFIGURATION_FILE "fc/conf/wall"
+#include "hwal.h"	/* Needed for memcpy */
+#include "fcstatic.h"
+
+#define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
+#define FCSCHED_FILE_ROOT			"\0"	/**< Folder on the sdcard to check */
+
+#define	FILENAME_LENGTH	512	/**< Including the absolut path to the file */
+
+#define INPUT_MAILBOX_SIZE		4
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+
+#define FCSHED_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
+
+/******************************************************************************
+ * LOCAL VARIABLES for this module
+ ******************************************************************************/
+
+static BaseSequentialStream * gDebugShell = NULL;
+
+/* Mailbox, checked by the fullcircle scheduler thread */
+static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
+static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
+
+static void fcsched_handleInputMailbox(void)
+{
+	msg_t msg1, msg2, status;
+	int newMessages;
+	
+	/* Use nonblocking function to count incoming messages */
+	newMessages = chMBGetUsedCountI(&mailboxIn);
+	
+	if (newMessages >= 2)
+	{
+		/* First retrieve the given pointer */
+		status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
+		if (status == RDY_OK)
+		{
+			status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
+			if (status == RDY_OK)
+			{
+				chSysLock();
+				switch ((uint32_t) msg1) {
+					case 1:
+						gDebugShell = (BaseSequentialStream *) msg2;
+						break;
+					default:
+						break;
+				}
+				
+				chSysUnlock();
+			}
+		}
+	}
+}
 
 /** @fn static int wall_handler(void* config, const char* section, const char* name, const char* value)
  * @brief Extract the configuration for the wall
@@ -71,9 +123,41 @@ WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
  */
 msg_t fc_scheduler(void *p)
 {
+	int res, resOpen;
+	char filename[FILENAME_LENGTH];
+	uint32_t filenameLength = 0;
+	
 	chRegSetThreadName("fcscheduler");
 	(void)p;
+			
+	/* Prepare Mailbox to communicate with the others */
+	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
+	filename[0] = 0;
+	
+	resOpen = fcstatic_open_sdcard();
+	char* root = FCSCHED_FILE_ROOT;
+	hwal_memcpy(filename, root, strlen(FCSCHED_FILE_ROOT));
+	
+	
+	do {
+		fcsched_handleInputMailbox();
+		if (resOpen)
+		{
+			res = fcstatic_getnext_file(filename, FILENAME_LENGTH, &filenameLength);
+			FCSHED_PRINT("File[%d] found '%s' (|name|=%d)\r\n", res, filename, filenameLength);
+		}
+		else
+		{
+			FCSHED_PRINT("Reopen SDcard\r\n");
+			resOpen = fcstatic_open_sdcard();
+		}
 		
+		/*Debug code: */
+		chThdSleep(MS2ST(5000 /* convert milliseconds to system ticks */));
+	} while ( TRUE );	
+	
+	FCSHED_PRINT("Scheduler stopped!\r\n");
+	
 	return RDY_OK;
 }
 
@@ -83,7 +167,7 @@ FRESULT fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 	
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage {debug}\r\n");
+		chprintf(chp, "Usage {debug, debugOn, debugOff}\r\n");
 		res = FR_INT_ERR;
 		return res;
 	}
@@ -115,6 +199,24 @@ FRESULT fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			{
 				chHeapFree(wallcfg.pLookupTable);
 			}
+		}
+		else if (strcmp(argv[0], "debugOn") == 0)
+		{
+			/* Activate the debugging */
+			chprintf(chp, "Activate the logging for Fullcircle Scheduler\r\n");
+			chSysLock();
+			chMBPostI(&mailboxIn, (uint32_t) 1);
+			chMBPostI(&mailboxIn, (uint32_t) chp);
+			chSysUnlock();
+		}
+		else if (strcmp(argv[0], "debugOff") == 0)
+		{
+			/* Activate the debugging */
+			chprintf(chp, "Deactivate the logging for Fullcircle Scheduler\r\n");
+			chSysLock();
+			chMBPostI(&mailboxIn, (uint32_t) 2);
+			chMBPostI(&mailboxIn, (uint32_t) 0);
+			chSysUnlock();
 		}
 	}
 	

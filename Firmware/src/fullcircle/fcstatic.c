@@ -23,7 +23,21 @@ int isFcSequence(char* path)
 	return 0;
 }
 
-int fcstatic_getnext_file(char* filename, uint32_t length, char *path)
+int fcstatic_open_sdcard(void)
+{
+	FRESULT err;
+	uint32_t clusters;
+	FATFS *fsp;
+	
+	err = f_getfree("/", &clusters, &fsp);
+	if (err != FR_OK) {
+		/* FS: f_getfree() failed. */
+		return -1;
+	}
+	return 1;
+}
+
+int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength)
 {
 	FRESULT res;
 	FILINFO fno;
@@ -49,7 +63,7 @@ int fcstatic_getnext_file(char* filename, uint32_t length, char *path)
 			{
 				path[i++] = '/';
 				strcpy(&path[i], fn);
-				res = fcstatic_getnext_file(filename, length, path);
+				res = fcstatic_getnext_file(path, length, pFilelength);
 				if (res != FR_OK)
 					break;
 				path[--i] = 0;
@@ -66,8 +80,9 @@ int fcstatic_getnext_file(char* filename, uint32_t length, char *path)
 					}
 					else
 					{
-						hwal_memcpy(filename, path, i);
-						hwal_memcpy(filename + i, fn, strlen(fn));
+						hwal_memcpy(path + i, fn, strlen(fn));
+						(*pFilelength) = strlen(fn);
+						return 1;
 					}
 				}
 			}

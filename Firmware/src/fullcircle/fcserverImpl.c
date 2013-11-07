@@ -10,18 +10,22 @@
 
 #include "dmx/dmx.h"
 
-#define MAILBOX_SIZE		10
-#define MAILBOX2_SIZE		5
+#define OUTPUT_MAILBOX_SIZE		10
+#define INPUT_MAILBOX_SIZE		5
 
 #define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
+/******************************************************************************
+ * LOCAL VARIABLES for this module
+ ******************************************************************************/
+
 /* Mailbox, filled by the fc_server thread */
-static uint32_t buffer4mailbox[MAILBOX_SIZE];
-static MAILBOX_DECL(mailboxOut, buffer4mailbox, MAILBOX_SIZE);
+static uint32_t buffer4mailbox[OUTPUT_MAILBOX_SIZE];
+static MAILBOX_DECL(mailboxOut, buffer4mailbox, OUTPUT_MAILBOX_SIZE);
 
 /* Mailbox, checked by the fc_server thread */
-static uint32_t buffer4mailbox2[MAILBOX2_SIZE];
-static MAILBOX_DECL(mailboxIn, buffer4mailbox2, MAILBOX2_SIZE);
+static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
+static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 
 static BaseSequentialStream * gDebugShell = NULL;
 
@@ -31,7 +35,7 @@ static uint32_t gServerActive = 0;
  * LOCAL FUNCTIONS
  ******************************************************************************/
 
-void handleInputMailbox(void)
+static void handleInputMailbox(void)
 {
 	msg_t msg1, msg2, status;
 	int newMessages;
@@ -141,8 +145,8 @@ msg_t fc_server(void *p)
 	(void)p;
 	
 	/* Prepare Mailbox to communicate with the others */
-	chMBInit(&mailboxOut, (msg_t *)buffer4mailbox, MAILBOX_SIZE);
-	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, MAILBOX2_SIZE);
+	chMBInit(&mailboxOut, (msg_t *)buffer4mailbox, OUTPUT_MAILBOX_SIZE);
+	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
 	
 	ret = fcserver_init(&server, &onNewImage, &onClientChange, 
 						10 /* width of wall */, 12 /* height of wall */);
