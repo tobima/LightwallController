@@ -13,11 +13,6 @@
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
-/*FIXME debug stuff*/
-static BaseSequentialStream *gChp = NULL;
-
-#define FCSHED_PRINT( ... )	if (gChp) { chprintf(gChp, __VA_ARGS__); }
-
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -52,13 +47,10 @@ static int wall_handler(void* config, const char* section, const char* name,
 		{
 			col = sizeof(uint32_t) * pconfig->width * pconfig->height;
 			pconfig->pLookupTable = chHeapAlloc(0, col /* reused for memory length */ );
-			FCSHED_PRINT("Allocating %d bytes needed for %d x %d\r\n", col, pconfig->width, pconfig->height);
 		}
 		col = strtol(name, NULL, 10);
 		dmxval = (uint32_t) strtol(value, NULL, 10);
-		FCSHED_PRINT("Actual pos is %d. %d = %d\r\n", row, col, dmxval);
-		pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
-		
+		pconfig->pLookupTable[row * pconfig->width + col] = dmxval;		
 	} else {
 		return 0;  /* unknown section/name, error */
 	}
@@ -103,9 +95,6 @@ FRESULT fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			wallcfg.width			= 0;
 			wallcfg.height			= 0;
 			wallcfg.pLookupTable	= 0;
-			
-			/*enable debugging */
-			gChp = chp;
 			
 			int ret = ini_parse(FCSCHED_CONFIGURATION_FILE, wall_handler, &wallcfg);
 			chprintf(chp, "Extracted %dx%d\t[Returned %d]\r\n", wallcfg.width, wallcfg.height, ret);
