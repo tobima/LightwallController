@@ -138,11 +138,26 @@ msg_t fc_scheduler(void *p)
 	uint32_t filenameLength = 0;
 	char* root = FCSCHED_FILE_ROOT;
 	
+	FRESULT err;
+	uint32_t clusters;
+	FATFS *fsp;
+	
 	chRegSetThreadName("fcscheduler");
 	(void)p;
 	
+	/* Initialize the SDcard */
+	do
+	{
+		err = f_getfree("/", &clusters, &fsp);
+		chThdSleep(MS2ST(100));
+	}
+	while (err != FR_OK) ;
+	
 	hwal_memset(&wallcfg, 0, sizeof(wallconf_t));
 	wallcfg.fps = -1;
+	
+	/* Load the configuration */
+	ini_parse(FCSCHED_CONFIGURATION_FILE, wall_handler, &wallcfg);
 	
 	/* Prepare Mailbox to communicate with the others */
 	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
