@@ -234,7 +234,7 @@ void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			/* Activate the debugging */
 			chprintf(chp, "Deactivate the logging for Fullcircle Scheduler\r\n");
 			chSysLock();
-			chMBPostI(&mailboxIn, (uint32_t) 2);
+			chMBPostI(&mailboxIn, (uint32_t) 1);
 			chMBPostI(&mailboxIn, (uint32_t) 0);
 			chSysUnlock();
 		}
