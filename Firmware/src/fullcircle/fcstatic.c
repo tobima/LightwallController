@@ -140,7 +140,7 @@ void fcstatic_remove_filename(char *path, char **ppFilename, uint32_t filenameLe
 	}
 }
 
-void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp)
+int fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp)
 {
 	fcsequence_t seq;
 	fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
@@ -161,7 +161,7 @@ void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequent
 	{
 		CHP_PRINT("Could not read %s\r\nError code is %d\r\n", pFilename, ret);
 		CHP_PRINT("Unable to load sequnce (%s:%d)\r\n", __FILE__, __LINE__);
-		return;
+		return ret;
 	}
 	
 	CHP_PRINT("=== Meta information ===\r\n"
@@ -170,7 +170,7 @@ void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequent
 	if (seq.fps == 0)
 	{
 		CHP_PRINT("The FPS could NOT be extracted! Stopping\r\n");
-		return;
+		return ret;
 	}
 	
 	/* Allocation some space for the RGB buffer */
@@ -182,7 +182,7 @@ void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequent
 	if (ret != FCSEQ_RET_OK)
 	{
 		CHP_PRINT("Reading the first frame failed with error code %d.\r\n", ret );
-		return;
+		return ret;
 	}
 	
 	/* Update the fps to the wall ones */
@@ -226,4 +226,7 @@ void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequent
 	}
 	
 	chHeapFree(rgb24);
+	fcseq_close(&seq);
+	
+	return FCSEQ_RET_OK;
 }

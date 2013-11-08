@@ -182,7 +182,6 @@ msg_t fc_scheduler(void *p)
 				FCSHED_PRINT("%s ...\r\n", path);
 				
 				/* Play the file */
-				FCSHED_PRINT("FPS using %d\r\n", wallcfg.fps );
 				fcstatic_playfile(path, &wallcfg, gDebugShell);
 				
 				/*extract filename from path for the next cycle */

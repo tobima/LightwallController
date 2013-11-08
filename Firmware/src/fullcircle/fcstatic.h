@@ -55,6 +55,6 @@ void fcstatic_remove_filename(char *path, char **ppFilename, uint32_t filenameLe
  * @param[in]	pConfiguration	configuration of the wall, mappingtable, fps & dimmfactor are needed (optiinal)
  * @param[in]	chp				Stream for debug outputs (optional)
  */
-void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp);
+int fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp);
 
 #endif /* End of FCSTATIC_H */
