@@ -220,11 +220,9 @@ msg_t fc_scheduler(void *p)
 static uint8_t dimmValue(uint8_t incoming, int factor)
 {
 	uint32_t tmp = incoming;
-	FCSHED_PRINT("%d -> ", incoming);
 	tmp = tmp * factor / 100;
 	if (tmp > 255)
 		tmp = 255;
-	FCSHED_PRINT("%d\r\n", tmp);
 	return (uint8_t) tmp;
 }
 
