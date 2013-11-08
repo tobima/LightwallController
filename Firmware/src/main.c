@@ -132,9 +132,22 @@ static void print_fsusage(BaseSequentialStream *chp, int argc, char *argv[]) {
    uint32_t clusters;
     FATFS *fsp;
     DIR dir;
+	FRESULT err;
+	int i=0;
     
 	(void) argc;
 	(void) argv;
+	
+	/* Initialize the SDcard */
+	do
+	{
+		err = f_getfree("/", &clusters, &fsp);
+		chThdSleep(MS2ST(100));
+		chprintf(chp, "%d try\r\n", i);				 
+		i++;
+	}
+	while (err != FR_OK && i < 50) ; /* wait at maximum 5 seconds */
+	
     if(f_getfree("/", &clusters, &fsp)== FR_OK) {
       chprintf(
         chp,
@@ -342,8 +355,9 @@ static msg_t Thread1(void *arg) {
 /*
  * Application entry point.
  */
-int main(void) {
-
+int main(void)
+{
+  	
   /*
    * System initializations.
    * - HAL initialization, this also initializes the configured device drivers
@@ -408,8 +422,7 @@ int main(void) {
    * Creates the example thread.
    */
   chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-  
-	
+  	
   /** 
    * Booting ...
    * - search for configuration on SD-card
@@ -425,7 +438,7 @@ int main(void) {
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
   chThdSleepMilliseconds(500);
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
-  
+  	
   if (!fs_ready) {
     chprintf(
       (BaseSequentialStream *)&SD6,
