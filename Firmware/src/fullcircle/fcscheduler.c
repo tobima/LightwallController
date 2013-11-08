@@ -147,19 +147,18 @@ msg_t fc_scheduler(void *p)
 		fcsched_handleInputMailbox();
 		if (resOpen)
 		{
-			res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);
-			
-			FCSHED_PRINT("File[%d] found '%s'\r\n", res, path);
-			
 			/*FIXME check dynamic fullcircle for a new client */
 			
+			/* pick the next file */
+			res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);
+									
 			if (res)
 			{
+				FCSHED_PRINT("%s ...\r\n", path);
 				/* Play the file */
 				
 				/*extract filename from path for the next cycle */
 				fcstatic_remove_filename(path, &filename, filenameLength);
-				FCSHED_PRINT("Filename is %s and path cleaned to '%s' \r\n", filename, path);
 			}
 			else
 			{
@@ -167,8 +166,6 @@ msg_t fc_scheduler(void *p)
 				hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
 				chHeapFree( filename );
 				filename = NULL;
-				
-				FCSHED_PRINT("Start from the beginning again %s \r\n", path);
 			}
 
 		}
