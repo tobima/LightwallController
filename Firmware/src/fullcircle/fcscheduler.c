@@ -12,6 +12,8 @@
 #include "hwal.h"	/* Needed for memcpy */
 #include "fcstatic.h"
 
+#include "dmx/dmx.h"
+
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
@@ -25,6 +27,7 @@
 
 #define	MSG_ACTIVATE_SHELL	1
 #define	MSG_SETFPS			2
+#define	MSG_DIMM			3
 
 /******************************************************************************
  * LOCAL VARIABLES for this module
@@ -67,6 +70,9 @@ static void fcsched_handleInputMailbox(void)
 					case MSG_SETFPS:
 						wallcfg.fps = (int) msg2;
 						break;
+					case MSG_DIMM:
+						wallcfg.dimmFactor = (int) msg2;
+						break;
 					default:
 						break;
 				}
@@ -102,6 +108,8 @@ static int wall_handler(void* config, const char* section, const char* name,
 		pconfig->height = strtol(value, NULL, 10);
 	} else if (MATCH("global", "fps")) {
 		pconfig->fps = strtol(value, NULL, 10);
+	} else if (MATCH("global", "dim")) {
+		pconfig->dimmFactor = strtol(value, NULL, 10);
 	} if ((row >= 0) && (row < pconfig->height) ) {
 		/* when the function was called the first time, take some memory */
 		if (pconfig->pLookupTable == NULL)
@@ -128,7 +136,7 @@ static int wall_handler(void* config, const char* section, const char* name,
 WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
 
 /**
- * HTTP server thread.
+ * Scheduling thread.
  */
 msg_t fc_scheduler(void *p)
 {
@@ -154,6 +162,7 @@ msg_t fc_scheduler(void *p)
 	while (err != FR_OK) ;
 	
 	hwal_memset(&wallcfg, 0, sizeof(wallconf_t));
+	wallcfg.dimmFactor = 100;
 	wallcfg.fps = -1;
 	
 	/* Load the configuration */
@@ -183,7 +192,7 @@ msg_t fc_scheduler(void *p)
 				
 				/* Play the file */
 				fcstatic_playfile(path, &wallcfg, gDebugShell);
-				
+					
 				/*extract filename from path for the next cycle */
 				fcstatic_remove_filename(path, &filename, filenameLength);
 			}
@@ -208,11 +217,37 @@ msg_t fc_scheduler(void *p)
 	return RDY_OK;
 }
 
+extern void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
+{
+	int row, col, offset;
+	
+	dmx_buffer.length = width * height * 3;
+	
+	if (pWallcfg && pWallcfg->height == height && pWallcfg->width == width)
+	{
+		for (row=0; row < pWallcfg->height; row++)
+		{
+			for (col=0; col < pWallcfg->width; col++)
+			{
+				offset = (row * pWallcfg->width + col);
+				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 0 ]  = pBuffer[ offset * 3 + 0 ];
+				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 1 ]  = pBuffer[ offset * 3 + 1 ];
+				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 2 ]  = pBuffer[ offset * 3 + 2 ];
+			}
+		}
+	}
+	else
+	{
+		/* Set the DMX buffer directly */
+		memcpy(dmx_buffer.buffer, pBuffer, dmx_buffer.length);
+	}
+}
+
 void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage {debug, debugOn, debugOff, fps (value)}\r\n");
+		chprintf(chp, "Usage {debug, debugOn, debugOff, fps (value), dim}\r\n");
 		return;
 	}
 	else if(argc >= 1)
@@ -271,7 +306,17 @@ void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			chMBPostI(&mailboxIn, (uint32_t) atoi(argv[1]));
 			chSysUnlock();
 		}
-
+		else if (strcmp(argv[0], "dim") == 0 && (argc >= 2))
+		{
+			/* Activate the debugging */
+			chprintf(chp, "Fullcircle Scheduler - Update dimming %d\r\n", atoi(argv[1]));
+			chSysLock();
+			chMBPostI(&mailboxIn, (uint32_t) MSG_DIMM);
+			chMBPostI(&mailboxIn, (uint32_t) atoi(argv[1]));
+			chSysUnlock();
+		}
+		
+		
 	}
 	
 }

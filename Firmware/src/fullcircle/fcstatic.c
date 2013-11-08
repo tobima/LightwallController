@@ -5,8 +5,6 @@
 #include "hwal.h"	/* Needed for memcpy */
 #include "chprintf.h"
 
-#include "dmx/dmx.h"
-
 #include "fcseq.h"
 
 #define FC_SEQUENCE_EXTENSION ".fcs"
@@ -152,7 +150,7 @@ int fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequenti
 	if (pFilename == NULL)
 	{
 		CHP_PRINT("No valid filename given\r\n");
-		return;
+		return FCSEQ_RET_PARAMERR;
 	}
 	
 	ret = fcseq_load(pFilename, &seq);
@@ -195,25 +193,26 @@ int fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequenti
 	/* loop to print something on the commandline */
 	while (ret == FCSEQ_RET_OK)
 	{
-#if 0
-		CHP_PRINT("=============== %d ===============\r\n", frame_index);
-		for (y=0; y < seq.height; y++)
+		if (pConfiguration == NULL)
 		{
-			ypos = y * seq.width * 3;
-			for(x=0; x < seq.width; x++)
+			CHP_PRINT("=============== %d ===============\r\n", frame_index);
+			for (y=0; y < seq.height; y++)
 			{
-				CHP_PRINT("%.2X", rgb24[(ypos+x*3) + 0]);
-				CHP_PRINT("%.2X", rgb24[(ypos+x*3) + 1]);
-				CHP_PRINT("%.2X", rgb24[(ypos+x*3) + 2]);
-				CHP_PRINT("|");
+				ypos = y * seq.width * 3;
+				for(x=0; x < seq.width; x++)
+				{
+					CHP_PRINT("%.2X", rgb24[(ypos+x*3) + 0]);
+					CHP_PRINT("%.2X", rgb24[(ypos+x*3) + 1]);
+					CHP_PRINT("%.2X", rgb24[(ypos+x*3) + 2]);
+					CHP_PRINT("|");
+				}
+				CHP_PRINT("\r\n");
 			}
-			CHP_PRINT("\r\n");
 		}
-#endif
-		
-		/* Set the DMX buffer */
-		dmx_buffer.length = seq.width * seq.height * 3;
-		memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
+		else
+		{
+			fcsched_printFrame(rgb24, seq.width, seq.height, pConfiguration);
+		}
 		
 		sleeptime = (1000 / seq.fps);
 		

@@ -43,6 +43,20 @@ typedef struct  {
 	uint32_t	*pLookupTable;	/**< Memory to the Loopuptable, must be freed after usage */
 } wallconf_t;
 
+/** @fn void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
+ * @brief Print a frame to the DMX frame
+ *
+ * After using, the memory of this structure must be freed!
+ *
+ * @param[in]	pBuffer		RGB24 Buffer with the actual frame
+ * @param[in]	width		of the actual frame
+ * @param[in]	height		of the actual frame
+ * @param[in]	pWallcfg	Configuration
+ *
+ * @return < 0 on errors
+ */
+extern void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg);
+
 /**
  * Debug interface for the commandline
  */
