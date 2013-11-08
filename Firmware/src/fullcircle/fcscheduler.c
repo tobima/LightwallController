@@ -146,7 +146,12 @@ msg_t fc_scheduler(void *p)
 		{
 			res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);
 			FCSHED_PRINT("File[%d] found '%s' (|name|=%d)\r\n", res, path, filenameLength);
-			/*FIXME extract filename from path for the next cycle */
+			
+			/*FIXME check dynamic fullcircle for a new client */
+			
+			/*extract filename from path for the next cycle */
+			fcstatic_remove_filename(path, filename, filenameLength);
+			FCSHED_PRINT("Filename is %s and path cleaned to '%s' \r\n", filename, path);
 		}
 		else
 		{

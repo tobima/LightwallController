@@ -38,6 +38,8 @@ extern "C" {
 typedef struct  {
 	int			width;			/**< Horizontal count of boxes the phyical installation */
 	int			height;			/**< Vertical count of boxes the phyical installation */
+	int			fps;			/**< Framerate, the wall uses */
+	int			dimmFactor;		/**< In percent -> 100 no change, 50 half the brightness */
 	uint32_t	*pLookupTable;	/**< Memory to the Loopuptable, must be freed after usage */
 } wallconf_t;
 

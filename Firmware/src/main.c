@@ -27,12 +27,12 @@
 
 #include "lwipthread.h"
 #include "web/web.h"
-#include "dmx/dmx.h"
 #include "netshell/netshell.h"
+#include "dmx/dmx.h"
 #include "dmx/dmx_cmd.h"
-#include "fcseq.h"
 #include "fullcircle/fcserverImpl.h"
 #include "fullcircle/fcscheduler.h"
+#include "fullcircle/fcstatic.h"
 
 #include "conf/conf.h"
 
@@ -128,14 +128,16 @@ static FATFS SDC_FS;
 /* FS mounted and ready.*/
 static bool_t fs_ready = FALSE;
 
-static void print_fsusage() {
+static void print_fsusage(BaseSequentialStream *chp, int argc, char *argv[]) {
    uint32_t clusters;
     FATFS *fsp;
     DIR dir;
     
+	(void) argc;
+	(void) argv;
     if(f_getfree("/", &clusters, &fsp)== FR_OK) {
       chprintf(
-        (BaseSequentialStream *)&SD6,
+        chp,
         "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
         clusters, (uint32_t)SDC_FS.csize,
         clusters * (uint32_t)SDC_FS.csize * (uint32_t)MMCSD_BLOCK_SIZE);
@@ -227,14 +229,10 @@ void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
 	scan_files(chp, (char *)fbuff);
 }
 
-static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[]) {
-  fcsequence_t seq;
-  fcseq_ret_t ret = FCSEQ_RET_NOTIMPL; 
-  int x, y, ypos;
-  int frame_index = 0;
-  int sleeptime;
-  int fixSleepTimer = -1;
-  uint8_t* rgb24;
+static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
+{
+	wallconf_t wallcfg;
+	wallcfg.fps = -1;
 	
   if(argc < 1)
   {
@@ -243,85 +241,15 @@ static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[]) {
   }
   else if(argc >= 2)
   {
-    fixSleepTimer = atoi(argv[1]);
-    chprintf(chp, "Sleeptime was set FIX to %d ms\r\n", fixSleepTimer);  
+    wallcfg.fps = atoi(argv[1]);
+    chprintf(chp, "FPS was set FIX to %d fps\r\n", wallcfg.fps);  
   }
 	
 #if 0
 	hwal_init(chp); /* No Debug output for the sequence library */
 #endif
 	
-	ret = fcseq_load(argv[0], &seq);
-
-  if (ret != FCSEQ_RET_OK)
-  {
-	chprintf(chp, "Could not read %s\r\nError code is %d\r\n", argv[0], ret);
-	chprintf(chp, "Unable to load sequnce (%s:%d)\r\n", __FILE__, __LINE__);
-	return;
-  }
-
-  chprintf(chp, "=== Meta information ===\r\n"
-		   "fps: %d, width: %d, height: %d\r\n",seq.fps,seq.width,seq.height);
-	
-	if (seq.fps == 0)
-	{
-		chprintf(chp, "The FPS could NOT be extracted! Stopping\r\n");
-		return;
-	}
-	
-	/* Allocation some space for the RGB buffer */
-	rgb24 = (uint8_t*) chHeapAlloc(NULL, (seq.width * seq.height * 3) );
-	
-	/* parse */
-	ret = fcseq_nextFrame(&seq, rgb24);
-
-	if (ret != FCSEQ_RET_OK)
-	{
-		chprintf(chp, "Reading the first frame failed with error code %d.\r\n", ret );
-		return;
-	}
-	
-	/* loop to print something on the commandline */
-	while (ret == FCSEQ_RET_OK)
-	{
-#if 0
-		chprintf(chp, "=============== %d ===============\r\n", frame_index);
-		for (y=0; y < seq.height; y++)
-		{
-			ypos = y * seq.width * 3;
-			for(x=0; x < seq.width; x++)
-			{
-				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 0]);
-				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 1]);
-				chprintf(chp, "%.2X", rgb24[(ypos+x*3) + 2]);
-				chprintf(chp, "|");
-			}
-			chprintf(chp, "\r\n");
-		}
-#endif
-
-		/* Set the DMX buffer */
-		dmx_buffer.length = seq.width * seq.height * 3;
-		memcpy(dmx_buffer.buffer, rgb24, dmx_buffer.length);
-		
-		if (fixSleepTimer > 0)
-		{
-			sleeptime = fixSleepTimer;
-		}
-		else
-		{
-			sleeptime = (1000 / seq.fps);
-		}
-		
-		chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
-		/* parse the next */
-		ret = fcseq_nextFrame(&seq, rgb24);
-		
-		/* Move the count */
-		frame_index++;
-	}
-	
-	chHeapFree(rgb24);
+	fcstatic_playfile(argv[0], &wallcfg, chp);
 }
 
 
@@ -509,7 +437,7 @@ int main(void) {
       (BaseSequentialStream *)&SD6,
       "\x1b[32m OK\r\n\x1b[0m");
     
-    print_fsusage();
+    print_fsusage((BaseSequentialStream *)&SD6, 0, NULL);
   }
   
   int use_config = 0;

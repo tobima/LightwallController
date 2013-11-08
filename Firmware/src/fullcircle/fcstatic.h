@@ -8,6 +8,7 @@
  */
 
 #include "ch.h"
+#include "fullcircle/fcscheduler.h"
 
 #ifndef FCSTATIC_H
 #define FCSTATIC_H
@@ -35,5 +36,25 @@ int fcstatic_open_sdcard(void);
  * @return 1 if a file was found
  */
 int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength, char *pLastFilename);
+
+/** @fn void fcstatic_remove_filename(char *path, char *pFilename, uint32_t filenameLength)
+ * @brief Extract the filename from the path.
+ *
+ * If necessary, the given storage for the filename is first freed
+ * 
+ * @param[in,out]	path		ingoing: absolute path to an result ; output: path to search in
+ * @param[in]		pFilename	storage for the filename, will be "free"d if necessary
+ * @param[in,out]	pFilelength	length of the filename appended in path
+ */
+void fcstatic_remove_filename(char *path, char *pFilename, uint32_t filenameLength);
+
+/** @fn void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp)
+ * @brief Plays a given sequence to the wall.
+ *
+ * @param[in]	pFilename		the sequence file to play
+ * @param[in]	pConfiguration	configuration of the wall, mappingtable, fps & dimmfactor are needed (optiinal)
+ * @param[in]	chp				Stream for debug outputs (optional)
+ */
+void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp);
 
 #endif /* End of FCSTATIC_H */
