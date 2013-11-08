@@ -16,7 +16,7 @@
 #define _FCSCHEDULER_H
 
 #ifndef FCSCHEDULER_THREAD_STACK_SIZE
-#define FCSCHEDULER_THREAD_STACK_SIZE   THD_WA_SIZE(1024)
+#define FCSCHEDULER_THREAD_STACK_SIZE   THD_WA_SIZE(2048) /* Increase memory for parsing */
 #endif
 
 /**

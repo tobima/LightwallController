@@ -23,6 +23,9 @@
 
 #define FCSHED_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
+#define	MSG_ACTIVATE_SHELL	1
+#define	MSG_SETFPS			2
+
 /******************************************************************************
  * LOCAL VARIABLES for this module
  ******************************************************************************/
@@ -32,6 +35,8 @@ static BaseSequentialStream * gDebugShell = NULL;
 /* Mailbox, checked by the fullcircle scheduler thread */
 static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
+
+static wallconf_t wallcfg;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -56,13 +61,15 @@ static void fcsched_handleInputMailbox(void)
 			{
 				chSysLock();
 				switch ((uint32_t) msg1) {
-					case 1:
+					case MSG_ACTIVATE_SHELL:
 						gDebugShell = (BaseSequentialStream *) msg2;
+						break;
+					case MSG_SETFPS:
+						wallcfg.fps = (int) msg2;
 						break;
 					default:
 						break;
 				}
-				
 				chSysUnlock();
 			}
 		}
@@ -133,7 +140,10 @@ msg_t fc_scheduler(void *p)
 	
 	chRegSetThreadName("fcscheduler");
 	(void)p;
-			
+	
+	hwal_memset(&wallcfg, 0, sizeof(wallconf_t));
+	wallcfg.fps = -1;
+	
 	/* Prepare Mailbox to communicate with the others */
 	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
 	path[0] = 0;
@@ -155,7 +165,10 @@ msg_t fc_scheduler(void *p)
 			if (res)
 			{
 				FCSHED_PRINT("%s ...\r\n", path);
+				
 				/* Play the file */
+				FCSHED_PRINT("FPS using %d\r\n", wallcfg.fps );
+				fcstatic_playfile(path, &wallcfg, gDebugShell);
 				
 				/*extract filename from path for the next cycle */
 				fcstatic_remove_filename(path, &filename, filenameLength);
@@ -167,7 +180,6 @@ msg_t fc_scheduler(void *p)
 				chHeapFree( filename );
 				filename = NULL;
 			}
-
 		}
 		else
 		{
@@ -175,8 +187,6 @@ msg_t fc_scheduler(void *p)
 			resOpen = fcstatic_open_sdcard();
 		}
 		
-		/*Debug code: */
-		chThdSleep(MS2ST(5000 /* convert milliseconds to system ticks */));
 	} while ( TRUE );	
 	
 	FCSHED_PRINT("Scheduler stopped!\r\n");
@@ -188,7 +198,7 @@ void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage {debug, debugOn, debugOff}\r\n");
+		chprintf(chp, "Usage {debug, debugOn, debugOff, fps (value)}\r\n");
 		return;
 	}
 	else if(argc >= 1)
@@ -225,7 +235,7 @@ void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			/* Activate the debugging */
 			chprintf(chp, "Activate the logging for Fullcircle Scheduler\r\n");
 			chSysLock();
-			chMBPostI(&mailboxIn, (uint32_t) 1);
+			chMBPostI(&mailboxIn, (uint32_t) MSG_ACTIVATE_SHELL);
 			chMBPostI(&mailboxIn, (uint32_t) chp);
 			chSysUnlock();
 		}
@@ -234,10 +244,20 @@ void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 			/* Activate the debugging */
 			chprintf(chp, "Deactivate the logging for Fullcircle Scheduler\r\n");
 			chSysLock();
-			chMBPostI(&mailboxIn, (uint32_t) 1);
+			chMBPostI(&mailboxIn, (uint32_t) MSG_ACTIVATE_SHELL);
 			chMBPostI(&mailboxIn, (uint32_t) 0);
 			chSysUnlock();
 		}
+		else if (strcmp(argv[0], "fps") == 0 && (argc >= 2))
+		{
+			/* Activate the debugging */
+			chprintf(chp, "Fullcircle Scheduler - Update FPS %d\r\n", atoi(argv[1]));
+			chSysLock();
+			chMBPostI(&mailboxIn, (uint32_t) MSG_SETFPS);
+			chMBPostI(&mailboxIn, (uint32_t) atoi(argv[1]));
+			chSysUnlock();
+		}
+
 	}
 	
 }

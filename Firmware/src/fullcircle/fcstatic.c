@@ -147,9 +147,13 @@ void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequent
 	int x, y, ypos;
 	int frame_index = 0;
 	int sleeptime;
-	int fixSleepTimer = -1;
 	uint8_t* rgb24;
 
+	if (pFilename == NULL)
+	{
+		CHP_PRINT("No valid filename given\r\n");
+		return;
+	}
 	
 	ret = fcseq_load(pFilename, &seq);
 	
