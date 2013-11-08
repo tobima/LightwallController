@@ -13,7 +13,7 @@
 #include "fcstatic.h"
 
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
-#define FCSCHED_FILE_ROOT			"fc/static"	/**< Folder on the sdcard to check */
+#define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
 #define	FILENAME_LENGTH	512	/**< Including the absolut path to the file */
 
@@ -93,6 +93,8 @@ static int wall_handler(void* config, const char* section, const char* name,
 		pconfig->width = strtol(value, NULL, 10);
 	} else if (MATCH("global", "height")) {
 		pconfig->height = strtol(value, NULL, 10);
+	} else if (MATCH("global", "fps")) {
+		pconfig->fps = strtol(value, NULL, 10);
 	} if ((row >= 0) && (row < pconfig->height) ) {
 		/* when the function was called the first time, take some memory */
 		if (pconfig->pLookupTable == NULL)
@@ -145,13 +147,23 @@ msg_t fc_scheduler(void *p)
 		if (resOpen)
 		{
 			res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);
-			FCSHED_PRINT("File[%d] found '%s' (|name|=%d)\r\n", res, path, filenameLength);
+			
+			FCSHED_PRINT("File[%d] found '%s' (|name|=%d, %x, %s)\r\n", res, path, 
+						 filenameLength, filename, filename);
 			
 			/*FIXME check dynamic fullcircle for a new client */
 			
-			/*extract filename from path for the next cycle */
-			fcstatic_remove_filename(path, filename, filenameLength);
-			FCSHED_PRINT("Filename is %s and path cleaned to '%s' \r\n", filename, path);
+			if (res)
+			{		
+				/*extract filename from path for the next cycle */
+				fcstatic_remove_filename(path, &filename, filenameLength);
+				FCSHED_PRINT("Filename is %s and path cleaned to '%s' \r\n", filename, path);
+			}
+			else
+			{
+				/*FIXME start with rootfolder again */
+			}
+
 		}
 		else
 		{

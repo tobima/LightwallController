@@ -43,10 +43,10 @@ int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength, ch
  * If necessary, the given storage for the filename is first freed
  * 
  * @param[in,out]	path		ingoing: absolute path to an result ; output: path to search in
- * @param[in]		pFilename	storage for the filename, will be "free"d if necessary
+ * @param[in]		ppFilename	storage for the filename, will be "free"d if necessary
  * @param[in,out]	pFilelength	length of the filename appended in path
  */
-void fcstatic_remove_filename(char *path, char *pFilename, uint32_t filenameLength);
+void fcstatic_remove_filename(char *path, char **ppFilename, uint32_t filenameLength);
 
 /** @fn void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp)
  * @brief Plays a given sequence to the wall.

@@ -232,6 +232,7 @@ void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
 static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	wallconf_t wallcfg;
+	hwal_memset(&wallcfg, 0, sizeof(wallconf_t));
 	wallcfg.fps = -1;
 	
   if(argc < 1)

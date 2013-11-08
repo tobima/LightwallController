@@ -115,26 +115,28 @@ int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength, ch
 	return 0;
 }
 
-void fcstatic_remove_filename(char *path, char *pFilename, uint32_t filenameLength)
+void fcstatic_remove_filename(char *path, char **ppFilename, uint32_t filenameLength)
 {
 	int startOffset = 0;
 	
 	/* Clean th dirt of the last run */
-	if (pFilename)
+	if (ppFilename && (*ppFilename) )
 	{
-		chHeapFree(pFilename);
-		pFilename = NULL;
+		chHeapFree( (*ppFilename) );
+		(*ppFilename) = NULL;
 	}
 	
 	if (filenameLength)
 	{
 		/* create new memory for the filename */
-		pFilename = chHeapAlloc(0, filenameLength);
+		(*ppFilename) = chHeapAlloc(0, filenameLength);
 		
-		startOffset = strlen(path) - filenameLength;
-		hwal_memcpy(pFilename, path + startOffset, filenameLength);
+		startOffset = strlen(path) - filenameLength + 1 /* +1 to ignore the "/" to seperate filename from path */;
+		hwal_memcpy((*ppFilename), path + startOffset, filenameLength - 1);
+		(*ppFilename)[filenameLength - 1] = 0; /* mark the end of the file */
+		
 		/* Clean the filename*/
-		hwal_memset(path + startOffset - 1, 0, filenameLength + 1);
+		hwal_memset(path + startOffset - 1, 0, filenameLength);
 	}
 }
 
