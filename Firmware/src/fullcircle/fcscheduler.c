@@ -129,6 +129,7 @@ msg_t fc_scheduler(void *p)
 	char path[FILENAME_LENGTH];	
 	char *filename = NULL;
 	uint32_t filenameLength = 0;
+	char* root = FCSCHED_FILE_ROOT;
 	
 	chRegSetThreadName("fcscheduler");
 	(void)p;
@@ -138,8 +139,8 @@ msg_t fc_scheduler(void *p)
 	path[0] = 0;
 	
 	resOpen = fcstatic_open_sdcard();
-	/* initialize the folder to search in */
-	char* root = FCSCHED_FILE_ROOT;
+	
+	/* initialize the folder to search in */	 
 	hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
 		
 	do {
@@ -148,20 +149,26 @@ msg_t fc_scheduler(void *p)
 		{
 			res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);
 			
-			FCSHED_PRINT("File[%d] found '%s' (|name|=%d, %x, %s)\r\n", res, path, 
-						 filenameLength, filename, filename);
+			FCSHED_PRINT("File[%d] found '%s'\r\n", res, path);
 			
 			/*FIXME check dynamic fullcircle for a new client */
 			
 			if (res)
-			{		
+			{
+				/* Play the file */
+				
 				/*extract filename from path for the next cycle */
 				fcstatic_remove_filename(path, &filename, filenameLength);
 				FCSHED_PRINT("Filename is %s and path cleaned to '%s' \r\n", filename, path);
 			}
 			else
 			{
-				/*FIXME start with rootfolder again */
+				/*Reset all and start with rootfolder again */
+				hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
+				chHeapFree( filename );
+				filename = NULL;
+				
+				FCSHED_PRINT("Start from the beginning again %s \r\n", path);
 			}
 
 		}
