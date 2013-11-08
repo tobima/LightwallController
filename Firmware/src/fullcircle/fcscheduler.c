@@ -217,10 +217,20 @@ msg_t fc_scheduler(void *p)
 	return RDY_OK;
 }
 
+static uint8_t dimmValue(uint8_t incoming, int factor)
+{
+	uint32_t tmp = incoming;
+	FCSHED_PRINT("%d -> ", incoming);
+	tmp = tmp * factor / 100;
+	if (tmp > 255)
+		tmp = 255;
+	FCSHED_PRINT("%d\r\n", tmp);
+	return (uint8_t) tmp;
+}
+
 extern void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
 {
 	int row, col, offset;
-	
 	dmx_buffer.length = width * height * 3;
 	
 	if (pWallcfg && pWallcfg->height == height && pWallcfg->width == width)
@@ -230,9 +240,9 @@ extern void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf
 			for (col=0; col < pWallcfg->width; col++)
 			{
 				offset = (row * pWallcfg->width + col);
-				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 0 ]  = pBuffer[ offset * 3 + 0 ];
-				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 1 ]  = pBuffer[ offset * 3 + 1 ];
-				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 2 ]  = pBuffer[ offset * 3 + 2 ];
+				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 0 ]  = dimmValue(pBuffer[ offset * 3 + 0 ], pWallcfg->dimmFactor);
+				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 1 ]  = dimmValue(pBuffer[ offset * 3 + 1 ], pWallcfg->dimmFactor);
+				dmx_buffer.buffer[ pWallcfg->pLookupTable[offset] + 2 ]  = dimmValue(pBuffer[ offset * 3 + 2 ], pWallcfg->dimmFactor);
 			}
 		}
 	}

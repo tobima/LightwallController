@@ -190,6 +190,11 @@ int fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequenti
 		CHP_PRINT("Updated fps to %d (configuration of the wall).\r\n", seq.fps );
 	}
 	
+	if (pConfiguration)
+	{
+		CHP_PRINT("Dimming to %d %\r\n", pConfiguration->dimmFactor );
+	}
+	
 	/* loop to print something on the commandline */
 	while (ret == FCSEQ_RET_OK)
 	{
