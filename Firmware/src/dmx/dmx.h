@@ -1,5 +1,19 @@
+/* @file dmx.h
+ * @brief Interface to send DMX frames
+ * @author tobima
+ *
+ * @date 12.06.2013 – Working test system
+ * @defgroup DMX
+ *
+ * Shared memory, that is sent via an adapted UART.
+ * 
+ */
+
 #ifndef _DMX_H_
 #define _DMX_H_ 
+
+/** @addtogroup DMX */
+/*@{*/
 
 #ifndef DMX_THREAD_STACK_SIZE
 #define DMX_THREAD_STACK_SIZE   THD_WA_SIZE(128)
@@ -30,4 +44,5 @@ extern "C" {
 }
 #endif
 
+/*@}*/
 #endif /*_DMX_H_*/

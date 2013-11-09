@@ -1,9 +1,8 @@
-/* @file fcseq.h
- * @brief This module parses an sequence file
+/* @file dmx_cmd.h
+ * @brief Debuging tool, to modify the shared memory for DMX.
  * @author Ollo
  *
  * @date 04.10.2013 – Created
- * @date 04.10.2013 – Doxygen documentation added
  * @defgroup DMX
  *
  */
