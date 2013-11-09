@@ -177,6 +177,8 @@ msg_t fc_scheduler(void *p)
 	fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
 	uint8_t* rgb24 = NULL;
 	
+	hwal_memset(&seq, 0, sizeof(fcsequence_t) );
+	
 	chRegSetThreadName("fcscheduler");
 	(void)p;
 	
@@ -220,7 +222,7 @@ msg_t fc_scheduler(void *p)
 					
 					/* Initialize the file for playback */
 					seqRet = fcseq_load(path, &seq);
-					if (seqRet != FCSEQ_RET_OK)
+					if (seqRet == FCSEQ_RET_OK)
 					{
 						gSourceState = FCSRC_STATE_FILE;
 						/* Allocation some space for the RGB buffer */
@@ -228,6 +230,10 @@ msg_t fc_scheduler(void *p)
 						seq.fps = wallcfg.fps;
 						FCSHED_PRINT("Using %d fps and dimmed to %d %.\r\n", seq.fps, wallcfg.dimmFactor );
 						sleeptime = (1000 / seq.fps);
+					}
+					else
+					{
+						gSourceState = FCSRC_STATE_FILEENDED;
 					}
 				}
 				else
@@ -246,14 +252,24 @@ msg_t fc_scheduler(void *p)
 			break;
 		case FCSRC_STATE_FILEENDED:
 			/* Close the file */
-			chHeapFree(rgb24);
+			if (rgb24)
+			{
+				chHeapFree(rgb24);
+			}
+			rgb24 = NULL;
 			fcseq_close(&seq);
 			sleeptime = DEFAULT_SLEEPTIME;
+				
 			/*extract filename from path for the next cycle */
 			fcstatic_remove_filename(path, &filename, filenameLength);
 			gSourceState = FCSRC_STATE_NOBODY;
 			break;
 		case FCSRC_STATE_FILE:
+			if (rgb24 == NULL)
+			{
+				gSourceState = FCSRC_STATE_FILEENDED;
+			}
+			
 			/* Read a frame */
 			seqRet = fcseq_nextFrame(&seq, rgb24);
 			if (seqRet != FCSEQ_RET_OK)
