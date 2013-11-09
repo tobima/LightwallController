@@ -230,6 +230,7 @@ msg_t fc_scheduler(void *p)
 						seq.fps = wallcfg.fps;
 						FCSHED_PRINT("Using %d fps and dimmed to %d %.\r\n", seq.fps, wallcfg.dimmFactor );
 						sleeptime = (1000 / seq.fps);
+						palSetPad(GPIOD, GPIOD_LED5);       /* Red.  */						
 					}
 					else
 					{
@@ -258,7 +259,8 @@ msg_t fc_scheduler(void *p)
 			}
 			rgb24 = NULL;
 			fcseq_close(&seq);
-			sleeptime = DEFAULT_SLEEPTIME;
+			sleeptime = DEFAULT_SLEEPTIME;				
+			palClearPad(GPIOD, GPIOD_LED5);     /* Red.  */
 				
 			/*extract filename from path for the next cycle */
 			fcstatic_remove_filename(path, &filename, filenameLength);
