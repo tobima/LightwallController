@@ -455,17 +455,11 @@ int main(void)
   chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,                    
                     lwip_thread, 
 					(use_config)?&(config.network):NULL);
-	
+		
   /*
-   * Creates the dynamic fullcircle thread.
+   * Creates the scheduler thread.
    */
-  chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
-					  fc_server, NULL);
-	
-	/*
-	 * Creates the scheduler thread.
-	 */
-	chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
+  chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
 					  fc_scheduler, NULL);
 	
   /*
