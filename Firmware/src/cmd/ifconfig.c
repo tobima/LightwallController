@@ -7,7 +7,16 @@
 
 void cmd_ifconfig(BaseSequentialStream *chp, int argc, char *argv[]) {
   struct netif* netif_et0 = netif_default;
-
+  ip_addr_t addr;
+  ip_addr_t netmask;
+  ip_addr_t gw;
+	
+  /* fill the actual values into the fields, that will be modified */
+  addr.addr		= netif_et0->ip_addr.addr;
+  netmask.addr	= netif_et0->netmask.addr;
+  gw.addr		= netif_et0->gw.addr;
+	
+  /* Send some output to the user */	
   if (argc < 1)
   { 
     chprintf(chp, 
@@ -44,20 +53,29 @@ void cmd_ifconfig(BaseSequentialStream *chp, int argc, char *argv[]) {
   }
   else
   {
-	  if (strcmp(argv[0], "help") == 0 || strcmp(argv[0], "--help") == 0)
+	  if (strcmp(argv[0], "ms0") == 0) /* this is the only network interface */
 	  {
-		  chprintf(chp, "ifconfig interface [address [network mask]] [defaultgw]\r\n");
-	  }
-	  else if (strcmp(argv[0], "ms0") == 0 && argc >= 4) /* this is the only network interface */
-	  {
-		  ip_addr_t addr;
-		  addr.addr = ipaddr_addr(argv[1]);
-		  ip_addr_t netmask;
-		  netmask.addr = ipaddr_addr(argv[2]);
-		  ip_addr_t gw;
-		  gw.addr = ipaddr_addr(argv[3]);
+		  if (argc >= 3)
+		  {
+			  addr.addr = ipaddr_addr(argv[1]);
+			  netmask.addr = ipaddr_addr(argv[2]);
+		  }
+		  else
+		  {
+			  chprintf(chp, "try e.g. ifconfig ms0 192.168.0.2 255.255.255.0\r\n");
+		  }
+
+		  if (argc >= 4)
+		  {		  
+			  gw.addr = ipaddr_addr(argv[3]);
+		  }
 		  
 		  netifapi_netif_set_addr(netif_et0, &addr, &netmask, &gw);
 	  }
+	  else
+	  {
+		  chprintf(chp, "ifconfig interface [address [network mask]] [defaultgw]\r\n");
+	  }
+
   }
 }; 
