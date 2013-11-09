@@ -81,7 +81,7 @@ static void handleInputMailbox(void)
  * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
  ******************************************************************************/
 
-void onNewImage(uint8_t* rgb24Buffer, int width, int height)
+static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
 	FCS_PRINT("%d x %d\r\n", width, height);
 	
@@ -92,7 +92,7 @@ void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 	memcpy(dmx_buffer.buffer, rgb24Buffer, dmx_buffer.length);
 }
 
-void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
+static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
 	if (gDebugShell) {
 		chprintf(gDebugShell, "Callback client %d did %X '", clientsocket, action);

@@ -14,6 +14,8 @@
 
 #include "fcseq.h"
 
+#include "fcserver.h"
+
 #include "dmx/dmx.h"
 
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
@@ -42,7 +44,8 @@ typedef enum
 	FCSRC_STATE_FILE,		/**< Actual sending frames from a file  */
 	FCSRC_STATE_FILEENDED,	/**< Need to find the next file to play */
 	FCSRC_STATE_NETWORK,	/**< Someone is streaming dynamic content to us */
-	FCSRC_STATE_NETINIT		/**< Probalby a new client will connect soon */
+	FCSRC_STATE_NETINIT,	/**< Probalby a new client will connect soon */
+	FCSRC_STATE_NETCHECKING	/**< Checking for network connections */
 } fcsource_state_t;
 
 
@@ -146,6 +149,51 @@ static int wall_handler(void* config, const char* section, const char* name,
 }
 
 /******************************************************************************
+ * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
+ ******************************************************************************/
+
+static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
+{
+	if (gSourceState == FCSRC_STATE_NETWORK)
+	{
+		/* Write the DMX buffer */
+		fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+	}
+}
+
+static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
+{
+	if (gDebugShell)
+	{
+		chprintf(gDebugShell, "Callback client %d did %X '", clientsocket, action);
+		switch (action) {
+			case FCCLIENT_STATUS_WAITING:
+				chprintf(gDebugShell, "waiting for a GO");
+				break;
+			case FCCLIENT_STATUS_CONNECTED:
+				chprintf(gDebugShell, "is CONNECTED to the wall, status: %d", gSourceState);
+				if (gSourceState == FCSRC_STATE_NETINIT)
+				{
+					gSourceState = FCSRC_STATE_NETWORK;
+				}
+				break;
+			case FCCLIENT_STATUS_DISCONNECTED:
+				chprintf(gDebugShell, "has left");	
+				break;
+			case FCCLIENT_STATUS_INITING:
+				chprintf(gDebugShell, "found this server");	
+				break;
+			case FCCLIENT_STATUS_TOOMUTCH:
+				chprintf(gDebugShell, "is one too mutch");	
+				break;
+			default:
+				break;
+		}
+		chprintf(gDebugShell, "'\t[%d clients]\r\n", totalAmount);
+	}	
+}
+
+/******************************************************************************
  * GLOBAL FUNCTIONS
  ******************************************************************************/
 
@@ -177,6 +225,9 @@ msg_t fc_scheduler(void *p)
 	fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
 	uint8_t* rgb24 = NULL;
 	
+	/* Dynamic fullcircle protcoll */
+	fcserver_t		server;
+	
 	hwal_memset(&seq, 0, sizeof(fcsequence_t) );
 	
 	chRegSetThreadName("fcscheduler");
@@ -205,13 +256,23 @@ msg_t fc_scheduler(void *p)
 	
 	/* initialize the folder to search in */	 
 	hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
-		
+	
+	/* Initialize the server */
+	fcserver_init(&server, &onNewImage, &onClientChange, wallcfg.width, wallcfg.height);
+	
 	do {
 		fcsched_handleInputMailbox();
 		
+		/* Handle server */
+		fcserver_process(&server);
+		
 		switch (gSourceState)
 		{
-		case FCSRC_STATE_NOBODY:			
+		case FCSRC_STATE_NOBODY:
+			/* Deactivate network code stuff */
+			fcserver_setactive(&server, 0 /* TRUE */);
+			palClearPad(GPIOD, GPIOD_LED4);     /* Green.  */
+				
 			if (resOpen)
 			{						
 				/* pick the next file */
@@ -264,7 +325,7 @@ msg_t fc_scheduler(void *p)
 				
 			/*extract filename from path for the next cycle */
 			fcstatic_remove_filename(path, &filename, filenameLength);
-			gSourceState = FCSRC_STATE_NOBODY;
+			gSourceState = FCSRC_STATE_NETINIT;
 			break;
 		case FCSRC_STATE_FILE:
 			if (rgb24 == NULL)
@@ -283,7 +344,16 @@ msg_t fc_scheduler(void *p)
 				/* Write the DMX buffer */
 				fcsched_printFrame(rgb24, seq.width, seq.height, &wallcfg);
 			}
-			break;				
+			break;
+		case FCSRC_STATE_NETINIT:			
+			fcserver_setactive(&server, 1 /* TRUE */);
+			palSetPad(GPIOD, GPIOD_LED5);       /* Green.  */
+			gSourceState = FCSRC_STATE_NETCHECKING;
+			break;
+		case FCSRC_STATE_NETCHECKING:
+			/* Nothing found, go back to the file sending */
+			gSourceState = 	FCSRC_STATE_NOBODY;
+			break;
 		default:			
 			/*FIXME check dynamic fullcircle for a new client */
 			break;
@@ -292,6 +362,9 @@ msg_t fc_scheduler(void *p)
 		chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
 		
 	} while ( TRUE );	
+	
+	/* clean the server stuff */
+	fcserver_close(&server);
 	
 	FCSHED_PRINT("Scheduler stopped!\r\n");
 	
