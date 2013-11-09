@@ -12,14 +12,16 @@
 #include "hwal.h"	/* Needed for memcpy */
 #include "fcstatic.h"
 
+#include "fcseq.h"
+
 #include "dmx/dmx.h"
 
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
 #define	FILENAME_LENGTH	512	/**< Including the absolut path to the file */
-
 #define INPUT_MAILBOX_SIZE		4
+#define DEFAULT_SLEEPTIME	100 /**< Time to wait at default before an cycle of the thread starts again */
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
@@ -32,15 +34,15 @@
 
 /**
  * @typedef fcsource_state_t
- * @brief Status code, that is used in this module
- * A summary of all possible return states in this module
+ * @brief Status of the actuall used source.
  */
 typedef enum 
 {
 	FCSRC_STATE_NOBODY = 0, /**< Noone is writing into the DMX buffer  */
 	FCSRC_STATE_FILE,		/**< Actual sending frames from a file  */
 	FCSRC_STATE_FILEENDED,	/**< Need to find the next file to play */
-	FCSRC_STATE_NETWORK		/**< Someone is streaming dynamic content to us */
+	FCSRC_STATE_NETWORK,	/**< Someone is streaming dynamic content to us */
+	FCSRC_STATE_NETINIT		/**< Probalby a new client will connect soon */
 } fcsource_state_t;
 
 
@@ -157,15 +159,23 @@ WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
  */
 msg_t fc_scheduler(void *p)
 {
+	int sleeptime = DEFAULT_SLEEPTIME;
+	/* File handling variables: */
 	int res, resOpen;
 	char path[FILENAME_LENGTH];	
 	char *filename = NULL;
 	uint32_t filenameLength = 0;
 	char* root = FCSCHED_FILE_ROOT;
 	
+	/* SD card initing variables */
 	FRESULT err;
 	uint32_t clusters;
 	FATFS *fsp;
+	
+	/* File reading variables */
+	fcsequence_t seq;
+	fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
+	uint8_t* rgb24 = NULL;
 	
 	chRegSetThreadName("fcscheduler");
 	(void)p;
@@ -196,36 +206,72 @@ msg_t fc_scheduler(void *p)
 		
 	do {
 		fcsched_handleInputMailbox();
-		if (resOpen)
+		
+		switch (gSourceState)
 		{
-			/*FIXME check dynamic fullcircle for a new client */
-			
-			/* pick the next file */
-			res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);
-									
-			if (res)
-			{
-				FCSHED_PRINT("%s ...\r\n", path);
-				
-				/* Play the file */
-				fcstatic_playfile(path, &wallcfg, gDebugShell);
+		case FCSRC_STATE_NOBODY:			
+			if (resOpen)
+			{						
+				/* pick the next file */
+				res = fcstatic_getnext_file(path, FILENAME_LENGTH, &filenameLength, filename);								
+				if (res)
+				{
+					FCSHED_PRINT("%s ...\r\n", path);
 					
-				/*extract filename from path for the next cycle */
-				fcstatic_remove_filename(path, &filename, filenameLength);
+					/* Initialize the file for playback */
+					seqRet = fcseq_load(path, &seq);
+					if (seqRet != FCSEQ_RET_OK)
+					{
+						gSourceState = FCSRC_STATE_FILE;
+						/* Allocation some space for the RGB buffer */
+						rgb24 = (uint8_t*) chHeapAlloc(NULL, (seq.width * seq.height * 3) );
+						seq.fps = wallcfg.fps;
+						FCSHED_PRINT("Using %d fps and dimmed to %d %.\r\n", seq.fps, wallcfg.dimmFactor );
+						sleeptime = (1000 / seq.fps);
+					}
+				}
+				else
+				{
+					/*Reset all and start with rootfolder again */
+					hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
+					chHeapFree( filename );
+					filename = NULL;
+				}
 			}
 			else
 			{
-				/*Reset all and start with rootfolder again */
-				hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
-				chHeapFree( filename );
-				filename = NULL;
+				FCSHED_PRINT("Reopen SDcard\r\n");
+				resOpen = fcstatic_open_sdcard();
 			}
+			break;
+		case FCSRC_STATE_FILEENDED:
+			/* Close the file */
+			chHeapFree(rgb24);
+			fcseq_close(&seq);
+			sleeptime = DEFAULT_SLEEPTIME;
+			/*extract filename from path for the next cycle */
+			fcstatic_remove_filename(path, &filename, filenameLength);
+			gSourceState = FCSRC_STATE_NOBODY;
+			break;
+		case FCSRC_STATE_FILE:
+			/* Read a frame */
+			seqRet = fcseq_nextFrame(&seq, rgb24);
+			if (seqRet != FCSEQ_RET_OK)
+			{
+				gSourceState = FCSRC_STATE_FILEENDED;
+			}
+			else
+			{
+				/* Write the DMX buffer */
+				fcsched_printFrame(rgb24, seq.width, seq.height, &wallcfg);
+			}
+			break;				
+		default:			
+			/*FIXME check dynamic fullcircle for a new client */
+			break;
 		}
-		else
-		{
-			FCSHED_PRINT("Reopen SDcard\r\n");
-			resOpen = fcstatic_open_sdcard();
-		}
+		
+		chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
 		
 	} while ( TRUE );	
 	
