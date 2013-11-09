@@ -29,6 +29,21 @@
 #define	MSG_SETFPS			2
 #define	MSG_DIMM			3
 
+
+/**
+ * @typedef fcsource_state_t
+ * @brief Status code, that is used in this module
+ * A summary of all possible return states in this module
+ */
+typedef enum 
+{
+	FCSRC_STATE_NOBODY = 0, /**< Noone is writing into the DMX buffer  */
+	FCSRC_STATE_FILE,		/**< Actual sending frames from a file  */
+	FCSRC_STATE_FILEENDED,	/**< Need to find the next file to play */
+	FCSRC_STATE_NETWORK		/**< Someone is streaming dynamic content to us */
+} fcsource_state_t;
+
+
 /******************************************************************************
  * LOCAL VARIABLES for this module
  ******************************************************************************/
@@ -40,6 +55,8 @@ static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 
 static wallconf_t wallcfg;
+
+static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
 
 /******************************************************************************
  * LOCAL FUNCTIONS

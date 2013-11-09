@@ -242,38 +242,12 @@ void cmd_tree(BaseSequentialStream *chp, int argc, char *argv[]) {
 	scan_files(chp, (char *)fbuff);
 }
 
-static void cmd_fcat(BaseSequentialStream *chp, int argc, char *argv[])
-{
-	wallconf_t wallcfg;
-	hwal_memset(&wallcfg, 0, sizeof(wallconf_t));
-	wallcfg.fps = -1;
-	
-  if(argc < 1)
-  {
-	chprintf(chp, "Usage <filename>\r\n");
-    return;
-  }
-  else if(argc >= 2)
-  {
-    wallcfg.fps = atoi(argv[1]);
-    chprintf(chp, "FPS was set FIX to %d fps\r\n", wallcfg.fps);  
-  }
-	
-#if 0
-	hwal_init(chp); /* No Debug output for the sequence library */
-#endif
-	
-	fcstatic_playfile(argv[0], &wallcfg, chp);
-}
-
-
 static const ShellCommand commands[] = {
   {"mem", cmd_mem},
   {"tree", cmd_tree},
   {"threads", cmd_threads},
   {"cat", cmd_cat},
   {"ifconfig", cmd_ifconfig},
-  {"fcat", cmd_fcat},
   {"dmx", cmd_dmx_modify},
   {"fcdyn", fcsserverImpl_cmdline},
   {"fcsched", fcscheduler_cmdline},
