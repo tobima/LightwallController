@@ -11,6 +11,7 @@
 
 #include "hwal.h"	/* Needed for memcpy */
 #include "fcstatic.h"
+#include "customHwal.h"	/* Needed to activate debugging in server implementation */
 
 #include "fcseq.h"
 
@@ -43,9 +44,7 @@ typedef enum
 	FCSRC_STATE_NOBODY = 0, /**< Noone is writing into the DMX buffer  */
 	FCSRC_STATE_FILE,		/**< Actual sending frames from a file  */
 	FCSRC_STATE_FILEENDED,	/**< Need to find the next file to play */
-	FCSRC_STATE_NETWORK,	/**< Someone is streaming dynamic content to us */
-	FCSRC_STATE_NETINIT,	/**< Probalby a new client will connect soon */
-	FCSRC_STATE_NETCHECKING	/**< Checking for network connections */
+	FCSRC_STATE_NETWORK		/**< Someone is streaming dynamic content to us */
 } fcsource_state_t;
 
 
@@ -62,6 +61,7 @@ static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 static wallconf_t wallcfg;
 
 static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
+static int gConnectedClients = 0;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -88,6 +88,7 @@ static void fcsched_handleInputMailbox(void)
 				switch ((uint32_t) msg1) {
 					case MSG_ACTIVATE_SHELL:
 						gDebugShell = (BaseSequentialStream *) msg2;
+						hwal_init((BaseSequentialStream *) msg2);
 						break;
 					case MSG_SETFPS:
 						wallcfg.fps = (int) msg2;
@@ -163,22 +164,20 @@ static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 
 static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
+	gConnectedClients = totalAmount;
 	if (gDebugShell)
 	{
-		chprintf(gDebugShell, "Callback client %d did %X '", clientsocket, action);
+		chprintf(gDebugShell, "Scheduler status %d\tCallback client %d did %X '", gSourceState, clientsocket, action);
 		switch (action) {
 			case FCCLIENT_STATUS_WAITING:
 				chprintf(gDebugShell, "waiting for a GO");
 				break;
 			case FCCLIENT_STATUS_CONNECTED:
-				chprintf(gDebugShell, "is CONNECTED to the wall, status: %d", gSourceState);
-				if (gSourceState == FCSRC_STATE_NETINIT)
-				{
-					gSourceState = FCSRC_STATE_NETWORK;
-				}
+				chprintf(gDebugShell, "is CONNECTED to the wall");
 				break;
 			case FCCLIENT_STATUS_DISCONNECTED:
-				chprintf(gDebugShell, "has left");	
+				chprintf(gDebugShell, "has left");
+				gConnectedClients--;
 				break;
 			case FCCLIENT_STATUS_INITING:
 				chprintf(gDebugShell, "found this server");	
@@ -265,6 +264,7 @@ msg_t fc_scheduler(void *p)
 		
 		/* Handle server */
 		fcserver_process(&server);
+		FCSHED_PRINT("%d. [server=%d]\r\n", gSourceState, server.status); /*FIXME remove debug code */
 		
 		switch (gSourceState)
 		{
@@ -325,7 +325,15 @@ msg_t fc_scheduler(void *p)
 				
 			/*extract filename from path for the next cycle */
 			fcstatic_remove_filename(path, &filename, filenameLength);
-			gSourceState = FCSRC_STATE_NETINIT;
+			gSourceState = FCSRC_STATE_NOBODY;
+				
+			FCSHED_PRINT("Check Ethernet interface\r\n");
+			fcserver_setactive(&server, 1 /* TRUE */);
+			palSetPad(GPIOD, GPIOD_LED5);       /* Green.  */
+			if (gConnectedClients > 0)
+			{
+				gSourceState = FCSRC_STATE_NETWORK;
+			}				
 			break;
 		case FCSRC_STATE_FILE:
 			if (rgb24 == NULL)
@@ -337,6 +345,7 @@ msg_t fc_scheduler(void *p)
 			seqRet = fcseq_nextFrame(&seq, rgb24);
 			if (seqRet != FCSEQ_RET_OK)
 			{
+				FCSHED_PRINT("Sequence reading returned: %d\r\n", seqRet);
 				gSourceState = FCSRC_STATE_FILEENDED;
 			}
 			else
@@ -345,17 +354,15 @@ msg_t fc_scheduler(void *p)
 				fcsched_printFrame(rgb24, seq.width, seq.height, &wallcfg);
 			}
 			break;
-		case FCSRC_STATE_NETINIT:			
-			fcserver_setactive(&server, 1 /* TRUE */);
-			palSetPad(GPIOD, GPIOD_LED5);       /* Green.  */
-			gSourceState = FCSRC_STATE_NETCHECKING;
-			break;
-		case FCSRC_STATE_NETCHECKING:
-			/* Nothing found, go back to the file sending */
-			gSourceState = 	FCSRC_STATE_NOBODY;
+		case FCSRC_STATE_NETWORK:			
+			if (gConnectedClients <= 0)
+			{
+				gSourceState = FCSRC_STATE_NOBODY;
+			}
 			break;
 		default:			
 			/*FIXME check dynamic fullcircle for a new client */
+			FCSHED_PRINT("Unkown status: %d\r\n", gSourceState);
 			break;
 		}
 		
