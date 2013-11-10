@@ -264,7 +264,6 @@ msg_t fc_scheduler(void *p)
 		
 		/* Handle server */
 		fcserver_process(&server);
-		FCSHED_PRINT("%d. [server=%d]\r\n", gSourceState, server.status); /*FIXME remove debug code */
 		
 		switch (gSourceState)
 		{
@@ -327,7 +326,7 @@ msg_t fc_scheduler(void *p)
 			fcstatic_remove_filename(path, &filename, filenameLength);
 			gSourceState = FCSRC_STATE_NOBODY;
 				
-			FCSHED_PRINT("Check Ethernet interface\r\n");
+			FCSHED_PRINT("Check Ethernet interface %d\r\n", gConnectedClients);
 			fcserver_setactive(&server, 1 /* TRUE */);
 			palSetPad(GPIOD, GPIOD_LED5);       /* Green.  */
 			if (gConnectedClients > 0)
@@ -345,7 +344,6 @@ msg_t fc_scheduler(void *p)
 			seqRet = fcseq_nextFrame(&seq, rgb24);
 			if (seqRet != FCSEQ_RET_OK)
 			{
-				FCSHED_PRINT("Sequence reading returned: %d\r\n", seqRet);
 				gSourceState = FCSRC_STATE_FILEENDED;
 			}
 			else
