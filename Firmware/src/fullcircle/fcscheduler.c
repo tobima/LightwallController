@@ -155,6 +155,7 @@ static int wall_handler(void* config, const char* section, const char* name,
 
 static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
+	FCSHED_PRINT("onNewImage %d : %dx%d\r\n", gSourceState, width, height);
 	if (gSourceState == FCSRC_STATE_NETWORK)
 	{
 		/* Write the DMX buffer */
@@ -328,7 +329,7 @@ msg_t fc_scheduler(void *p)
 				
 			FCSHED_PRINT("Check Ethernet interface %d\r\n", gConnectedClients);
 			fcserver_setactive(&server, 1 /* TRUE */);
-			palSetPad(GPIOD, GPIOD_LED5);       /* Green.  */
+			palSetPad(GPIOD, GPIOD_LED4);       /* Green.  */
 			if (gConnectedClients > 0)
 			{
 				gSourceState = FCSRC_STATE_NETWORK;
