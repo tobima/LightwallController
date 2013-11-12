@@ -81,6 +81,7 @@ LIBINC =
 # Include some custom extensions:
 APP_LIBS = lib
 include $(APP_LIBS)/fc/chibios.mk
+include $(APP_LIBS)/uhttp/uhttp.mk
 APP = src
 include $(APP)/src.mk
 
