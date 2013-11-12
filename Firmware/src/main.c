@@ -455,12 +455,23 @@ int main(void)
   chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,                    
                     lwip_thread, 
 					(use_config)?&(config.network):NULL);
+	
+#ifndef FCDYN_DEBUGING
 		
   /*
    * Creates the scheduler thread.
    */
   chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
 					  fc_scheduler, NULL);
+	
+#else
+	
+	/*
+	 * Creates the scheduler thread.
+	 */
+	chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
+					  fc_server, NULL);
+#endif
 	
   /*
    * Creates the HTTP thread.
@@ -498,6 +509,5 @@ int main(void)
    */
   while (TRUE) {  
     chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
-    //chThdSleepMilliseconds(500);
   }
 }

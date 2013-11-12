@@ -20,7 +20,7 @@
 #endif
 
 #ifndef FCSERVER_IMPL_SLEEPTIME
-#define FCSERVER_IMPL_SLEEPTIME 20	/* time in milliseconds before starting endless loop again */
+#define FCSERVER_IMPL_SLEEPTIME 50	/* time in milliseconds before starting endless loop again */
 #endif
 
 extern WORKING_AREA(wa_fc_server, FCSERVERIMPL_THREAD_STACK_SIZE);

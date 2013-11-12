@@ -30,6 +30,8 @@ static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 static BaseSequentialStream * gDebugShell = NULL;
 
 static uint32_t gServerActive = 0;
+static int		gOldBtnStatus = 0;
+
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -140,7 +142,7 @@ msg_t fc_server(void *p)
 {		
 	fcserver_ret_t	ret;
 	fcserver_t		server;
-	
+	int				actButtonStatus;
 	chRegSetThreadName("fcdynserver");
 	(void)p;
 	
@@ -156,13 +158,40 @@ msg_t fc_server(void *p)
 		/* printf("Server initialization failed with returncode %d\n", ret); */
 		return FR_INT_ERR;
 	}
-		
-	fcserver_setactive(&server, 1 /* TRUE */);
 	
 	do {
 		handleInputMailbox();
 		
 		ret = fcserver_process(&server);
+		
+		actButtonStatus = palReadPad(GPIOA, GPIOA_BUTTON);
+		if (actButtonStatus != gOldBtnStatus)
+		{
+			/* Toggle server status */
+			if (gServerActive)
+			{
+				gServerActive = 0;
+			}
+			else
+			{
+				gServerActive = 1;
+			}
+		}
+		gOldBtnStatus = actButtonStatus;
+		
+		/* Update the active status of the server */
+		if (gServerActive)
+		{
+			palSetPad(GPIOD, GPIOD_LED4);       /* Green.  */
+			palClearPad(GPIOD, GPIOD_LED5);     /* Red.  */
+		}
+		else
+		{
+			palClearPad(GPIOD, GPIOD_LED4);     /* Green.  */
+			palSetPad(GPIOD, GPIOD_LED5);       /* Red.  */
+		}
+
+		fcserver_setactive(&server, gServerActive);
 		
 		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
 	} while ( ret == FCSERVER_RET_OK);

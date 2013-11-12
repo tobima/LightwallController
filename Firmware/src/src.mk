@@ -23,4 +23,6 @@ APPINC = ${APP} \
 APPDEFS =
 
 # Fullcricle (fc_c) specific:
-#APPDEFS += -DPRINT_DEBUG
+APPDEFS += -DPRINT_DEBUG
+# Activate debugging server, without final scheduler
+APPDEFS += -DFCDYN_DEBUGING
