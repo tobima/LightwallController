@@ -1,5 +1,7 @@
 # List of all the board related files.
 APPSRC = src/web/web.c \
+       src/web/io.c \
+       src/web/htdocs.c \
        src/dmx/dmx.c \
        src/dmx/dmx_cmd.c \
        src/main.c \

@@ -124,7 +124,7 @@ int StreamClientAccept(HTTP_CLIENT_HANDLER handler, const char *params)
 
                         num_threads++;
                         while (num_threads > 2) {
-                            TimeDly(MS_2_TICKS(100));
+                            chThdSleepMilliseconds(100);
                         }
                         //_beginthread(StreamClientThread, 0, ctp);
                         StreamClientThread(ctp);

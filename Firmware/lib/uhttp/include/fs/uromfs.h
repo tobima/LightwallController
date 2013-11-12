@@ -74,6 +74,7 @@
  */
 #include <stddef.h>
 #include <sys/types.h>
+#include <pro/uhttp/compiler.h>
 #include <stdint.h>
 
 /*!
