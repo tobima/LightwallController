@@ -30,8 +30,6 @@ static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 static BaseSequentialStream * gDebugShell = NULL;
 
 static uint32_t gServerActive = 0;
-static int		gOldBtnStatus = 0;
-
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -142,7 +140,9 @@ msg_t fc_server(void *p)
 {		
 	fcserver_ret_t	ret;
 	fcserver_t		server;
-	int				actButtonStatus;
+	int		actButtonStatus = 0;
+	int		gOldBtnStatus = 0;	/**< last status of the button */
+	int		btnChangeCount = 0;
 	chRegSetThreadName("fcdynserver");
 	(void)p;
 	
@@ -167,6 +167,14 @@ msg_t fc_server(void *p)
 		actButtonStatus = palReadPad(GPIOA, GPIOA_BUTTON);
 		if (actButtonStatus != gOldBtnStatus)
 		{
+			btnChangeCount++;
+		}
+		gOldBtnStatus = actButtonStatus;
+		
+		/* The button must be pressend and released */
+		if ( (btnChangeCount > 0) && (btnChangeCount % 2 == 0) )
+		{
+			btnChangeCount = 0;
 			/* Toggle server status */
 			if (gServerActive)
 			{
@@ -177,7 +185,7 @@ msg_t fc_server(void *p)
 				gServerActive = 1;
 			}
 		}
-		gOldBtnStatus = actButtonStatus;
+		
 		
 		/* Update the active status of the server */
 		if (gServerActive)
