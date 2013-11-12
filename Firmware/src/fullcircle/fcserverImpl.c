@@ -159,6 +159,16 @@ msg_t fc_server(void *p)
 		return FR_INT_ERR;
 	}
 	
+	/* Wait a short time and print a welcome message */
+	chThdSleep(MS2ST(50 /* convert milliseconds to system ticks */));
+	chprintf(
+			 (BaseSequentialStream *)&SD6,
+			 "\r\n"
+			 "========================================================\r\n"
+			 "Dynamic Fullcircle Protocol - DEMO\r\n"
+			 "========================================================\r\n"
+			 "Press the blue button to activate/deactivate the server.\r\n");
+	
 	do {
 		handleInputMailbox();
 		
