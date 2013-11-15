@@ -415,39 +415,12 @@ void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage {debug, debugOn, debugOff, fps (value), dim}\r\n");
+		chprintf(chp, "Usage {debugOn, debugOff, fps (value), dim}\r\n");
 		return;
 	}
 	else if(argc >= 1)
     {
-		if (strcmp(argv[0], "debug") == 0)
-		{
-			wallconf_t wallcfg;
-			wallcfg.width			= 0;
-			wallcfg.height			= 0;
-			wallcfg.pLookupTable	= 0;
-			
-			int ret = ini_parse(FCSCHED_CONFIGURATION_FILE, wall_handler, &wallcfg);
-			chprintf(chp, "Extracted %dx%d\t[Returned %d]\r\n", wallcfg.width, wallcfg.height, ret);
-			
-			if ( wallcfg.width > 0 && wallcfg.height > 0)
-			{
-				int row, col;
-				for (row=0; row < wallcfg.height; row++) {
-					for (col=0; col < wallcfg.width; col++) {
-						chprintf(chp, "%03d ", wallcfg.pLookupTable[row * wallcfg.width + col]);
-					}
-					chprintf(chp, "\r\n");
-				}
-			}
-			
-			/* clean */
-			if (wallcfg.pLookupTable)
-			{
-				chHeapFree(wallcfg.pLookupTable);
-			}
-		}
-		else if (strcmp(argv[0], "debugOn") == 0)
+		if (strcmp(argv[0], "debugOn") == 0)
 		{
 			/* Activate the debugging */
 			chprintf(chp, "Activate the logging for Fullcircle Scheduler\r\n");
