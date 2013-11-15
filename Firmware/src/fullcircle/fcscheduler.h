@@ -54,16 +54,16 @@ typedef struct  {
 extern void readConfigurationFile(wallconf_t* pConfiguration);
 
 /** @fn void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
- * @brief Print a frame to the DMX frame
+ * @brief Print a frame to the DMX memory, that will be send to the wall.
  *
- * After using, the memory of this structure must be freed!
+ * THIS function MUST only be used by one source.
+ * Multiple sources will be disturbe each other ;-)
  *
- * @param[in]	pBuffer		RGB24 Buffer with the actual frame
+ * @param[in]	pBuffer		RGB24 memory with the actual frame
  * @param[in]	width		of the actual frame
  * @param[in]	height		of the actual frame
  * @param[in]	pWallcfg	Configuration
  *
- * @return < 0 on errors
  */
 extern void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg);
 

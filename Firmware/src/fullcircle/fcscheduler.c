@@ -309,6 +309,11 @@ msg_t fc_scheduler(void *p)
 		
 	} while ( TRUE );	
 	
+	/* clean the memory of the configuration */
+	if (wallcfg.pLookupTable)
+	{
+		hwal_free(wallcfg.pLookupTable);
+	}
 	
 	FCSHED_PRINT("Scheduler stopped!\r\n");
 	

@@ -86,11 +86,10 @@ static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
 	FCS_PRINT("%d x %d\r\n", width, height);
 	
-	/*FIXME there is no MAPPING between positions and DMX addresses */
+	/* MAPPING between positions and DMX addresses */
 	
-	/* Set the DMX buffer */
-	dmx_buffer.length = width * height * 3;
-	memcpy(dmx_buffer.buffer, rgb24Buffer, dmx_buffer.length);
+	/* Write the DMX buffer */
+	fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
 }
 
 static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
@@ -165,6 +164,12 @@ msg_t fc_server(void *p)
 	} while ( ret == FCSERVER_RET_OK);
 	
 	FCS_PRINT("FATAL error, closing fullcircle server thread\r\n");
+	
+	/* clean the memory of the configuration */
+	if (wallcfg.pLookupTable)
+	{
+		hwal_free(wallcfg.pLookupTable);
+	}
 	
 	/* clean everything */
 	fcserver_close(&server);
