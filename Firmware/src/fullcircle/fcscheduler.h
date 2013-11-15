@@ -43,6 +43,16 @@ typedef struct  {
 	uint32_t	*pLookupTable;	/**< Memory to the Loopuptable, must be freed after usage */
 } wallconf_t;
 
+
+/** @fn void readConfigurationFile( extern wallconf_t )
+ * @brief Read configuration file
+ *
+ * The static configuration with the wall.
+ 
+ * @param[out]	pConfiguration	Read configuration
+ */
+extern void readConfigurationFile(wallconf_t* pConfiguration);
+
 /** @fn void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
  * @brief Print a frame to the DMX frame
  *

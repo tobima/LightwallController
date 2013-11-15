@@ -241,12 +241,7 @@ msg_t fc_scheduler(void *p)
 	}
 	while (err != FR_OK) ;
 	
-	hwal_memset(&wallcfg, 0, sizeof(wallconf_t));
-	wallcfg.dimmFactor = 100;
-	wallcfg.fps = -1;
-	
-	/* Load the configuration */
-	ini_parse(FCSCHED_CONFIGURATION_FILE, wall_handler, &wallcfg);
+	readConfigurationFile( &wallcfg );
 	
 	/* Prepare Mailbox to communicate with the others */
 	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
@@ -384,6 +379,16 @@ static uint8_t dimmValue(uint8_t incoming, int factor)
 	if (tmp > 255)
 		tmp = 255;
 	return (uint8_t) tmp;
+}
+
+extern void readConfigurationFile(wallconf_t* pConfiguration)
+{
+	hwal_memset(pConfiguration, 0, sizeof(wallconf_t));
+	pConfiguration->dimmFactor = 100;
+	pConfiguration->fps = -1;
+	
+	/* Load the configuration */
+	ini_parse(FCSCHED_CONFIGURATION_FILE, wall_handler, pConfiguration);
 }
 
 extern void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
