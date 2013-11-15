@@ -15,8 +15,6 @@
 
 #include "fcseq.h"
 
-#include "fcserver.h"
-
 #include "dmx/dmx.h"
 
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
@@ -150,50 +148,6 @@ static int wall_handler(void* config, const char* section, const char* name,
 }
 
 /******************************************************************************
- * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
- ******************************************************************************/
-
-static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
-{
-	FCSHED_PRINT("onNewImage %d : %dx%d\r\n", gSourceState, width, height);
-	if (gSourceState == FCSRC_STATE_NETWORK)
-	{
-		/* Write the DMX buffer */
-		fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
-	}
-}
-
-static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
-{
-	gConnectedClients = totalAmount;
-	if (gDebugShell)
-	{
-		chprintf(gDebugShell, "Scheduler status %d\tCallback client %d did %X '", gSourceState, clientsocket, action);
-		switch (action) {
-			case FCCLIENT_STATUS_WAITING:
-				chprintf(gDebugShell, "waiting for a GO");
-				break;
-			case FCCLIENT_STATUS_CONNECTED:
-				chprintf(gDebugShell, "is CONNECTED to the wall");
-				break;
-			case FCCLIENT_STATUS_DISCONNECTED:
-				chprintf(gDebugShell, "has left");
-				gConnectedClients--;
-				break;
-			case FCCLIENT_STATUS_INITING:
-				chprintf(gDebugShell, "found this server");	
-				break;
-			case FCCLIENT_STATUS_TOOMUTCH:
-				chprintf(gDebugShell, "is one too mutch");	
-				break;
-			default:
-				break;
-		}
-		chprintf(gDebugShell, "'\t[%d clients]\r\n", totalAmount);
-	}	
-}
-
-/******************************************************************************
  * GLOBAL FUNCTIONS
  ******************************************************************************/
 
@@ -224,10 +178,7 @@ msg_t fc_scheduler(void *p)
 	fcsequence_t seq;
 	fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
 	uint8_t* rgb24 = NULL;
-	
-	/* Dynamic fullcircle protcoll */
-	fcserver_t		server;
-	
+		
 	hwal_memset(&seq, 0, sizeof(fcsequence_t) );
 	
 	chRegSetThreadName("fcscheduler");
@@ -251,21 +202,15 @@ msg_t fc_scheduler(void *p)
 	
 	/* initialize the folder to search in */	 
 	hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
-	
-	/* Initialize the server */
-	fcserver_init(&server, &onNewImage, &onClientChange, wallcfg.width, wallcfg.height);
-	
+		
 	do {
 		fcsched_handleInputMailbox();
-		
-		/* Handle server */
-		fcserver_process(&server);
-		
+				
 		switch (gSourceState)
 		{
 		case FCSRC_STATE_NOBODY:
 			/* Deactivate network code stuff */
-			fcserver_setactive(&server, 0 /* TRUE */);
+			/*FIXME set server inactive */
 			palClearPad(GPIOD, GPIOD_LED4);     /* Green.  */
 				
 			if (resOpen)
@@ -323,7 +268,7 @@ msg_t fc_scheduler(void *p)
 			gSourceState = FCSRC_STATE_NOBODY;
 				
 			FCSHED_PRINT("Check Ethernet interface %d\r\n", gConnectedClients);
-			fcserver_setactive(&server, 1 /* TRUE */);
+			/*FIXME set server status to true */
 			palSetPad(GPIOD, GPIOD_LED4);       /* Green.  */
 			if (gConnectedClients > 0)
 			{
@@ -364,8 +309,6 @@ msg_t fc_scheduler(void *p)
 		
 	} while ( TRUE );	
 	
-	/* clean the server stuff */
-	fcserver_close(&server);
 	
 	FCSHED_PRINT("Scheduler stopped!\r\n");
 	

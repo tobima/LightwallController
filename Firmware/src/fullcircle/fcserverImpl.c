@@ -6,6 +6,7 @@
 
 #include <unistd.h>
 #include "fcserver.h"
+#include "fcscheduler.h"
 #include "customHwal.h"	/* Needed to activate debugging in server implementation */
 
 #include "dmx/dmx.h"
@@ -26,6 +27,10 @@ static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 static BaseSequentialStream * gDebugShell = NULL;
 
 static uint32_t gServerActive = 0;
+
+static wallconf_t wallcfg;
+
+/*FIXME add Mailbox in order to communicate with the scheduler */
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -141,9 +146,10 @@ msg_t fc_server(void *p)
 	/* Prepare Mailbox to communicate with the others */
 	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
 	
-	/*FIXME read the dimension from the configuration file */
-	ret = fcserver_init(&server, &onNewImage, &onClientChange, 
-						10 /* width of wall */, 12 /* height of wall */);
+	/* read the dimension from the configuration file */
+	readConfigurationFile( &wallcfg );
+	
+	ret = fcserver_init(&server, &onNewImage, &onClientChange, wallcfg.width, wallcfg.height);
 	
 	if (ret != FCSERVER_RET_OK)
 	{
@@ -200,7 +206,7 @@ msg_t fc_server(void *p)
 	
 	/* clean everything */
 	fcserver_close(&server);
-	
+		
 	return RDY_OK;
 }
 
