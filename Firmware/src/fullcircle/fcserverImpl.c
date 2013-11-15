@@ -137,9 +137,6 @@ msg_t fc_server(void *p)
 {		
 	fcserver_ret_t	ret;
 	fcserver_t		server;
-	int		actButtonStatus = 0;
-	int		gOldBtnStatus = 0;	/**< last status of the button */
-	int		btnChangeCount = 0;
 	chRegSetThreadName("fcdynserver");
 	(void)p;
 	
@@ -162,47 +159,12 @@ msg_t fc_server(void *p)
 		
 		ret = fcserver_process(&server);
 		
-		actButtonStatus = palReadPad(GPIOA, GPIOA_BUTTON);
-		if (actButtonStatus != gOldBtnStatus)
-		{
-			btnChangeCount++;
-		}
-		gOldBtnStatus = actButtonStatus;
-		
-		/* The button must be pressend and released */
-		if ( (btnChangeCount > 0) && (btnChangeCount % 2 == 0) )
-		{
-			btnChangeCount = 0;
-			/* Toggle server status */
-			if (gServerActive)
-			{
-				gServerActive = 0;
-			}
-			else
-			{
-				gServerActive = 1;
-			}
-		}
-		
-		
-		/* Update the active status of the server */
-		if (gServerActive)
-		{
-			palSetPad(GPIOD, GPIOD_LED4);       /* Green.  */
-			palClearPad(GPIOD, GPIOD_LED5);     /* Red.  */
-		}
-		else
-		{
-			palClearPad(GPIOD, GPIOD_LED4);     /* Green.  */
-			palSetPad(GPIOD, GPIOD_LED5);       /* Red.  */
-		}
-
 		fcserver_setactive(&server, gServerActive);
 		
 		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
 	} while ( ret == FCSERVER_RET_OK);
 	
-	FCS_PRINT("FATAL error, closing thread\r\n");
+	FCS_PRINT("FATAL error, closing fullcircle server thread\r\n");
 	
 	/* clean everything */
 	fcserver_close(&server);
