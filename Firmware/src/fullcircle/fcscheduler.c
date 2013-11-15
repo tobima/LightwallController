@@ -24,7 +24,7 @@
 
 #define	FILENAME_LENGTH	512	/**< Including the absolut path to the file */
 #define INPUT_MAILBOX_SIZE		4
-#define DEFAULT_SLEEPTIME	100 /**< Time to wait at default before an cycle of the thread starts again */
+#define DEFAULT_SLEEPTIME	5 /**< Time to wait at default before an cycle of the thread starts again */
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
