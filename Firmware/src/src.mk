@@ -25,5 +25,3 @@ APPDEFS =
 # Fullcricle (fc_c) specific:
 # Debugging for the underling library
 #APPDEFS += -DPRINT_DEBUG
-# Activate debugging server, without final scheduler
-#APPDEFS += -DFCDYN_DEBUGING

@@ -456,7 +456,6 @@ int main(void)
                     lwip_thread, 
 					(use_config)?&(config.network):NULL);
 	
-#ifndef FCDYN_DEBUGING
 		
   /*
    * Creates the scheduler thread.
@@ -464,14 +463,13 @@ int main(void)
   chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
 					  fc_scheduler, NULL);
 	
-#else
 	
 	/*
 	 * Creates the scheduler thread.
 	 */
 	chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
 					  fc_server, NULL);
-#endif
+
 	
   /*
    * Creates the HTTP thread.

@@ -19,10 +19,6 @@
  * LOCAL VARIABLES for this module
  ******************************************************************************/
 
-/* Mailbox, filled by the fc_server thread */
-static uint32_t buffer4mailbox[OUTPUT_MAILBOX_SIZE];
-static MAILBOX_DECL(mailboxOut, buffer4mailbox, OUTPUT_MAILBOX_SIZE);
-
 /* Mailbox, checked by the fc_server thread */
 static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
@@ -118,10 +114,6 @@ static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clie
 		chprintf(gDebugShell, "'\t[%d clients]\r\n", totalAmount);
 	}
 	
-	chSysLock();
-	chMBPostI(&mailboxOut, (uint32_t) action);
-	chMBPostI(&mailboxOut, (uint32_t) clientsocket);
-	chSysUnlock();
 }
 
 /******************************************************************************
@@ -147,9 +139,9 @@ msg_t fc_server(void *p)
 	(void)p;
 	
 	/* Prepare Mailbox to communicate with the others */
-	chMBInit(&mailboxOut, (msg_t *)buffer4mailbox, OUTPUT_MAILBOX_SIZE);
 	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
 	
+	/*FIXME read the dimension from the configuration file */
 	ret = fcserver_init(&server, &onNewImage, &onClientChange, 
 						10 /* width of wall */, 12 /* height of wall */);
 	
@@ -158,16 +150,6 @@ msg_t fc_server(void *p)
 		/* printf("Server initialization failed with returncode %d\n", ret); */
 		return FR_INT_ERR;
 	}
-	
-	/* Wait a short time and print a welcome message */
-	chThdSleep(MS2ST(50 /* convert milliseconds to system ticks */));
-	chprintf(
-			 (BaseSequentialStream *)&SD6,
-			 "\r\n"
-			 "========================================================\r\n"
-			 "Dynamic Fullcircle Protocol - DEMO\r\n"
-			 "========================================================\r\n"
-			 "Press the blue button to activate/deactivate the server.\r\n");
 	
 	do {
 		handleInputMailbox();
@@ -223,47 +205,15 @@ msg_t fc_server(void *p)
 }
 
 void fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
-{
-	msg_t msg1, msg2, status;
-	int i, newMessages;
-	
+{	
 	if(argc < 1)
 	{
-		chprintf(chp, "Usage {status, debugOn, debugOff, on, off}\r\n");
+		chprintf(chp, "Usage {debugOn, debugOff, on, off}\r\n");
 		return;
 	}
 	else if(argc >= 1)
     {
-		if (strcmp(argv[0], "status") == 0)
-		{
-			newMessages = chMBGetUsedCountI(&mailboxOut);
-			
-			chprintf(chp, "%d Messages found\r\n", newMessages );
-			for (i=0; i < newMessages; i += 2) {
-				status = chMBFetch(&mailboxOut, &msg1, TIME_INFINITE);
-				
-				if (status != RDY_OK)
-				{
-					chprintf(chp, "Failed accessing message queue: %d\r\n", status );
-				}
-				else
-				{
-					status = chMBFetch(&mailboxOut, &msg2, TIME_INFINITE);
-					if (status == RDY_OK)
-					{
-						chSysLock();
-						chprintf(chp, "%d = %d\r\n", (uint32_t) msg1, (uint32_t) msg2);
-						chSysUnlock();
-					}
-					else
-					{
-						chprintf(chp, "Could only extract key (%d)\r\n", (uint32_t) msg1);
-					}
-
-				}
-			}
-		}
-		else if (strcmp(argv[0], "debugOn") == 0)
+		if (strcmp(argv[0], "debugOn") == 0)
 		{
 			/* Activate the debugging */
 			chprintf(chp, "Activate the logging for fullcircle server\r\n");
