@@ -43,8 +43,6 @@ static BaseSequentialStream * gDebugShell = NULL;
 
 static wallconf_t wallcfg;
 
-/*FIXME add Mailbox in order to communicate with the scheduler */
-
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -99,15 +97,20 @@ static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
 	FCS_PRINT("%d x %d\r\n", width, height);
 	
-	/* MAPPING between positions and DMX addresses */
-	
-	/* Write the DMX buffer */
-	fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+	if (gFcServerActive == 0)
+	{
+		/* Write the DMX buffer */
+		fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+	}
 }
 
 static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
-	if (gDebugShell) {
+	/* Update the scheduler about the actual amount of connected client. */
+	gFcConnectedClients = totalAmount;
+	
+	if (gDebugShell)
+	{
 		chprintf(gDebugShell, "Callback client %d did %X '", clientsocket, action);
 		switch (action) {
 			case FCCLIENT_STATUS_WAITING:
@@ -117,7 +120,12 @@ static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clie
 				chprintf(gDebugShell, "is CONNECTED to the wall");
 				break;
 			case FCCLIENT_STATUS_DISCONNECTED:
-				chprintf(gDebugShell, "has left");	
+				chprintf(gDebugShell, "has left");
+				/* The actual client left -> update the counter */
+				if (gFcConnectedClients > 0)
+				{
+					gFcConnectedClients--;
+				}
 				break;
 			case FCCLIENT_STATUS_INITING:
 				chprintf(gDebugShell, "found this server");	

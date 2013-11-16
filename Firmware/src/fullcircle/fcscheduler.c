@@ -70,6 +70,8 @@ static wallconf_t wallcfg;
 static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
 static int gConnectedClients = 0;
 
+uint32_t gFcConnectedClients = 0;
+
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -219,7 +221,9 @@ msg_t fc_scheduler(void *p)
 		{
 		case FCSRC_STATE_NOBODY:
 			/* Deactivate network code stuff */
-			/*FIXME set server inactive */
+				
+			/*set server inactive */
+			gFcServerActive = 0;
 			palClearPad(GPIOD, GPIOD_LED4);     /* Green.  */
 				
 			if (resOpen)
@@ -277,7 +281,9 @@ msg_t fc_scheduler(void *p)
 			gSourceState = FCSRC_STATE_NOBODY;
 				
 			FCSHED_PRINT("Check Ethernet interface %d\r\n", gConnectedClients);
-			/*FIXME set server status to true */
+				
+			/* set server status to true */
+			gFcServerActive = TRUE;
 			palSetPad(GPIOD, GPIOD_LED4);       /* Green.  */
 			if (gConnectedClients > 0)
 			{

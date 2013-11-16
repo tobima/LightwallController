@@ -137,17 +137,7 @@ static void print_fsusage(BaseSequentialStream *chp, int argc, char *argv[]) {
     
 	(void) argc;
 	(void) argv;
-	
-	/* Initialize the SDcard */
-	do
-	{
-		err = f_getfree("/", &clusters, &fsp);
-		chThdSleep(MS2ST(100));
-		chprintf(chp, "%d try\r\n", i);				 
-		i++;
-	}
-	while (err != FR_OK && i < 50) ; /* wait at maximum 5 seconds */
-	
+		
     if(f_getfree("/", &clusters, &fsp)== FR_OK) {
       chprintf(
         chp,

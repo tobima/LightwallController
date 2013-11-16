@@ -19,6 +19,13 @@
 #define FCSCHEDULER_THREAD_STACK_SIZE   THD_WA_SIZE(2048) /* Increase memory for parsing */
 #endif
 
+
+/** @var gFcConnectedClients
+ * @brief Amount of actual clients connected via the network (accessable for all, as shared memory)
+ * This variable is used as input method to this module
+ */
+extern uint32_t gFcConnectedClients;
+
 /**
  * Stack area for the scheduler thread.
  */
