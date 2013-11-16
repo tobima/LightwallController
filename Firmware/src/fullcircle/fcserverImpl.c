@@ -1,3 +1,12 @@
+/** @file fcserverImpl.h
+ * @brief Dynamic fullcircle implementation for Chibios
+ * @author Ollo
+ *
+ * @date 26.09.2013
+ * @defgroup LightwallController
+ *
+ */
+
 #include "fcserverImpl.h"
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +26,12 @@
 #define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
 /******************************************************************************
+ * GLOBAL VARIABLES of this module
+ ******************************************************************************/
+
+uint32_t gFcServerActive = 0;
+
+/******************************************************************************
  * LOCAL VARIABLES for this module
  ******************************************************************************/
 
@@ -25,8 +40,6 @@ static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 
 static BaseSequentialStream * gDebugShell = NULL;
-
-static uint32_t gServerActive = 0;
 
 static wallconf_t wallcfg;
 
@@ -65,8 +78,8 @@ static void handleInputMailbox(void)
 						gDebugShell = 0;
 						break;
 					case 3:
-						gServerActive = (uint32_t) msg2;
-						FCS_PRINT("DynFc Server - DMX is set to %d\r\n", gServerActive);
+						gFcServerActive = (uint32_t) msg2;
+						FCS_PRINT("DynFc Server - DMX is set to %d\r\n", gFcServerActive);
 						break;
 					default:
 						break;
@@ -158,7 +171,7 @@ msg_t fc_server(void *p)
 		
 		ret = fcserver_process(&server);
 		
-		fcserver_setactive(&server, gServerActive);
+		fcserver_setactive(&server, gFcServerActive);
 		
 		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
 	} while ( ret == FCSERVER_RET_OK);

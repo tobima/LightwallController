@@ -1,3 +1,11 @@
+/** @file fcscheduler.c
+ * @brief Brain of Lightwall controller
+ * @author Ollo
+ *
+ * @date 07.11.2013 - Created
+ * @defgroup LightwallController
+ *
+ */
 
 #include "fcscheduler.h"
 #include <stdio.h>
@@ -14,15 +22,16 @@
 #include "customHwal.h"	/* Needed to activate debugging in server implementation */
 
 #include "fcseq.h"
+#include "fcserverImpl.h"
 
 #include "dmx/dmx.h"
 
 #define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
-#define	FILENAME_LENGTH	512	/**< Including the absolut path to the file */
+#define	FILENAME_LENGTH			512	/**< Including the absolut path to the file */
 #define INPUT_MAILBOX_SIZE		4
-#define DEFAULT_SLEEPTIME	5 /**< Time to wait at default before an cycle of the thread starts again */
+#define DEFAULT_SLEEPTIME		5 /**< Time to wait at default before an cycle of the thread starts again */
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 

@@ -1,4 +1,4 @@
-/* @file fcscheduler.h
+/** @file fcscheduler.h
  * @brief Brain of Lightwall controller
  * @author Ollo
  *

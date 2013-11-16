@@ -1,4 +1,4 @@
-/* @file fcserverImpl.h
+/** @file fcserverImpl.h
  * @brief Dynamic fullcircle implementation for Chibios
  * @author Ollo
  *
@@ -20,8 +20,13 @@
 #endif
 
 #ifndef FCSERVER_IMPL_SLEEPTIME
-#define FCSERVER_IMPL_SLEEPTIME 20	/* time in milliseconds before starting endless loop again */
+#define FCSERVER_IMPL_SLEEPTIME 5	/* time in milliseconds before starting endless loop again */
 #endif
+
+/** @var gFcServerActive
+ * @brief Shared memory, block clients or let clients communicate with the wall
+ */
+extern uint32_t gFcServerActive;
 
 extern WORKING_AREA(wa_fc_server, FCSERVERIMPL_THREAD_STACK_SIZE);
 
