@@ -24,7 +24,9 @@
 #endif
 
 /** @var gFcServerActive
- * @brief block clients or let clients communicate with the wall (accessable for all, as shared memory)
+ * @brief block clients or let clients communicate with the wall (accessible for all, as shared memory)
+ *
+ * The server is active on a positive number (deactivated on zero)
  */
 extern uint32_t gFcServerActive;
 

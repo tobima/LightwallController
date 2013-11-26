@@ -68,7 +68,7 @@ static void handleInputMailbox(void)
 				switch ((uint32_t) msg1) {
 					case 1:
 						gDebugShell = (BaseSequentialStream *) msg2;
-						chprintf((BaseSequentialStream *) msg2, "Debugging works\r\n");
+						chprintf((BaseSequentialStream *) msg2, "FC Server - Debugging active\r\n");
 						hwal_init((BaseSequentialStream *) msg2);
 						break;
 					case 2:
@@ -93,25 +93,26 @@ static void handleInputMailbox(void)
  * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
  ******************************************************************************/
 
-static void onNewImage(uint8_t* rgb24Buffer, int width, int height)
+void onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
-	FCS_PRINT("%d x %d\r\n", width, height);
-	
-	if (gFcServerActive == 0)
+	FCS_PRINT("%d x %d [%d]\r\n", width, height, gFcServerActive);
+	FCS_PRINT("%d,%d, %d\r\n", rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
+
+	if (gFcServerActive)
 	{
 		/* Write the DMX buffer */
 		fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
 	}
 }
 
-static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
+void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
 	/* Update the scheduler about the actual amount of connected client. */
 	gFcConnectedClients = totalAmount;
 	
 	if (gDebugShell)
 	{
-		chprintf(gDebugShell, "Callback client %d did %X '", clientsocket, action);
+		chprintf(gDebugShell, "FcServer - Callback client %d did %X '", clientsocket, action);
 		switch (action) {
 			case FCCLIENT_STATUS_WAITING:
 				chprintf(gDebugShell, "waiting for a GO");
@@ -131,7 +132,7 @@ static void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clie
 				chprintf(gDebugShell, "found this server");	
 				break;
 			case FCCLIENT_STATUS_TOOMUTCH:
-				chprintf(gDebugShell, "is one too mutch");	
+				chprintf(gDebugShell, "is one too much");
 				break;
 			default:
 				break;

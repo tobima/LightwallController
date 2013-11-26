@@ -64,7 +64,7 @@ extern void readConfigurationFile(wallconf_t* pConfiguration);
  * @brief Print a frame to the DMX memory, that will be send to the wall.
  *
  * THIS function MUST only be used by one source.
- * Multiple sources will be disturbe each other ;-)
+ * Multiple sources will be disturb each other ;-)
  *
  * @param[in]	pBuffer		RGB24 memory with the actual frame
  * @param[in]	width		of the actual frame

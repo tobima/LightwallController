@@ -285,7 +285,7 @@ msg_t fc_scheduler(void *p)
 			/* set server status to true */
 			gFcServerActive = TRUE;
 			palSetPad(GPIOD, GPIOD_LED4);       /* Green.  */
-			if (gConnectedClients > 0)
+			if ( gConnectedClients )
 			{
 				gSourceState = FCSRC_STATE_NETWORK;
 			}				
