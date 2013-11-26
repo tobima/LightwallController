@@ -47,99 +47,110 @@ static wallconf_t wallcfg;
  * LOCAL FUNCTIONS
  ******************************************************************************/
 
-static void handleInputMailbox(void)
+static void
+handleInputMailbox(void)
 {
-	msg_t msg1, msg2, status;
-	int newMessages;
-	
-	/* Use nonblocking function to count incoming messages */
-	newMessages = chMBGetUsedCountI(&mailboxIn);
-	
-	if (newMessages >= 2)
-	{
-		/* First retrieve the given pointer */
-		status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
-		if (status == RDY_OK)
-		{
-			status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
-			if (status == RDY_OK)
-			{
-				chSysLock();
-				switch ((uint32_t) msg1) {
-					case 1:
-						gDebugShell = (BaseSequentialStream *) msg2;
-						chprintf((BaseSequentialStream *) msg2, "FC Server - Debugging active\r\n");
-						hwal_init((BaseSequentialStream *) msg2);
-						break;
-					case 2:
-						FCS_PRINT("FC Server - silent mode\r\n");
-						gDebugShell = 0;
-						break;
-					case 3:
-						gFcServerActive = (uint32_t) msg2;
-						FCS_PRINT("DynFc Server - DMX is set to %d\r\n", gFcServerActive);
-						break;
-					default:
-						break;
-				}
-				
-				chSysUnlock();
-			}
-		}
-	}
+  msg_t msg1, msg2, status;
+  int newMessages;
+
+  /* Use nonblocking function to count incoming messages */
+  newMessages = chMBGetUsedCountI(&mailboxIn);
+
+  if (newMessages >= 2)
+    {
+      /* First retrieve the given pointer */
+      status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
+      if (status == RDY_OK)
+        {
+          status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
+          if (status == RDY_OK)
+            {
+              chSysLock()
+              ;
+              switch ((uint32_t) msg1)
+                {
+              case 1:
+                gDebugShell = (BaseSequentialStream *) msg2;
+                chprintf((BaseSequentialStream *) msg2,
+                    "FC Server - Debugging active\r\n");
+                hwal_init((BaseSequentialStream *) msg2);
+                break;
+              case 2:
+                FCS_PRINT("FC Server - silent mode\r\n")
+                ;
+                gDebugShell = 0;
+                break;
+              case 3:
+                gFcServerActive = (uint32_t) msg2;
+                FCS_PRINT("DynFc Server - DMX is set to %d\r\n",
+                    gFcServerActive)
+                ;
+                break;
+              default:
+                break;
+                }
+
+              chSysUnlock();
+            }
+        }
+    }
 }
 
 /******************************************************************************
  * IMPLEMENTATION FOR THE NECESSARY CALLBACKS
  ******************************************************************************/
 
-void onNewImage(uint8_t* rgb24Buffer, int width, int height)
+void
+onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
-	FCS_PRINT("%d x %d [%d]\r\n", width, height, gFcServerActive);
-	FCS_PRINT("%d,%d, %d\r\n", rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
+  FCS_PRINT("%d x %d [%d]\r\n", width, height, gFcServerActive);
+  FCS_PRINT("%d,%d, %d\r\n", rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
 
-	if (gFcServerActive)
-	{
-		/* Write the DMX buffer */
-		fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
-	}
+  if (gFcServerActive)
+    {
+      /* Write the DMX buffer */
+      fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+    }
 }
 
-void onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
+void
+onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
-	/* Update the scheduler about the actual amount of connected client. */
-	gFcConnectedClients = totalAmount;
-	
-	if (gDebugShell)
-	{
-		chprintf(gDebugShell, "FcServer - Callback client %d did %X '", clientsocket, action);
-		switch (action) {
-			case FCCLIENT_STATUS_WAITING:
-				chprintf(gDebugShell, "waiting for a GO");
-				break;
-			case FCCLIENT_STATUS_CONNECTED:
-				chprintf(gDebugShell, "is CONNECTED to the wall");
-				break;
-			case FCCLIENT_STATUS_DISCONNECTED:
-				chprintf(gDebugShell, "has left");
-				/* The actual client left -> update the counter */
-				if (gFcConnectedClients > 0)
-				{
-					gFcConnectedClients--;
-				}
-				break;
-			case FCCLIENT_STATUS_INITING:
-				chprintf(gDebugShell, "found this server");	
-				break;
-			case FCCLIENT_STATUS_TOOMUTCH:
-				chprintf(gDebugShell, "is one too much");
-				break;
-			default:
-				break;
-		}
-		chprintf(gDebugShell, "'\t[%d clients]\r\n", totalAmount);
-	}
-	
+  /* Update the scheduler about the actual amount of connected client. */
+  gFcConnectedClients = totalAmount;
+
+  if (gDebugShell)
+    {
+      chprintf(gDebugShell, "FcServer - Callback client %d did %X '",
+          clientsocket, action);
+      switch (action)
+        {
+      case FCCLIENT_STATUS_WAITING:
+        chprintf(gDebugShell, "waiting for a GO");
+        break;
+      case FCCLIENT_STATUS_CONNECTED:
+        chprintf(gDebugShell, "is CONNECTED to the wall");
+        break;
+      case FCCLIENT_STATUS_DISCONNECTED:
+        chprintf(gDebugShell, "has left");
+        /* The actual client left -> update the counter */
+        if (gFcConnectedClients > 0)
+          {
+            gFcConnectedClients--;
+          }
+        break;
+      case FCCLIENT_STATUS_INITING:
+        chprintf(gDebugShell, "found this server");
+        break;
+      case FCCLIENT_STATUS_TOOMUTCH:
+        chprintf(gDebugShell, "is one too much");
+        break;
+      default:
+        break;
+        }
+      chprintf(gDebugShell, "'\t[%d clients]\r\n", totalAmount);
+    }
+
 }
 
 /******************************************************************************
@@ -154,93 +165,104 @@ WORKING_AREA(wa_fc_server, FCSERVERIMPL_THREAD_STACK_SIZE);
 /**
  * Dynamic fullcircle server thread.
  */
-msg_t fc_server(void *p)
-{		
-	fcserver_ret_t	ret;
-	fcserver_t		server;
-	chRegSetThreadName("fcdynserver");
-	(void)p;
-	
-	/* Prepare Mailbox to communicate with the others */
-	chMBInit(&mailboxIn, (msg_t *)buffer4mailbox2, INPUT_MAILBOX_SIZE);
-	
-	/* read the dimension from the configuration file */
-	readConfigurationFile( &wallcfg );
-	
-	ret = fcserver_init(&server, &onNewImage, &onClientChange, wallcfg.width, wallcfg.height);
-	
-	if (ret != FCSERVER_RET_OK)
-	{
-		/* printf("Server initialization failed with returncode %d\n", ret); */
-		return FR_INT_ERR;
-	}
-	
-	do {
-		handleInputMailbox();
-		
-		ret = fcserver_process(&server);
-		
-		fcserver_setactive(&server, gFcServerActive);
-		
-		chThdSleep(MS2ST(FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
-	} while ( ret == FCSERVER_RET_OK);
-	
-	FCS_PRINT("FATAL error, closing fullcircle server thread\r\n");
-	
-	/* clean the memory of the configuration */
-	if (wallcfg.pLookupTable)
-	{
-		hwal_free(wallcfg.pLookupTable);
-	}
-	
-	/* clean everything */
-	fcserver_close(&server);
-		
-	return RDY_OK;
+msg_t
+fc_server(void *p)
+{
+  fcserver_ret_t ret;
+  fcserver_t server;
+  chRegSetThreadName("fcdynserver");
+  (void) p;
+
+  /* Prepare Mailbox to communicate with the others */
+  chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
+
+  /* read the dimension from the configuration file */
+  readConfigurationFile(&wallcfg);
+
+  ret = fcserver_init(&server, &onNewImage, &onClientChange, wallcfg.width,
+      wallcfg.height);
+
+  if (ret != FCSERVER_RET_OK)
+    {
+      /* printf("Server initialization failed with returncode %d\n", ret); */
+      return FR_INT_ERR;
+    }
+
+  do
+    {
+      handleInputMailbox();
+
+      ret = fcserver_process(&server);
+
+      fcserver_setactive(&server, gFcServerActive);
+
+      chThdSleep(
+          MS2ST(
+              FCSERVER_IMPL_SLEEPTIME /* convert milliseconds to system ticks */));
+    }
+  while (ret == FCSERVER_RET_OK);
+
+  FCS_PRINT("FATAL error, closing fullcircle server thread\r\n");
+
+  /* clean the memory of the configuration */
+  if (wallcfg.pLookupTable)
+    {
+      hwal_free(wallcfg.pLookupTable);
+    }
+
+  /* clean everything */
+  fcserver_close(&server);
+
+  return RDY_OK;
 }
 
-void fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
-{	
-	if(argc < 1)
-	{
-		chprintf(chp, "Usage {debugOn, debugOff, on, off}\r\n");
-		return;
-	}
-	else if(argc >= 1)
+void
+fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
+{
+  if (argc < 1)
     {
-		if (strcmp(argv[0], "debugOn") == 0)
-		{
-			/* Activate the debugging */
-			chprintf(chp, "Activate the logging for fullcircle server\r\n");
-			chSysLock();
-			chMBPostI(&mailboxIn, (uint32_t) 1);
-			chMBPostI(&mailboxIn, (uint32_t) chp);
-			chSysUnlock();
-		}
-		else if (strcmp(argv[0], "debugOff") == 0)
-		{
-			/* Activate the debugging */
-			chprintf(chp, "Deactivate the logging for fullcircle server\r\n");
-			chSysLock();
-			chMBPostI(&mailboxIn, (uint32_t) 2);
-			chMBPostI(&mailboxIn, (uint32_t) 0);
-			chSysUnlock();
-		}
-		else if (strcmp(argv[0], "on") == 0)
-		{
-			chprintf(chp, "Activate DMX output\r\n");
-			chSysLock();
-			chMBPostI(&mailboxIn, (uint32_t) 3);
-			chMBPostI(&mailboxIn, (uint32_t) 1);
-			chSysUnlock();
-		}
-		else if (strcmp(argv[0], "off") == 0)
-		{
-			chprintf(chp, "Turn DMX output OFF\r\n");
-			chSysLock();
-			chMBPostI(&mailboxIn, (uint32_t) 3);
-			chMBPostI(&mailboxIn, (uint32_t) 0);
-			chSysUnlock();
-		}
-	}
+      chprintf(chp, "Usage {debugOn, debugOff, on, off}\r\n");
+      return;
+    }
+  else if (argc >= 1)
+    {
+      if (strcmp(argv[0], "debugOn") == 0)
+        {
+          /* Activate the debugging */
+          chprintf(chp, "Activate the logging for fullcircle server\r\n");
+          chSysLock()
+          ;
+          chMBPostI(&mailboxIn, (uint32_t) 1);
+          chMBPostI(&mailboxIn, (uint32_t) chp);
+          chSysUnlock();
+        }
+      else if (strcmp(argv[0], "debugOff") == 0)
+        {
+          /* Activate the debugging */
+          chprintf(chp, "Deactivate the logging for fullcircle server\r\n");
+          chSysLock()
+          ;
+          chMBPostI(&mailboxIn, (uint32_t) 2);
+          chMBPostI(&mailboxIn, (uint32_t) 0);
+          chSysUnlock();
+        }
+      else if (strcmp(argv[0], "on") == 0)
+        {
+          chprintf(chp, "Activate DMX output\r\n");
+          chSysLock()
+          ;
+          chMBPostI(&mailboxIn, (uint32_t) 3);
+          chMBPostI(&mailboxIn, (uint32_t) 1);
+          chSysUnlock();
+        }
+      else if (strcmp(argv[0], "off") == 0)
+        {
+          chprintf(chp, "Turn DMX output OFF\r\n");
+          chSysLock()
+          ;
+          chMBPostI(&mailboxIn, (uint32_t) 3);
+          chMBPostI(&mailboxIn, (uint32_t) 0);
+          chSysUnlock();
+        }
+    }
 }

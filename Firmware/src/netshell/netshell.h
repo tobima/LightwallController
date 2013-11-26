@@ -16,9 +16,11 @@
 extern WORKING_AREA(wa_net_shell_server, NET_SHELL_THREAD_STACK_SIZE);
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-  msg_t server_thread(void *p);
+  msg_t
+  server_thread(void *p);
 #ifdef __cplusplus
 }
 #endif

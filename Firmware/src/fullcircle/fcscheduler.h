@@ -11,14 +11,12 @@
 #include "hal.h"
 #include "ff.h"
 
-
 #ifndef _FCSCHEDULER_H
 #define _FCSCHEDULER_H
 
 #ifndef FCSCHEDULER_THREAD_STACK_SIZE
 #define FCSCHEDULER_THREAD_STACK_SIZE   THD_WA_SIZE(2048) /* Increase memory for parsing */
 #endif
-
 
 /** @var gFcConnectedClients
  * @brief Amount of actual clients connected via the network (accessable for all, as shared memory)
@@ -32,9 +30,11 @@ extern uint32_t gFcConnectedClients;
 extern WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-	msg_t fc_scheduler(void *p);
+  msg_t
+  fc_scheduler(void *p);
 #ifdef __cplusplus
 }
 #endif
@@ -42,14 +42,14 @@ extern "C" {
 /** @var wallconf_t
  *  @brief This structure contains information about the physical wall
  */
-typedef struct  {
-	int			width;			/**< Horizontal count of boxes the phyical installation */
-	int			height;			/**< Vertical count of boxes the phyical installation */
-	int			fps;			/**< Framerate, the wall uses */
-	int			dimmFactor;		/**< In percent -> 100 no change, 50 half the brightness */
-	uint32_t	*pLookupTable;	/**< Memory to the Loopuptable, must be freed after usage */
+typedef struct
+{
+  int width; /**< Horizontal count of boxes the phyical installation */
+  int height; /**< Vertical count of boxes the phyical installation */
+  int fps; /**< Framerate, the wall uses */
+  int dimmFactor; /**< In percent -> 100 no change, 50 half the brightness */
+  uint32_t *pLookupTable; /**< Memory to the Loopuptable, must be freed after usage */
 } wallconf_t;
-
 
 /** @fn void readConfigurationFile( extern wallconf_t )
  * @brief Read configuration file
@@ -58,7 +58,8 @@ typedef struct  {
  
  * @param[out]	pConfiguration	Read configuration
  */
-extern void readConfigurationFile(wallconf_t* pConfiguration);
+extern void
+readConfigurationFile(wallconf_t* pConfiguration);
 
 /** @fn void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
  * @brief Print a frame to the DMX memory, that will be send to the wall.
@@ -72,11 +73,14 @@ extern void readConfigurationFile(wallconf_t* pConfiguration);
  * @param[in]	pWallcfg	Configuration
  *
  */
-extern void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg);
+extern void
+fcsched_printFrame(uint8_t* pBuffer, int width, int height,
+    wallconf_t* pWallcfg);
 
 /**
  * Debug interface for the commandline
  */
-void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
+void
+fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
 
 #endif /* End of _FCSCHEDULER_H */

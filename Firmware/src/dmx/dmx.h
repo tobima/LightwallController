@@ -25,10 +25,11 @@
 
 #define DMX_BUFFER_MAX	513
 
-typedef struct  {
-	uint8_t		startbyte;
-	uint8_t		buffer[DMX_BUFFER_MAX];
-	uint16_t	length;
+typedef struct
+{
+  uint8_t startbyte;
+  uint8_t buffer[DMX_BUFFER_MAX];
+  uint16_t length;
 } DMXBuffer;
 
 extern DMXBuffer dmx_buffer;
@@ -36,10 +37,13 @@ extern DMXBuffer dmx_buffer;
 extern WORKING_AREA(wa_dmx, DMX_THREAD_STACK_SIZE);
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-  msg_t dmxthread(void *p);
-  void DMXInit(void);
+  msg_t
+  dmxthread(void *p);
+  void
+  DMXInit(void);
 #ifdef __cplusplus
 }
 #endif

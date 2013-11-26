@@ -1,7 +1,9 @@
 #include "lwipthread.h"
 
-typedef struct  {
+typedef struct
+{
   struct lwipthread_opts network;
 } configuration_t;
 
-int conf_load(configuration_t* config);
+int
+conf_load(configuration_t* config);

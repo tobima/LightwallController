@@ -19,7 +19,8 @@
  * @return -1 when the found path does not fit into filename
  * @return 1 if the SDCard could be opend
  */
-int fcstatic_open_sdcard(void);
+int
+fcstatic_open_sdcard(void);
 
 /** @fn int fcstatic_getnext_file(char* filename, uint32_t length, char *path)
  * @brief pick the next file to process
@@ -35,7 +36,9 @@ int fcstatic_open_sdcard(void);
  * @return -1 when the found path does not fit into filename
  * @return 1 if a file was found
  */
-int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength, char *pLastFilename);
+int
+fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength,
+    char *pLastFilename);
 
 /** @fn void fcstatic_remove_filename(char *path, char *pFilename, uint32_t filenameLength)
  * @brief Extract the filename from the path.
@@ -46,7 +49,9 @@ int fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength, ch
  * @param[in]		ppFilename	storage for the filename, will be "free"d if necessary
  * @param[in,out]	pFilelength	length of the filename appended in path
  */
-void fcstatic_remove_filename(char *path, char **ppFilename, uint32_t filenameLength);
+void
+fcstatic_remove_filename(char *path, char **ppFilename,
+    uint32_t filenameLength);
 
 /** @fn void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp)
  * @brief Plays a given sequence to the wall.
@@ -55,6 +60,8 @@ void fcstatic_remove_filename(char *path, char **ppFilename, uint32_t filenameLe
  * @param[in]	pConfiguration	configuration of the wall, mappingtable, fps & dimmfactor are needed (optiinal)
  * @param[in]	chp				Stream for debug outputs (optional)
  */
-int fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp);
+int
+fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration,
+    BaseSequentialStream *chp);
 
 #endif /* End of FCSTATIC_H */
