@@ -66,7 +66,6 @@ static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 static wallconf_t wallcfg;
 
 static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
-static int gConnectedClients = 0;
 
 uint32_t gFcConnectedClients = 0;
 
@@ -299,16 +298,15 @@ fc_scheduler(void *p)
         fcstatic_remove_filename(path, &filename, filenameLength);
         gSourceState = FCSRC_STATE_NOBODY;
 
-        FCSHED_PRINT("Check Ethernet interface %d\r\n", gConnectedClients)
-        ;
+        FCSHED_PRINT("Check Ethernet interface %d\r\n", gFcConnectedClients);
 
-        /* set server status to true */
-        gFcServerActive = TRUE;
-        palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
-        if (gConnectedClients)
-          {
+        if (gFcConnectedClients)
+        {
+            /* set server status to true */
+            gFcServerActive = TRUE;
+            palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
             gSourceState = FCSRC_STATE_NETWORK;
-          }
+        }
         break;
       case FCSRC_STATE_FILE:
         if (rgb24 == NULL)
@@ -329,7 +327,7 @@ fc_scheduler(void *p)
           }
         break;
       case FCSRC_STATE_NETWORK:
-        if (gConnectedClients <= 0)
+        if (gFcConnectedClients <= 0)
           {
             gSourceState = FCSRC_STATE_NOBODY;
           }
