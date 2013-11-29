@@ -41,9 +41,21 @@
 #define	MSG_SETFPS			2
 #define	MSG_DIMM			3
 
-/**
- * @typedef fcsource_state_t
+/** @typedef fcsource_state_t
  * @brief Status of the actual used source.
+ *
+ *
+ * @dot
+digraph G {
+edge [fontsize=10];
+start -> nobody [label="Starting"];
+nobody -> file [label="Nobody is sending DMX"];
+file -> fileended [label="Last Frame sent"];
+fileended -> file [label="Goto next file"];
+fileended -> network [label = "Client is waiting"];
+network -> file [label = "Client disconnected"];
+}
+@enddot
  */
 typedef enum
 {
