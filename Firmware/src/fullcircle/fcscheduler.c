@@ -48,6 +48,7 @@
  * @dot
 digraph G {
 edge [fontsize=10];
+start [shape = rect];
 start -> nobody [label="Starting"];
 nobody -> file [label="Nobody is sending DMX"];
 file -> fileended [label="Last Frame sent"];
