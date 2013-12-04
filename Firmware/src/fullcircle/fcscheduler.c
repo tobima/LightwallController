@@ -33,6 +33,8 @@
 #define INPUT_MAILBOX_SIZE		4
 #define DEFAULT_SLEEPTIME		5 /**< Time to wait at default before an cycle of the thread starts again */
 
+#define MAXIMUM_INITIALIZATION		10
+
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
 #define FCSHED_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
@@ -223,7 +225,7 @@ fc_scheduler(void *p)
   (void) p;
 
   /* Initialize the SDcard */
-  do
+  for(res = 0 /* reuse res to avoid endless loop*/; res < MAXIMUM_INITIALIZATION; res++)
     {
       err = f_getfree("/", &clusters, &fsp);
       chThdSleep(MS2ST(100));

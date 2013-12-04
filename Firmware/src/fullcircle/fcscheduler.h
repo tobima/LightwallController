@@ -11,6 +11,8 @@
 #include "hal.h"
 #include "ff.h"
 
+#define INPUT_DYNMAILBOX_SIZE	10
+
 #ifndef _FCSCHEDULER_H
 #define _FCSCHEDULER_H
 
@@ -28,6 +30,14 @@ extern uint32_t gFcConnectedClients;
  * Stack area for the scheduler thread.
  */
 extern WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
+
+/**
+ * @var 
+ * Mailbox, that must be filled from the network code.
+ * When this mailbox runs empty, the network code will be stopped.
+ */
+extern uint32_t gFcBuf4DynQueue[INPUT_DYNMAILBOX_SIZE];
+extern MAILBOX_DECL(gFcMailboxDyn, gFcBuf4DynQueue, INPUT_MAILBOX_SIZE);
 
 #ifdef __cplusplus
 extern "C"

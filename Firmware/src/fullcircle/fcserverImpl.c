@@ -103,9 +103,6 @@ handleInputMailbox(void)
 void
 onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
-  FCS_PRINT("%d x %d [%d]\r\n", width, height, gFcServerActive);
-  FCS_PRINT("%d,%d, %d\r\n", rgb24Buffer[0], rgb24Buffer[1], rgb24Buffer[2]);
-
   if (gFcServerActive)
     {
       /* Write the DMX buffer */
