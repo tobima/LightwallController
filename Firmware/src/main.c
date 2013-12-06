@@ -145,8 +145,6 @@ print_fsusage(BaseSequentialStream *chp, int argc, char *argv[])
   uint32_t clusters;
   FATFS *fsp;
   DIR dir;
-  FRESULT err;
-  int i = 0;
 
   (void) argc;
   (void) argv;

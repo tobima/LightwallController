@@ -65,7 +65,7 @@ typedef enum
   FCSRC_STATE_NOBODY = 0, /**< Nobody is writing into the DMX buffer  */
   FCSRC_STATE_FILE, /**< Actual sending frames from a file  */
   FCSRC_STATE_FILEENDED, /**< Need to find the next file to play */
-  FCSRC_STATE_NETWORK /**< Someone is streaming dynamic content to us */
+  FCSRC_STATE_NETWORK	 /**< Someone is streaming dynamic content to us */
 } fcsource_state_t;
 
 
@@ -307,7 +307,7 @@ fc_scheduler(void *p)
         /* Deactivate network code stuff */
 
         /*set server inactive */
-        gFcServerActive = 0;
+    	gFcServerActive = 0;
         palClearPad(GPIOD, GPIOD_LED4); /* Green.  */
 
         if (resOpen)

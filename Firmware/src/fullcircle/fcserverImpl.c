@@ -65,8 +65,7 @@ handleInputMailbox(void)
           status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
           if (status == RDY_OK)
             {
-              chSysLock()
-              ;
+              chSysLock();
               switch ((uint32_t) msg1)
                 {
               case 1:
@@ -76,8 +75,7 @@ handleInputMailbox(void)
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
               case 2:
-                FCS_PRINT("FC Server - silent mode\r\n")
-                ;
+                FCS_PRINT("FC Server - silent mode\r\n");
                 gDebugShell = 0;
                 break;
               case 3:
