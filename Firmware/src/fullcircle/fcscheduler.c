@@ -227,7 +227,7 @@ fc_scheduler(void *p)
   fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
   uint8_t* rgb24 = NULL;
 
-  /* small hack to initialize these global variables */
+  /* small hack to initialize the global variables */
   gFcBuf4DynQueue = (uint32_t*) hwal_malloc(sizeof(uint32_t) *INPUT_DYNMAILBOX_SIZE);
   MAILBOX_DECL(fcMailboxDyn,gFcBuf4DynQueue, INPUT_DYNMAILBOX_SIZE);
   gFcMailboxDyn = &fcMailboxDyn;
