@@ -21,7 +21,7 @@
 #include "dmx/dmx.h"
 
 #define OUTPUT_MAILBOX_SIZE		10
-#define INPUT_MAILBOX_SIZE		5
+#define FCSERVER_MAILBOX_SIZE		5
 
 #define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
@@ -36,8 +36,8 @@ uint32_t gFcServerActive = 0;
  ******************************************************************************/
 
 /* Mailbox, checked by the fc_server thread */
-static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
-static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
+static uint32_t gFcServerMailboxBuffer[FCSERVER_MAILBOX_SIZE];
+static MAILBOX_DECL(gFcServerMailbox, gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
 
 static BaseSequentialStream * gDebugShell = NULL;
 
@@ -54,15 +54,15 @@ handleInputMailbox(void)
   int newMessages;
 
   /* Use nonblocking function to count incoming messages */
-  newMessages = chMBGetUsedCountI(&mailboxIn);
+  newMessages = chMBGetUsedCountI(&gFcServerMailbox);
 
   if (newMessages >= 2)
     {
       /* First retrieve the given pointer */
-      status = chMBFetch(&mailboxIn, &msg1, TIME_INFINITE);
+      status = chMBFetch(&gFcServerMailbox, &msg1, TIME_INFINITE);
       if (status == RDY_OK)
         {
-          status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
+          status = chMBFetch(&gFcServerMailbox, &msg2, TIME_INFINITE);
           if (status == RDY_OK)
             {
               chSysLock();
@@ -173,7 +173,7 @@ fc_server(void *p)
   (void) p;
 
   /* Prepare Mailbox to communicate with the others */
-  chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
+  chMBInit(&gFcServerMailbox, (msg_t *) gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
 
   /* read the dimension from the configuration file */
   readConfigurationFile(&wallcfg);
@@ -231,8 +231,8 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chprintf(chp, "Activate the logging for fullcircle server\r\n");
           chSysLock()
           ;
-          chMBPostI(&mailboxIn, (uint32_t) 1);
-          chMBPostI(&mailboxIn, (uint32_t) chp);
+          chMBPostI(&gFcServerMailbox, (uint32_t) 1);
+          chMBPostI(&gFcServerMailbox, (uint32_t) chp);
           chSysUnlock();
         }
       else if (strcmp(argv[0], "debugOff") == 0)
@@ -241,8 +241,8 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chprintf(chp, "Deactivate the logging for fullcircle server\r\n");
           chSysLock()
           ;
-          chMBPostI(&mailboxIn, (uint32_t) 2);
-          chMBPostI(&mailboxIn, (uint32_t) 0);
+          chMBPostI(&gFcServerMailbox, (uint32_t) 2);
+          chMBPostI(&gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
         }
       else if (strcmp(argv[0], "on") == 0)
@@ -250,8 +250,8 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chprintf(chp, "Activate DMX output\r\n");
           chSysLock()
           ;
-          chMBPostI(&mailboxIn, (uint32_t) 3);
-          chMBPostI(&mailboxIn, (uint32_t) 1);
+          chMBPostI(&gFcServerMailbox, (uint32_t) 3);
+          chMBPostI(&gFcServerMailbox, (uint32_t) 1);
           chSysUnlock();
         }
       else if (strcmp(argv[0], "off") == 0)
@@ -259,8 +259,8 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chprintf(chp, "Turn DMX output OFF\r\n");
           chSysLock()
           ;
-          chMBPostI(&mailboxIn, (uint32_t) 3);
-          chMBPostI(&mailboxIn, (uint32_t) 0);
+          chMBPostI(&gFcServerMailbox, (uint32_t) 3);
+          chMBPostI(&gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
         }
     }
