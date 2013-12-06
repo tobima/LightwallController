@@ -165,10 +165,12 @@ static void fcsched_handleFcMailboxDyn(void)
 	  {
 		  FCSHED_PRINT("%d counting down...\r\n", gDynamicServerTimeout);
 		  gDynamicServerTimeout--;
-		  if (gDynamicServerTimeout == 0)
+
+		  /* Check if the counter is outside of its borders */
+		  if (gDynamicServerTimeout == 0 || gDynamicServerTimeout > FCSCHED_DYNSERVER_RESETVALUE)
 		  {
 			  FCSHED_PRINT("%d wall is dead.\r\n", gSourceState);
-			  gSourceState == FCSRC_STATE_NOBODY;
+			  gSourceState = FCSRC_STATE_NOBODY;
 		  }
 	  }
   }
