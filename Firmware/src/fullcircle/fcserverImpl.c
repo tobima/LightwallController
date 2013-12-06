@@ -23,11 +23,6 @@
 #define OUTPUT_MAILBOX_SIZE		10
 #define FCSERVER_MAILBOX_SIZE		5
 
-#define FCSERVER_CMD_DEBUG_ON				1
-#define FCSERVER_CMD_DEBUG_OFF				2
-#define FCSERVER_CMD_MODIFY_ACTIVE			3
-#define FCSERVER_CMD_MODIFY_DISCONNECTALL	4
-
 #define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
 /******************************************************************************

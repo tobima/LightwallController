@@ -22,6 +22,14 @@
 #define FCSERVER_IMPL_SLEEPTIME 5	/* time in milliseconds before starting endless loop again */
 #endif
 
+/**
+ * Commands that can be sent via the mailbox @see gFcServerMailbox
+ */
+#define FCSERVER_CMD_DEBUG_ON				1	/**< Command to deactivate debugging */
+#define FCSERVER_CMD_DEBUG_OFF				2	/**< Command to activate debugging */
+#define FCSERVER_CMD_MODIFY_ACTIVE			3	/**< Command to modify if the server can send something to the wall */
+#define FCSERVER_CMD_MODIFY_DISCONNECTALL	4	/**< Command to disconnect all actual connected clients */
+
 /** @var gFcServerActive
  * @brief block clients or let clients communicate with the wall (accessible for all, as shared memory)
  *
