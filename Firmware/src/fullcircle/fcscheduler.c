@@ -31,9 +31,9 @@
 
 #define	FILENAME_LENGTH			512	/**< Including the absolut path to the file */
 #define INPUT_MAILBOX_SIZE		4
-#define DEFAULT_SLEEPTIME		5 /**< Time to wait at default before an cycle of the thread starts again */
 
-#define MAXIMUM_INITIALIZATION		10
+#define MAXIMUM_INITIALIZATION			10
+#define	FCSCHED_DYNSERVER_RESETVALUE	100	/**< Dynamic server, must be triggered */
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
@@ -92,6 +92,8 @@ static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
 
 uint32_t gFcConnectedClients = 0;
 
+static uint32_t gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
+
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -135,6 +137,41 @@ fcsched_handleInputMailbox(void)
             }
         }
     }
+}
+
+static void fcsched_handleFcMailboxDyn(void)
+{
+  msg_t msg1, status;
+  int newMessages;
+
+  /* Use nonblocking function to count incoming messages */
+  newMessages = chMBGetUsedCountI(gFcMailboxDyn);
+
+
+  if (newMessages)
+  {
+      status = chMBFetch(gFcMailboxDyn, &msg1, TIME_INFINITE);
+      if (status == RDY_OK)
+      {
+              chSysLock();
+              FCSHED_PRINT("%d\r\n", ((uint32_t) msg1));
+              chSysUnlock();
+              gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
+      }
+  }
+  else
+  {
+	  if (gSourceState == FCSRC_STATE_NETWORK)
+	  {
+		  FCSHED_PRINT("%d counting down...\r\n", gDynamicServerTimeout);
+		  gDynamicServerTimeout--;
+		  if (gDynamicServerTimeout == 0)
+		  {
+			  FCSHED_PRINT("%d wall is dead.\r\n", gSourceState);
+			  gSourceState == FCSRC_STATE_NOBODY;
+		  }
+	  }
+  }
 }
 
 /** @fn static int wall_handler(void* config, const char* section, const char* name, const char* value)
@@ -209,7 +246,7 @@ WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
 msg_t
 fc_scheduler(void *p)
 {
-  int sleeptime = DEFAULT_SLEEPTIME;
+  int sleeptime = FCSERVER_IMPL_SLEEPTIME;
   /* File handling variables: */
   int res, resOpen;
   char path[FILENAME_LENGTH];
@@ -258,8 +295,9 @@ fc_scheduler(void *p)
   hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
 
   do
-    {
+  {
       fcsched_handleInputMailbox();
+      fcsched_handleFcMailboxDyn();
 
       switch (gSourceState)
         {
@@ -320,7 +358,7 @@ fc_scheduler(void *p)
           }
         rgb24 = NULL;
         fcseq_close(&seq);
-        sleeptime = DEFAULT_SLEEPTIME;
+        sleeptime = FCSERVER_IMPL_SLEEPTIME;
         palClearPad(GPIOD, GPIOD_LED5); /* Red.  */
 
         /*extract filename from path for the next cycle */
@@ -357,14 +395,14 @@ fc_scheduler(void *p)
         break;
       case FCSRC_STATE_NETWORK:
         if (gFcConnectedClients <= 0)
-          {
+        {
             gSourceState = FCSRC_STATE_NOBODY;
-          }
+        	FCSHED_PRINT("CLient disconnected %d\r\n", gSourceState);
+        }
         break;
       default:
         /*FIXME check dynamic fullcircle for a new client */
-        FCSHED_PRINT("Unkown status: %d\r\n", gSourceState)
-        ;
+        FCSHED_PRINT("Unkown status: %d\r\n", gSourceState);
         break;
         }
 
@@ -449,8 +487,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
         {
           /* Activate the debugging */
           chprintf(chp, "Activate the logging for Fullcircle Scheduler\r\n");
-          chSysLock()
-          ;
+          chSysLock();
           chMBPostI(&mailboxIn, (uint32_t) MSG_ACTIVATE_SHELL);
           chMBPostI(&mailboxIn, (uint32_t) chp);
           chSysUnlock();
