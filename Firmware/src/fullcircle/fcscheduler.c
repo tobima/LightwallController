@@ -68,6 +68,14 @@ typedef enum
   FCSRC_STATE_NETWORK /**< Someone is streaming dynamic content to us */
 } fcsource_state_t;
 
+
+/******************************************************************************
+ * GLOBAL VARIABLES for this module
+ ******************************************************************************/
+
+uint32_t*	gFcBuf4DynQueue;
+Mailbox *	gFcMailboxDyn;
+
 /******************************************************************************
  * LOCAL VARIABLES for this module
  ******************************************************************************/
@@ -218,6 +226,12 @@ fc_scheduler(void *p)
   fcsequence_t seq;
   fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
   uint8_t* rgb24 = NULL;
+
+  /* small hack to initialize these global variables */
+  gFcBuf4DynQueue = (uint32_t*) hwal_malloc(sizeof(uint32_t) *INPUT_DYNMAILBOX_SIZE);
+  MAILBOX_DECL(fcMailboxDyn,gFcBuf4DynQueue, INPUT_DYNMAILBOX_SIZE);
+  gFcMailboxDyn = &fcMailboxDyn;
+
 
   hwal_memset(&seq, 0, sizeof(fcsequence_t));
 

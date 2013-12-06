@@ -32,12 +32,13 @@ extern uint32_t gFcConnectedClients;
 extern WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
 
 /**
- * @var 
+ * @var gFcBuf4DynQueue
+ * @var gFcMailboxDyn
  * Mailbox, that must be filled from the network code.
  * When this mailbox runs empty, the network code will be stopped.
  */
-extern uint32_t gFcBuf4DynQueue[INPUT_DYNMAILBOX_SIZE];
-extern MAILBOX_DECL(gFcMailboxDyn, gFcBuf4DynQueue, INPUT_MAILBOX_SIZE);
+extern uint32_t*	gFcBuf4DynQueue;
+extern Mailbox *	gFcMailboxDyn;
 
 #ifdef __cplusplus
 extern "C"
