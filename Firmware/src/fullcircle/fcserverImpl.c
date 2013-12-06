@@ -23,6 +23,11 @@
 #define OUTPUT_MAILBOX_SIZE		10
 #define FCSERVER_MAILBOX_SIZE		5
 
+#define FCSERVER_CMD_DEBUG_ON				1
+#define FCSERVER_CMD_DEBUG_OFF				2
+#define FCSERVER_CMD_MODIFY_ACTIVE			3
+#define FCSERVER_CMD_MODIFY_DISCONNECTALL	4
+
 #define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
 /******************************************************************************
@@ -36,8 +41,8 @@ uint32_t gFcServerActive = 0;
  ******************************************************************************/
 
 /* Mailbox, checked by the fc_server thread */
-static uint32_t gFcServerMailboxBuffer[FCSERVER_MAILBOX_SIZE];
-static MAILBOX_DECL(gFcServerMailbox, gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
+uint32_t*	gFcServerMailboxBuffer	= NULL;
+Mailbox *	gFcServerMailbox 		= NULL;
 
 static BaseSequentialStream * gDebugShell = NULL;
 
@@ -47,43 +52,46 @@ static wallconf_t wallcfg;
  * LOCAL FUNCTIONS
  ******************************************************************************/
 
-static void
+static int
 handleInputMailbox(void)
 {
   msg_t msg1, msg2, status;
   int newMessages;
+  int mailboxCmd;
 
   /* Use nonblocking function to count incoming messages */
-  newMessages = chMBGetUsedCountI(&gFcServerMailbox);
+  newMessages = chMBGetUsedCountI(gFcServerMailbox);
 
   if (newMessages >= 2)
     {
       /* First retrieve the given pointer */
-      status = chMBFetch(&gFcServerMailbox, &msg1, TIME_INFINITE);
+      status = chMBFetch(gFcServerMailbox, &msg1, TIME_INFINITE);
       if (status == RDY_OK)
         {
-          status = chMBFetch(&gFcServerMailbox, &msg2, TIME_INFINITE);
+          status = chMBFetch(gFcServerMailbox, &msg2, TIME_INFINITE);
           if (status == RDY_OK)
             {
               chSysLock();
               switch ((uint32_t) msg1)
                 {
-              case 1:
+              case FCSERVER_CMD_DEBUG_ON:
                 gDebugShell = (BaseSequentialStream *) msg2;
                 chprintf((BaseSequentialStream *) msg2,
                     "FC Server - Debugging active\r\n");
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
-              case 2:
+              case FCSERVER_CMD_DEBUG_OFF:
                 FCS_PRINT("FC Server - silent mode\r\n");
                 gDebugShell = 0;
                 break;
-              case 3:
+              case FCSERVER_CMD_MODIFY_ACTIVE:
                 gFcServerActive = (uint32_t) msg2;
                 FCS_PRINT("DynFc Server - DMX is set to %d\r\n",
-                    gFcServerActive)
-                ;
+                    gFcServerActive);
                 break;
+              case FCSERVER_CMD_MODIFY_DISCONNECTALL:
+            	  mailboxCmd = FCSERVER_CMD_MODIFY_DISCONNECTALL;
+            	  break;
               default:
                 break;
                 }
@@ -92,6 +100,7 @@ handleInputMailbox(void)
             }
         }
     }
+  	return mailboxCmd;
 }
 
 /******************************************************************************
@@ -171,9 +180,16 @@ fc_server(void *p)
   fcserver_t server;
   chRegSetThreadName("fcdynserver");
   (void) p;
+  int mailboxCmd;
+
+  /* small hack to initialize the global accessible server */
+  gFcServerMailboxBuffer = hwal_malloc(sizeof(uint32_t) * FCSERVER_MAILBOX_SIZE);
+  MAILBOX_DECL(fcServerMailbox, gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
+  gFcServerMailbox = &fcServerMailbox;
+
 
   /* Prepare Mailbox to communicate with the others */
-  chMBInit(&gFcServerMailbox, (msg_t *) gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
+  chMBInit(gFcServerMailbox, (msg_t *) gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
 
   /* read the dimension from the configuration file */
   readConfigurationFile(&wallcfg);
@@ -189,7 +205,14 @@ fc_server(void *p)
 
   do
     {
-      handleInputMailbox();
+	  mailboxCmd = handleInputMailbox();
+      switch(mailboxCmd) {
+      case FCSERVER_CMD_MODIFY_DISCONNECTALL:
+    	  fcserver_disconnect_all(&server);
+    	  break;
+      default:
+    	  break;
+      }
 
       ret = fcserver_process(&server);
 
@@ -220,7 +243,7 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
   if (argc < 1)
     {
-      chprintf(chp, "Usage {debugOn, debugOff, on, off}\r\n");
+      chprintf(chp, "Usage {debugOn, debugOff, on, off, disconnect}\r\n");
       return;
     }
   else if (argc >= 1)
@@ -231,37 +254,42 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chprintf(chp, "Activate the logging for fullcircle server\r\n");
           chSysLock()
           ;
-          chMBPostI(&gFcServerMailbox, (uint32_t) 1);
-          chMBPostI(&gFcServerMailbox, (uint32_t) chp);
+          chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_DEBUG_ON);
+          chMBPostI(gFcServerMailbox, (uint32_t) chp);
           chSysUnlock();
         }
       else if (strcmp(argv[0], "debugOff") == 0)
         {
           /* Activate the debugging */
           chprintf(chp, "Deactivate the logging for fullcircle server\r\n");
-          chSysLock()
-          ;
-          chMBPostI(&gFcServerMailbox, (uint32_t) 2);
-          chMBPostI(&gFcServerMailbox, (uint32_t) 0);
+          chSysLock();
+          chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_DEBUG_OFF);
+          chMBPostI(gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
         }
       else if (strcmp(argv[0], "on") == 0)
         {
           chprintf(chp, "Activate DMX output\r\n");
-          chSysLock()
-          ;
-          chMBPostI(&gFcServerMailbox, (uint32_t) 3);
-          chMBPostI(&gFcServerMailbox, (uint32_t) 1);
+          chSysLock();
+          chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_ACTIVE);
+          chMBPostI(gFcServerMailbox, (uint32_t) 1);
           chSysUnlock();
         }
       else if (strcmp(argv[0], "off") == 0)
         {
           chprintf(chp, "Turn DMX output OFF\r\n");
-          chSysLock()
-          ;
-          chMBPostI(&gFcServerMailbox, (uint32_t) 3);
-          chMBPostI(&gFcServerMailbox, (uint32_t) 0);
+          chSysLock();
+          chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_ACTIVE);
+          chMBPostI(gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
         }
+      else if (strcmp(argv[0], "disconnect") == 0)
+      {
+        chprintf(chp, "Disconnect all clients\r\n");
+        chSysLock();
+        chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_DISCONNECTALL);
+        chMBPostI(gFcServerMailbox, (uint32_t) 1);
+        chSysUnlock();
+      }
     }
 }

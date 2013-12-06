@@ -29,6 +29,14 @@
  */
 extern uint32_t gFcServerActive;
 
+/**
+ * @var gFcServerMailboxBuffer
+ * @var gFcServerMailbox
+ * External mailbox interface to communicate with the dynamic server
+ */
+extern uint32_t*	gFcServerMailboxBuffer;
+extern Mailbox *	gFcServerMailbox;
+
 extern WORKING_AREA(wa_fc_server, FCSERVERIMPL_THREAD_STACK_SIZE);
 
 #ifdef __cplusplus
