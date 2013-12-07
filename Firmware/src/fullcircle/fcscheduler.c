@@ -39,7 +39,7 @@
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
-#define FCSHED_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
+#define FCSCHED_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
 #define	MSG_ACTIVATE_SHELL	1
 #define	MSG_SETFPS		2
@@ -167,7 +167,7 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
       if (status == RDY_OK)
         {
           chSysLock();
-          FCSHED_PRINT("%d\r\n", ((uint32_t ) msg1));
+          FCSCHED_PRINT("%d\r\n", ((uint32_t ) msg1));
           chSysUnlock();
           gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
         }
@@ -176,7 +176,7 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
     {
       if (gSourceState == FCSRC_STATE_NETWORK)
         {
-          FCSHED_PRINT("FcDyn timeout %6d / %6d [ms]\r\n",
+          FCSCHED_PRINT("FcDyn timeout %6d / %6d [ms]\r\n",
               FCSCHED_DYNSERVER_RESETVALUE - gDynamicServerTimeout, FCSCHED_DYNSERVER_RESETVALUE);
 
           if (gDynamicServerTimeout == 0)
@@ -188,7 +188,7 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
               || gDynamicServerTimeout > FCSCHED_DYNSERVER_RESETVALUE)
           {
               gDynamicServerTimeout = 0; /* deactivate monitoring */
-              FCSHED_PRINT("%d wall is dead. (actual %d clients connected)\r\n",
+              FCSCHED_PRINT("%d wall is dead. (actual %d clients connected)\r\n",
                   gSourceState, gFcConnectedClients);
               gSourceState = FCSRC_STATE_NOBODY;
 
@@ -278,7 +278,7 @@ configuration_handler(void* config, const char* section, const char* name,
     const char* value)
 {
   schedulerconf_t* pconfig = (schedulerconf_t*) config;
-  if (MATCH("scheduler", "netOnly"))
+  if (MATCH("scheduler", "netonly"))
     {
       pconfig->netOnly = strtol(value, NULL, 10);
     }
@@ -348,11 +348,17 @@ fc_scheduler(void *p)
 
     /* Load the configuration */
     hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
+
     ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
+
     if (schedConfiguration.netOnly)
       {
-        FCSHED_PRINT("Deactivating Scheduler");
+        FCSCHED_PRINT("Deactivating Scheduler");
         gSchedulerActive = 0;
+        chSysLock();
+        chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
+        chMBPostI(&mailboxIn, (uint32_t) 1);
+        chSysUnlock();
       }
 
   /* Prepare Mailbox to communicate with the others */
@@ -374,6 +380,8 @@ fc_scheduler(void *p)
       case FCSRC_STATE_NOBODY:
         /* Deactivate network code stuff */
 
+        FCSCHED_PRINT("Net ONLY ?!? %d",        schedConfiguration.netOnly);
+
         /*set server inactive */
         gFcServerActive = 0;
         palClearPad(GPIOD, GPIOD_LED4); /* Green.  */
@@ -385,7 +393,7 @@ fc_scheduler(void *p)
                 filename);
             if (res)
               {
-                FCSHED_PRINT("%s ...\r\n", path);
+                FCSCHED_PRINT("%s ...\r\n", path);
 
                 /* Initialize the file for playback */
                 seqRet = fcseq_load(path, &seq);
@@ -396,7 +404,7 @@ fc_scheduler(void *p)
                     rgb24 = (uint8_t*) chHeapAlloc(NULL,
                         (seq.width * seq.height * 3));
                     seq.fps = wallcfg.fps;
-                    FCSHED_PRINT("Using %d fps and dimmed to %d %.\r\n",
+                    FCSCHED_PRINT("Using %d fps and dimmed to %d %.\r\n",
                         seq.fps, wallcfg.dimmFactor);
                     sleeptime = (1000 / seq.fps);
                     palSetPad(GPIOD, GPIOD_LED5); /* Red.  */
@@ -416,7 +424,7 @@ fc_scheduler(void *p)
           }
         else
           {
-            FCSHED_PRINT("Reopen SDcard\r\n");
+            FCSCHED_PRINT("Reopen SDcard\r\n");
             resOpen = fcstatic_open_sdcard();
           }
         break;
@@ -435,7 +443,7 @@ fc_scheduler(void *p)
         fcstatic_remove_filename(path, &filename, filenameLength);
         gSourceState = FCSRC_STATE_NOBODY;
 
-        FCSHED_PRINT("Check Ethernet interface %d\r\n", gFcConnectedClients)
+        FCSCHED_PRINT("Check Ethernet interface %d\r\n", gFcConnectedClients)
         ;
 
         if (gFcConnectedClients)
@@ -469,12 +477,12 @@ fc_scheduler(void *p)
         if (gFcConnectedClients <= 0)
           {
             gSourceState = FCSRC_STATE_NOBODY;
-            FCSHED_PRINT("CLient disconnected %d\r\n", gSourceState);
+            FCSCHED_PRINT("CLient disconnected %d\r\n", gSourceState);
           }
         break;
       default:
         /*FIXME check dynamic fullcircle for a new client */
-        FCSHED_PRINT("Unkown status: %d\r\n", gSourceState)
+        FCSCHED_PRINT("Unkown status: %d\r\n", gSourceState)
         ;
         break;
         }
@@ -490,7 +498,7 @@ fc_scheduler(void *p)
       hwal_free(wallcfg.pLookupTable);
     }
 
-  FCSHED_PRINT("Scheduler stopped!\r\n");
+  FCSCHED_PRINT("Scheduler stopped!\r\n");
 
   return RDY_OK;
 }
