@@ -33,7 +33,7 @@
 #define INPUT_MAILBOX_SIZE		4
 
 #define MAXIMUM_INITIALIZATION			10
-#define	FCSCHED_DYNSERVER_RESETVALUE	100	/**< Dynamic server, must be triggered */
+#define	FCSCHED_DYNSERVER_RESETVALUE	1000	/**< Dynamic server, must be triggered */
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
@@ -116,8 +116,7 @@ fcsched_handleInputMailbox(void)
           status = chMBFetch(&mailboxIn, &msg2, TIME_INFINITE);
           if (status == RDY_OK)
             {
-              chSysLock()
-              ;
+              chSysLock();
               switch ((uint32_t) msg1)
                 {
               case MSG_ACTIVATE_SHELL:
@@ -169,8 +168,15 @@ static void fcsched_handleFcMailboxDyn(void)
 		  /* Check if the counter is outside of its borders */
 		  if (gDynamicServerTimeout == 0 || gDynamicServerTimeout > FCSCHED_DYNSERVER_RESETVALUE)
 		  {
-			  FCSHED_PRINT("%d wall is dead.\r\n", gSourceState);
+			  FCSHED_PRINT("%d wall is dead. (actual %d clients connected)\r\n",
+					  gSourceState, gFcConnectedClients);
 			  gSourceState = FCSRC_STATE_NOBODY;
+
+			  /* Update the client amount, as one client died */
+			  if (gFcConnectedClients > 0)
+			  {
+				  gFcConnectedClients--;
+			  }
 		  }
 	  }
   }
@@ -375,6 +381,7 @@ fc_scheduler(void *p)
             gFcServerActive = TRUE;
             palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
             gSourceState = FCSRC_STATE_NETWORK;
+            gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
         }
         break;
       case FCSRC_STATE_FILE:
@@ -498,8 +505,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
         {
           /* Activate the debugging */
           chprintf(chp, "Deactivate the logging for Fullcircle Scheduler\r\n");
-          chSysLock()
-          ;
+          chSysLock();
           chMBPostI(&mailboxIn, (uint32_t) MSG_ACTIVATE_SHELL);
           chMBPostI(&mailboxIn, (uint32_t) 0);
           chSysUnlock();
