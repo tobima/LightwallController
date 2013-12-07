@@ -168,7 +168,6 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
       if (gSourceState == FCSRC_STATE_NETWORK)
         {
           FCSHED_PRINT("Schedule left timeout %d\r\n", gDynamicServerTimeout);
-          gDynamicServerTimeout -= sleeptime;
 
           if (gDynamicServerTimeout == 0)
             {
@@ -177,7 +176,7 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
           /* Check if the counter is outside of its borders */
           else if (gDynamicServerTimeout <= sleeptime
               || gDynamicServerTimeout > FCSCHED_DYNSERVER_RESETVALUE)
-            {
+          {
               gDynamicServerTimeout = 0; /* deactivate monitoring */
               FCSHED_PRINT("%d wall is dead. (actual %d clients connected)\r\n",
                   gSourceState, gFcConnectedClients);
@@ -188,7 +187,11 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
                 {
                   gFcConnectedClients--;
                 }
-            }
+          }
+          else
+          {
+              gDynamicServerTimeout -= sleeptime;
+          }
         }
     }
 }
