@@ -209,7 +209,7 @@ fc_server(void *p)
     	  break;
       }
 
-      ret = fcserver_process(&server);
+      ret = fcserver_process(&server, FCSERVER_IMPL_SLEEPTIME);
 
       fcserver_setactive(&server, gFcServerActive);
 
