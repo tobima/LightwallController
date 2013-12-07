@@ -84,9 +84,6 @@ handleInputMailbox(void)
                 FCS_PRINT("DynFc Server - DMX is set to %d\r\n",
                     gFcServerActive);
                 break;
-              case FCSERVER_CMD_MODIFY_DISCONNECTALL:
-            	  mailboxCmd = FCSERVER_CMD_MODIFY_DISCONNECTALL;
-            	  break;
               default:
                 break;
                 }
@@ -175,7 +172,6 @@ fc_server(void *p)
   fcserver_t server;
   chRegSetThreadName("fcdynserver");
   (void) p;
-  int mailboxCmd;
 
   /* small hack to initialize the global accessible server */
   gFcServerMailboxBuffer = hwal_malloc(sizeof(uint32_t) * FCSERVER_MAILBOX_SIZE);
@@ -200,14 +196,7 @@ fc_server(void *p)
 
   do
     {
-	  mailboxCmd = handleInputMailbox();
-      switch(mailboxCmd) {
-      case FCSERVER_CMD_MODIFY_DISCONNECTALL:
-    	  fcserver_disconnect_all(&server);
-    	  break;
-      default:
-    	  break;
-      }
+	  handleInputMailbox();
 
       ret = fcserver_process(&server, FCSERVER_IMPL_SLEEPTIME);
 
@@ -278,13 +267,5 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chMBPostI(gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
         }
-      else if (strcmp(argv[0], "disconnect") == 0)
-      {
-        chprintf(chp, "Disconnect all clients\r\n");
-        chSysLock();
-        chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_DISCONNECTALL);
-        chMBPostI(gFcServerMailbox, (uint32_t) 1);
-        chSysUnlock();
-      }
     }
 }

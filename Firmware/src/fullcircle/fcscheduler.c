@@ -170,10 +170,6 @@ static void fcsched_handleFcMailboxDyn(void)
 		  if (gDynamicServerTimeout == 0 || gDynamicServerTimeout > FCSCHED_DYNSERVER_RESETVALUE)
 		  {
 			  FCSHED_PRINT("%d wall is dead.\r\n", gSourceState);
-			  chSysLock();
-			  chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_DISCONNECTALL);
-			  chMBPostI(gFcServerMailbox, (uint32_t) 1);
-			  chSysUnlock();
 			  gSourceState = FCSRC_STATE_NOBODY;
 		  }
 	  }
