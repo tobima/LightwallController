@@ -101,12 +101,17 @@ static uint8_t  gSchedulerActive = TRUE;
  * LOCAL FUNCTIONS
  ******************************************************************************/
 
-static void
-fcsched_handleInputMailbox(void)
+/**
+ * @fn static int fcsched_handleInputMailbox(void)
+ *
+ * Handle all incoming messages from the mailbox
+ * @return 1 if the loop must be skipped completely
+ */
+static int fcsched_handleInputMailbox(void)
 {
   msg_t msg1, msg2, status;
   int newMessages;
-
+  int retStatus = 0;
   /* Use nonblocking function to count incoming messages */
   newMessages = chMBGetUsedCountI(&mailboxIn);
 
@@ -138,7 +143,7 @@ fcsched_handleInputMailbox(void)
                 gFcServerActive = TRUE; /* The server has an GO */
                 palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
                 palClearPad(GPIOD, GPIOD_LED5); /* Red.  */
-                break;
+                retStatus = 1;
               default:
                 break;
                 }
@@ -146,6 +151,7 @@ fcsched_handleInputMailbox(void)
             }
         }
     }
+   return retStatus;
 }
 
 /** @fn static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
@@ -280,7 +286,7 @@ configuration_handler(void* config, const char* section, const char* name,
   schedulerconf_t* pconfig = (schedulerconf_t*) config;
   if (MATCH("scheduler", "netonly"))
     {
-      pconfig->netOnly = 99; /*strtol(value, NULL, 10); */
+      pconfig->netOnly = strtol(value, NULL, 10);
     }
   else
     {
@@ -351,27 +357,31 @@ fc_scheduler(void *p)
 
     ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
 
-    if (schedConfiguration.netOnly)
-      {
-        FCSCHED_PRINT("Deactivating Scheduler");
-        chSysLock();
-        chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
-        chMBPostI(&mailboxIn, (uint32_t) 1);
-        chSysUnlock();
-      }
-
   /* Prepare Mailbox to communicate with the others */
   chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
   path[0] = 0;
+
+  /* Deactivate this thread, if necessary */
+  if (schedConfiguration.netOnly)
+    {
+      FCSCHED_PRINT("Deactivating Scheduler");
+      chSysLock();
+      chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
+      chMBPostI(&mailboxIn, (uint32_t) 1);
+      chSysUnlock();
+    }
 
   resOpen = fcstatic_open_sdcard();
 
   /* initialize the folder to search in */
   hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
 
-  do
+  while ( gSchedulerActive )
     {
-      fcsched_handleInputMailbox();
+      if (fcsched_handleInputMailbox())
+        {
+        continue;
+        }
       fcsched_handleFcMailboxDyn(sleeptime);
 
       switch (gSourceState)
@@ -489,7 +499,6 @@ fc_scheduler(void *p)
       chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
 
     }
-  while ( gSchedulerActive );
 
   /* clean the memory of the configuration */
   if (wallcfg.pLookupTable)
