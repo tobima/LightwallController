@@ -52,7 +52,7 @@ handleInputMailbox(void)
 {
   msg_t msg1, msg2, status;
   int newMessages;
-  int mailboxCmd;
+  int mailboxCmd = 0;
 
   /* Use nonblocking function to count incoming messages */
   newMessages = chMBGetUsedCountI(gFcServerMailbox);
