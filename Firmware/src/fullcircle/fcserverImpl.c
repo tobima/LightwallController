@@ -36,8 +36,8 @@ uint32_t gFcServerActive = 0;
  ******************************************************************************/
 
 /* Mailbox, checked by the fc_server thread */
-uint32_t*	gFcServerMailboxBuffer	= NULL;
-Mailbox *	gFcServerMailbox 		= NULL;
+uint32_t* gFcServerMailboxBuffer = NULL;
+Mailbox * gFcServerMailbox = NULL;
 
 static BaseSequentialStream * gDebugShell = NULL;
 
@@ -66,7 +66,8 @@ handleInputMailbox(void)
           status = chMBFetch(gFcServerMailbox, &msg2, TIME_INFINITE);
           if (status == RDY_OK)
             {
-              chSysLock();
+              chSysLock()
+              ;
               switch ((uint32_t) msg1)
                 {
               case FCSERVER_CMD_DEBUG_ON:
@@ -76,13 +77,15 @@ handleInputMailbox(void)
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
               case FCSERVER_CMD_DEBUG_OFF:
-                FCS_PRINT("FC Server - silent mode\r\n");
+                FCS_PRINT("FC Server - silent mode\r\n")
+                ;
                 gDebugShell = 0;
                 break;
               case FCSERVER_CMD_MODIFY_ACTIVE:
                 gFcServerActive = (uint32_t) msg2;
                 FCS_PRINT("DynFc Server - DMX is set to %d\r\n",
-                    gFcServerActive);
+                    gFcServerActive)
+                ;
                 break;
               default:
                 break;
@@ -92,7 +95,7 @@ handleInputMailbox(void)
             }
         }
     }
-  	return mailboxCmd;
+  return mailboxCmd;
 }
 
 /******************************************************************************
@@ -107,7 +110,8 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
       /* Write the DMX buffer */
       fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
       FCS_PRINT("Update Frame\r\n");
-      chSysLock();
+      chSysLock()
+      ;
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
       chSysUnlock();
     }
@@ -174,13 +178,14 @@ fc_server(void *p)
   (void) p;
 
   /* small hack to initialize the global accessible server */
-  gFcServerMailboxBuffer = hwal_malloc(sizeof(uint32_t) * FCSERVER_MAILBOX_SIZE);
+  gFcServerMailboxBuffer = hwal_malloc(
+      sizeof(uint32_t) * FCSERVER_MAILBOX_SIZE);
   MAILBOX_DECL(fcServerMailbox, gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
   gFcServerMailbox = &fcServerMailbox;
 
-
   /* Prepare Mailbox to communicate with the others */
-  chMBInit(gFcServerMailbox, (msg_t *) gFcServerMailboxBuffer, FCSERVER_MAILBOX_SIZE);
+  chMBInit(gFcServerMailbox, (msg_t *) gFcServerMailboxBuffer,
+  FCSERVER_MAILBOX_SIZE);
 
   /* read the dimension from the configuration file */
   readConfigurationFile(&wallcfg);
@@ -196,7 +201,7 @@ fc_server(void *p)
 
   do
     {
-	  handleInputMailbox();
+      handleInputMailbox();
 
       ret = fcserver_process(&server, FCSERVER_IMPL_SLEEPTIME);
 
@@ -246,7 +251,8 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
         {
           /* Activate the debugging */
           chprintf(chp, "Deactivate the logging for fullcircle server\r\n");
-          chSysLock();
+          chSysLock()
+          ;
           chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_DEBUG_OFF);
           chMBPostI(gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
@@ -254,7 +260,8 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
       else if (strcmp(argv[0], "on") == 0)
         {
           chprintf(chp, "Activate DMX output\r\n");
-          chSysLock();
+          chSysLock()
+          ;
           chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_ACTIVE);
           chMBPostI(gFcServerMailbox, (uint32_t) 1);
           chSysUnlock();
@@ -262,7 +269,8 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
       else if (strcmp(argv[0], "off") == 0)
         {
           chprintf(chp, "Turn DMX output OFF\r\n");
-          chSysLock();
+          chSysLock()
+          ;
           chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_ACTIVE);
           chMBPostI(gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
