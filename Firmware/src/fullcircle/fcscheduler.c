@@ -139,8 +139,12 @@ fcsched_handleInputMailbox(void)
     }
 }
 
-static void
-fcsched_handleFcMailboxDyn(int sleeptime)
+/** @fn static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
+ * Check if the server code is still acting and the client sends a new frame
+ *
+ * @param[in] sleeptime cycle this function is called again, to update the timeout supervision correctly
+ */
+static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
 {
   msg_t msg1, status;
   int newMessages;
@@ -153,8 +157,7 @@ fcsched_handleFcMailboxDyn(int sleeptime)
       status = chMBFetch(gFcMailboxDyn, &msg1, TIME_INFINITE);
       if (status == RDY_OK)
         {
-          chSysLock()
-          ;
+          chSysLock();
           FCSHED_PRINT("%d\r\n", ((uint32_t ) msg1));
           chSysUnlock();
           gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
@@ -167,10 +170,15 @@ fcsched_handleFcMailboxDyn(int sleeptime)
           FCSHED_PRINT("Schedule left timeout %d\r\n", gDynamicServerTimeout);
           gDynamicServerTimeout -= sleeptime;
 
+          if (gDynamicServerTimeout == 0)
+            {
+              /* Monitoring is deactivated */
+            }
           /* Check if the counter is outside of its borders */
-          if (gDynamicServerTimeout == 0
+          else if (gDynamicServerTimeout <= sleeptime
               || gDynamicServerTimeout > FCSCHED_DYNSERVER_RESETVALUE)
             {
+              gDynamicServerTimeout = 0; /* deactivate monitoring */
               FCSHED_PRINT("%d wall is dead. (actual %d clients connected)\r\n",
                   gSourceState, gFcConnectedClients);
               gSourceState = FCSRC_STATE_NOBODY;
@@ -387,7 +395,7 @@ fc_scheduler(void *p)
             gFcServerActive = TRUE;
             palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
             gSourceState = FCSRC_STATE_NETWORK;
-            gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
+            gDynamicServerTimeout = 0;
           }
         break;
       case FCSRC_STATE_FILE:
