@@ -280,7 +280,7 @@ configuration_handler(void* config, const char* section, const char* name,
   schedulerconf_t* pconfig = (schedulerconf_t*) config;
   if (MATCH("scheduler", "netonly"))
     {
-      pconfig->netOnly = strtol(value, NULL, 10);
+      pconfig->netOnly = 99; /*strtol(value, NULL, 10); */
     }
   else
     {
@@ -354,7 +354,6 @@ fc_scheduler(void *p)
     if (schedConfiguration.netOnly)
       {
         FCSCHED_PRINT("Deactivating Scheduler");
-        gSchedulerActive = 0;
         chSysLock();
         chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
         chMBPostI(&mailboxIn, (uint32_t) 1);
@@ -380,7 +379,7 @@ fc_scheduler(void *p)
       case FCSRC_STATE_NOBODY:
         /* Deactivate network code stuff */
 
-        FCSCHED_PRINT("Net ONLY ?!? %d",        schedConfiguration.netOnly);
+        FCSCHED_PRINT("Net ONLY ?!? %d\r\n",        schedConfiguration.netOnly);
 
         /*set server inactive */
         gFcServerActive = 0;
