@@ -19,7 +19,7 @@
 #endif
 
 #ifndef FCSERVER_IMPL_SLEEPTIME
-#define FCSERVER_IMPL_SLEEPTIME 5	/* time in milliseconds before starting endless loop again */
+#define FCSERVER_IMPL_SLEEPTIME 10	/* time in milliseconds before starting endless loop again */
 #endif
 
 /**

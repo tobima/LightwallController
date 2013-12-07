@@ -21,7 +21,7 @@
 #include "dmx/dmx.h"
 
 #define OUTPUT_MAILBOX_SIZE		10
-#define FCSERVER_MAILBOX_SIZE		5
+#define FCSERVER_MAILBOX_SIZE		10
 
 #define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 

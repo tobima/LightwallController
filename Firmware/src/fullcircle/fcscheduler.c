@@ -167,7 +167,8 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
     {
       if (gSourceState == FCSRC_STATE_NETWORK)
         {
-          FCSHED_PRINT("Schedule left timeout %d\r\n", gDynamicServerTimeout);
+          FCSHED_PRINT("FcDyn timeout %6d / %6d [ms]\r\n",
+              FCSCHED_DYNSERVER_RESETVALUE - gDynamicServerTimeout, FCSCHED_DYNSERVER_RESETVALUE);
 
           if (gDynamicServerTimeout == 0)
             {
