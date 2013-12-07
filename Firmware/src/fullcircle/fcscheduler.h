@@ -62,6 +62,12 @@ typedef struct
   uint32_t *pLookupTable; /**< Memory to the Loopuptable, must be freed after usage */
 } wallconf_t;
 
+
+typedef struct
+{
+  int netOnly; /**< Use only the network device */
+} schedulerconf_t;
+
 /** @fn void readConfigurationFile( extern wallconf_t )
  * @brief Read configuration file
  *

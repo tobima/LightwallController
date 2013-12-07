@@ -27,7 +27,8 @@
 #include "fcserver.h" /* Necessary the timing supervision */
 #include "dmx/dmx.h"
 
-#define FCSCHED_CONFIGURATION_FILE	"fc/conf/wall"
+#define FCSCHED_WALLCFG_FILE	"fc/conf/wall"
+#define FCSCHED_CONFIG_FILE     "fc/conf/controller"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
 #define	FILENAME_LENGTH			512	/**< Including the absolut path to the file */
@@ -262,6 +263,32 @@ wall_handler(void* config, const char* section, const char* name,
   return 1;
 }
 
+/** @fn static int configuration_handler(void* config, const char* section, const char* name, const char* value)
+ * @brief Extract the configuration for the scheduler
+ *
+ * @param[in]   config  structure, all found values are stored
+ * @param[in]   section section, actual found
+ * @param[in]   name    key
+ * @param[in]   value   value
+ *
+ * @return < 0 on errors
+ */
+static int
+configuration_handler(void* config, const char* section, const char* name,
+    const char* value)
+{
+  schedulerconf_t* pconfig = (schedulerconf_t*) config;
+  if (MATCH("scheduler", "netOnly"))
+    {
+      pconfig->netOnly = strtol(value, NULL, 10);
+    }
+  else
+    {
+      return 0; /* unknown section/name, error */
+    }
+  return 1;
+}
+
 /******************************************************************************
  * GLOBAL FUNCTIONS
  ******************************************************************************/
@@ -284,6 +311,7 @@ fc_scheduler(void *p)
   char *filename = NULL;
   uint32_t filenameLength = 0;
   char* root = FCSCHED_FILE_ROOT;
+  schedulerconf_t schedConfiguration;
 
   /* SD card initing variables */
   FRESULT err;
@@ -313,10 +341,19 @@ fc_scheduler(void *p)
       err = f_getfree("/", &clusters, &fsp);
       chThdSleep(MS2ST(100));
     }
-  while (err != FR_OK)
-    ;
+  while (err != FR_OK);
 
+  /* Load wall configuration */
   readConfigurationFile(&wallcfg);
+
+    /* Load the configuration */
+    hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
+    ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
+    if (schedConfiguration.netOnly)
+      {
+        FCSHED_PRINT("Deactivating Scheduler");
+        gSchedulerActive = 0;
+      }
 
   /* Prepare Mailbox to communicate with the others */
   chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
@@ -476,7 +513,7 @@ readConfigurationFile(wallconf_t* pConfiguration)
   pConfiguration->fps = -1;
 
   /* Load the configuration */
-  ini_parse(FCSCHED_CONFIGURATION_FILE, wall_handler, pConfiguration);
+  ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
 }
 
 extern void
