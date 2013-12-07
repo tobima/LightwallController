@@ -77,15 +77,8 @@ handleInputMailbox(void)
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
               case FCSERVER_CMD_DEBUG_OFF:
-                FCS_PRINT("FC Server - silent mode\r\n")
-                ;
+                FCS_PRINT("FC Server - silent mode\r\n");
                 gDebugShell = 0;
-                break;
-              case FCSERVER_CMD_MODIFY_ACTIVE:
-                gFcServerActive = (uint32_t) msg2;
-                FCS_PRINT("DynFc Server - DMX is set to %d\r\n",
-                    gFcServerActive)
-                ;
                 break;
               default:
                 break;
@@ -232,7 +225,7 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
   if (argc < 1)
     {
-      chprintf(chp, "Usage {debugOn, debugOff, on, off, disconnect}\r\n");
+      chprintf(chp, "Usage {debugOn, debugOff}\r\n");
       return;
     }
   else if (argc >= 1)
@@ -254,24 +247,6 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chSysLock()
           ;
           chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_DEBUG_OFF);
-          chMBPostI(gFcServerMailbox, (uint32_t) 0);
-          chSysUnlock();
-        }
-      else if (strcmp(argv[0], "on") == 0)
-        {
-          chprintf(chp, "Activate DMX output\r\n");
-          chSysLock()
-          ;
-          chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_ACTIVE);
-          chMBPostI(gFcServerMailbox, (uint32_t) 1);
-          chSysUnlock();
-        }
-      else if (strcmp(argv[0], "off") == 0)
-        {
-          chprintf(chp, "Turn DMX output OFF\r\n");
-          chSysLock()
-          ;
-          chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_MODIFY_ACTIVE);
           chMBPostI(gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();
         }

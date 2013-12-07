@@ -41,8 +41,9 @@
 #define FCSHED_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
 
 #define	MSG_ACTIVATE_SHELL	1
-#define	MSG_SETFPS			2
-#define	MSG_DIMM			3
+#define	MSG_SETFPS		2
+#define	MSG_DIMM		3
+#define MSG_STOPP               4
 
 /** @typedef fcsource_state_t
  * @brief Status of the actual used source.
@@ -93,6 +94,7 @@ static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
 uint32_t gFcConnectedClients = 0;
 
 static uint32_t gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
+static uint8_t  gSchedulerActive = TRUE;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -129,6 +131,12 @@ fcsched_handleInputMailbox(void)
                 break;
               case MSG_DIMM:
                 wallcfg.dimmFactor = (int) msg2;
+                break;
+              case MSG_STOPP:
+                gSchedulerActive = 0;
+                gFcServerActive = TRUE; /* The server has an GO */
+                palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
+                palClearPad(GPIOD, GPIOD_LED5); /* Red.  */
                 break;
               default:
                 break;
@@ -437,7 +445,7 @@ fc_scheduler(void *p)
       chThdSleep(MS2ST(sleeptime /* convert milliseconds to system ticks */));
 
     }
-  while ( TRUE);
+  while ( gSchedulerActive );
 
   /* clean the memory of the configuration */
   if (wallcfg.pLookupTable)
@@ -506,7 +514,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
   if (argc < 1)
     {
-      chprintf(chp, "Usage {debugOn, debugOff, fps (value), dim}\r\n");
+      chprintf(chp, "Usage {debugOn, debugOff, fps (value), dim, stop}\r\n");
       return;
     }
   else if (argc >= 1)
@@ -547,13 +555,20 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           /* Activate the debugging */
           chprintf(chp, "Fullcircle Scheduler - Update dimming %d\r\n",
               atoi(argv[1]));
-          chSysLock()
-          ;
+          chSysLock();
           chMBPostI(&mailboxIn, (uint32_t) MSG_DIMM);
           chMBPostI(&mailboxIn, (uint32_t) atoi(argv[1]));
           chSysUnlock();
         }
-
+      else if (strcmp(argv[0], "stop") == 0)
+        {
+          /* Activate the debugging */
+          chprintf(chp, "Fullcircle Scheduler - Stopped\r\n");
+          chSysLock();
+          chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
+          chMBPostI(&mailboxIn, (uint32_t) 1);
+          chSysUnlock();
+        }
     }
 
 }
