@@ -99,15 +99,13 @@ void
 onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
   if (gFcServerActive)
-    {
+  {
       /* Write the DMX buffer */
       fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
-      FCS_PRINT("Update Frame\r\n");
-      chSysLock()
-      ;
+      chSysLock();
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
       chSysUnlock();
-    }
+  }
 }
 
 void
