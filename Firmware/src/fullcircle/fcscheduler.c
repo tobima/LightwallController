@@ -250,7 +250,7 @@ wall_handler(void* config, const char* section, const char* name,
     {
       pconfig->dimmFactor = strtol(value, NULL, 10);
     }
-  if ((row >= 0) && (row < pconfig->height))
+   else if ((row >= 0) && (row < pconfig->height))
     {
       /* when the function was called the first time, take some memory */
       if (pconfig->pLookupTable == NULL)
@@ -261,7 +261,7 @@ wall_handler(void* config, const char* section, const char* name,
         }
       col = strtol(name, NULL, 10);
       dmxval = (uint32_t) strtol(value, NULL, 10);
-      FCSCHED_PRINT("Updated row: %d, col: %d with dmx: %d \r\n", row, col, dmxval);
+      FCSCHED_PRINT("Updated row: %d\tcol: %d\tdmx: %d \tOriginal section: %s\r\n", row, col, dmxval, section);
       pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
     }
   else
