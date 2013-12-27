@@ -39,7 +39,7 @@
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
-#define FCSCHED_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
+#define FCSCHED_PRINT( ... )	if (gDebugShellSched) { chprintf(gDebugShellSched, __VA_ARGS__); }
 
 #define	MSG_ACTIVATE_SHELL	1
 #define	MSG_SETFPS		2
@@ -82,7 +82,7 @@ Mailbox * gFcMailboxDyn;
  * LOCAL VARIABLES for this module
  ******************************************************************************/
 
-static BaseSequentialStream * gDebugShell = NULL;
+static BaseSequentialStream * gDebugShellSched = NULL;
 
 /* Mailbox, checked by the fullcircle scheduler thread */
 static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
@@ -129,7 +129,7 @@ static int fcsched_handleInputMailbox(void)
               switch ((uint32_t) msg1)
                 {
               case MSG_ACTIVATE_SHELL:
-                gDebugShell = (BaseSequentialStream *) (uint32_t) msg2;
+                gDebugShellSched = (BaseSequentialStream *) msg2;
 		FCSCHED_PRINT("Activated debugging\r\n");
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
@@ -569,7 +569,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
   if (argc < 1)
     {
-      chprintf(chp, "Usage {debugOn, debugOff, fps (value), dim, stop, config}\r\n");
+      chprintf(chp, "Usage {debugOn, debugOff, fps (value), dim, start, stop, config}\r\n");
       return;
     }
   else if (argc >= 1)
@@ -623,14 +623,35 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chMBPostI(&mailboxIn, (uint32_t) 1);
           chSysUnlock();
         }
+	else if (strcmp(argv[0], "start") == 0 )
+	{
+		chprintf(chp, "Start server again\r\n");
+		fcscheduler_startThread();
+	}
 	else if (strcmp(argv[0], "config") == 0)
 	{
 	  wallconf_t demo;
+
+	  if ( !gSchedulerActive )
+	  {
+		  chprintf(chp, "Scheduler is stopped, you need to start:\r\nfcsched start\r\n" );
+		return;
+	  }
+
 	  /* Load wall configuration */
 	  readConfigurationFile(&demo);
           
           chprintf(chp, "Width and height are %dx%d\r\n", demo.width, demo.height);
 	}
     }
+
+}
+
+void
+fcscheduler_startThread(void)
+{
+  gSchedulerActive = 1;
+  chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
+      fc_scheduler, NULL);
 
 }

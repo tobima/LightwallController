@@ -102,7 +102,7 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
   {
       FCS_PRINT("Start filling DMX\r\n");
       /* Write the DMX buffer */
-     // fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+      fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
       
       chSysLock();
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
@@ -245,8 +245,7 @@ fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
         {
           /* Activate the debugging */
           chprintf(chp, "Deactivate the logging for fullcircle server\r\n");
-          chSysLock()
-          ;
+          chSysLock();
           chMBPostI(gFcServerMailbox, (uint32_t) FCSERVER_CMD_DEBUG_OFF);
           chMBPostI(gFcServerMailbox, (uint32_t) 0);
           chSysUnlock();

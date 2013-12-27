@@ -453,11 +453,10 @@ main(void)
   /*
    * Creates the scheduler thread.
    */
-  chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
-      fc_scheduler, NULL);
+  fcscheduler_startThread();
 
   /*
-   * Creates the scheduler thread.
+   * Creates the Fullcircle server thread.
    */
   chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
       fc_server, NULL);

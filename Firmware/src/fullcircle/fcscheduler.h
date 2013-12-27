@@ -100,4 +100,10 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
 void
 fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
 
+/** @fn void fcscheduler_startThread()
+ * @brief function to start a thread
+ */
+void
+fcscheduler_startThread();
+
 #endif /* End of _FCSCHEDULER_H */
