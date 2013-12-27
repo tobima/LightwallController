@@ -102,7 +102,8 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
   {
       FCS_PRINT("Start filling DMX\r\n");
       /* Write the DMX buffer */
-      fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+     // fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+      
       chSysLock();
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
       chSysUnlock();

@@ -129,7 +129,8 @@ static int fcsched_handleInputMailbox(void)
               switch ((uint32_t) msg1)
                 {
               case MSG_ACTIVATE_SHELL:
-                gDebugShell = (BaseSequentialStream *) msg2;
+                gDebugShell = (BaseSequentialStream *) (uint32_t) msg2;
+		FCSCHED_PRINT("Activated debugging\r\n");
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
               case MSG_SETFPS:
@@ -260,6 +261,7 @@ wall_handler(void* config, const char* section, const char* name,
         }
       col = strtol(name, NULL, 10);
       dmxval = (uint32_t) strtol(value, NULL, 10);
+      FCSCHED_PRINT("Updated row: %d, col: %d with dmx: %d \r\n", row, col, dmxval);
       pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
     }
   else
@@ -567,7 +569,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
   if (argc < 1)
     {
-      chprintf(chp, "Usage {debugOn, debugOff, fps (value), dim, stop}\r\n");
+      chprintf(chp, "Usage {debugOn, debugOff, fps (value), dim, stop, config}\r\n");
       return;
     }
   else if (argc >= 1)
@@ -576,8 +578,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
         {
           /* Activate the debugging */
           chprintf(chp, "Activate the logging for Fullcircle Scheduler\r\n");
-          chSysLock()
-          ;
+          chSysLock();
           chMBPostI(&mailboxIn, (uint32_t) MSG_ACTIVATE_SHELL);
           chMBPostI(&mailboxIn, (uint32_t) chp);
           chSysUnlock();
@@ -622,6 +623,14 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
           chMBPostI(&mailboxIn, (uint32_t) 1);
           chSysUnlock();
         }
+	else if (strcmp(argv[0], "config") == 0)
+	{
+	  wallconf_t demo;
+	  /* Load wall configuration */
+	  readConfigurationFile(&demo);
+          
+          chprintf(chp, "Width and height are %dx%d\r\n", demo.width, demo.height);
+	}
     }
 
 }
