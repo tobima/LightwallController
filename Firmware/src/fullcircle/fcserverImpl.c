@@ -100,11 +100,13 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
   if (gFcServerActive)
   {
+      FCS_PRINT("Start filling DMX\r\n");
       /* Write the DMX buffer */
       fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
       chSysLock();
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
       chSysUnlock();
+      FCS_PRINT("filling DMX completed\r\n");
   }
 }
 
@@ -193,7 +195,7 @@ fc_server(void *p)
   do
     {
       handleInputMailbox();
-
+      
       ret = fcserver_process(&server, FCSERVER_IMPL_SLEEPTIME);
 
       fcserver_setactive(&server, gFcServerActive);
