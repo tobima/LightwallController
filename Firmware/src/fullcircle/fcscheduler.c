@@ -232,6 +232,7 @@ wall_handler(void* config, const char* section, const char* name,
   wallconf_t* pconfig = (wallconf_t*) config;
   int row = strtol(section, NULL, 10);
   int col;
+  int memoryLength = 0;
   uint32_t dmxval;
 
   if (MATCH("global", "width"))
@@ -255,14 +256,26 @@ wall_handler(void* config, const char* section, const char* name,
       /* when the function was called the first time, take some memory */
       if (pconfig->pLookupTable == NULL)
         {
-          col = sizeof(uint32_t) * pconfig->width * pconfig->height;
-          pconfig->pLookupTable = chHeapAlloc(0,
-              col /* reused for memory length */);
+          memoryLength = sizeof(uint32_t) * pconfig->width * pconfig->height;
+          pconfig->pLookupTable = chHeapAlloc(0, memoryLength);
+
+	  /* Clean the whole memory: (dmxval is reused as index) */
+	  for(dmxval=0; dmxval < memoryLength; dmxval++)
+	  {
+	    pconfig->pLookupTable[dmxval] = 0;
+	  }
         }
       col = strtol(name, NULL, 10);
       dmxval = (uint32_t) strtol(value, NULL, 10);
-      FCSCHED_PRINT("Updated row: %d\tcol: %d\tdmx: %d \tOriginal section: %s\r\n", row, col, dmxval, section);
-      pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
+      FCSCHED_PRINT("Updated row: %3d\tcol: %3d\tdmx: %3d\r\n", row, col, dmxval);
+      if ((row * pconfig->width + col) < (pconfig->width * pconfig->height) )
+      {
+        pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
+      }
+      else
+      {
+	FCSCHED_PRINT("ERROR could not set dmxvalue %d\r\n", dmxval);
+      }
     }
   else
     {
