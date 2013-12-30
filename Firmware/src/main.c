@@ -327,7 +327,22 @@ static struct EventListener el0, el1;
 static const evhandler_t evhndl[] =
   { InsertHandler, RemoveHandler };
 
+/*
+ * This is a periodic thread that does absolutely nothing except flashing
+ * a LED.
+ */
+static WORKING_AREA(waThreadBlink, 128);
+static msg_t blinkerThread(void *arg) {
 
+  (void)arg;
+  chRegSetThreadName("blinker");
+  while (TRUE) {
+    palSetPad(GPIOD, GPIOD_LED4);       /* Green.  */
+    chThdSleepMilliseconds(500);
+    palClearPad(GPIOD, GPIOD_LED4);     /* Green.  */
+    chThdSleepMilliseconds(500);
+  }
+}
 
 /*
  * Application entry point.
@@ -345,6 +360,8 @@ main(void)
    */
   halInit();
   chSysInit();
+
+  chThdCreateStatic(waThreadBlink, sizeof(waThreadBlink), NORMALPRIO, blinkerThread, NULL);
 
 #ifdef UGFX_WALL
   gfxInit();

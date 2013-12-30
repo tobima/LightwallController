@@ -146,8 +146,6 @@ static int fcsched_handleInputMailbox(void)
               case MSG_STOPP:
                 gSchedulerActive = 0;
                 gFcServerActive = TRUE; /* The server has an GO */
-                palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
-                palClearPad(GPIOD, GPIOD_LED5); /* Red.  */
                 retStatus = 1;
               default:
                 break;
@@ -414,7 +412,6 @@ fc_scheduler(void *p)
 
         /*set server inactive */
         gFcServerActive = 0;
-        palClearPad(GPIOD, GPIOD_LED4); /* Green.  */
 
         if (resOpen)
           {
@@ -437,7 +434,6 @@ fc_scheduler(void *p)
                     FCSCHED_PRINT("Using %d fps and dimmed to %d %.\r\n",
                         seq.fps, wallcfg.dimmFactor);
                     sleeptime = (1000 / seq.fps);
-                    palSetPad(GPIOD, GPIOD_LED5); /* Red.  */
                   }
                 else
                   {
@@ -467,7 +463,6 @@ fc_scheduler(void *p)
         rgb24 = NULL;
         fcseq_close(&seq);
         sleeptime = FCSERVER_IMPL_SLEEPTIME;
-        palClearPad(GPIOD, GPIOD_LED5); /* Red.  */
 
         /*extract filename from path for the next cycle */
         fcstatic_remove_filename(path, &filename, filenameLength);
@@ -480,7 +475,6 @@ fc_scheduler(void *p)
           {
             /* set server status to true */
             gFcServerActive = TRUE;
-            palSetPad(GPIOD, GPIOD_LED4); /* Green.  */
             gSourceState = FCSRC_STATE_NETWORK;
             gDynamicServerTimeout = 0;
           }

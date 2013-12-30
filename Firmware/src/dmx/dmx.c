@@ -14,7 +14,6 @@ WORKING_AREA(wa_dmx, DMX_THREAD_STACK_SIZE);
 DMXBuffer dmx_buffer;
 
 static Semaphore sem;
-static uint8_t gLedToggle = 0;
 
 /*
  * GPT3 callback.
@@ -147,17 +146,6 @@ dmxthread(void *arg)
       chSemWait(&sem);
 
       uartStopSend(&UARTD3);
-
-      if (gLedToggle)
-        {
-          palSetPad(GPIOD, GPIOD_LED6); /* Blue.  */
-          gLedToggle = 0;
-        }
-      else
-        {
-          palClearPad(GPIOD, GPIOD_LED6); /* Blue.  */
-          gLedToggle = 1;
-        }
 
     }
 
