@@ -20,7 +20,12 @@
 
 #include "ch.h"
 #include "hal.h"
+
+#ifdef UGFX_WALL
 #include "gfx.h"
+#include "fcwall.h"
+#endif
+
 #include "ini/ini.h"
 
 #include "chprintf.h"
@@ -44,7 +49,6 @@
 #include "cmd/cmd.h"
 
 #include "ff.h"
-#include "fcwall.h"
 
 /*===========================================================================*/
 /* Card insertion monitor.                                                   */
@@ -344,7 +348,6 @@ main(void)
 
 #ifdef UGFX_WALL
   gfxInit();
-  fcwall_init(12, 10);
 #endif
 
   /*
@@ -372,6 +375,7 @@ main(void)
 
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
+#ifndef UGFX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
 
   DMXInit();
@@ -379,9 +383,10 @@ main(void)
   /*
    * Creates the DMX thread.
    */
+
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-
+#endif
   chprintf((BaseSequentialStream *) &SD6, "Start blinker thread ...");
 
   /** 
@@ -476,9 +481,7 @@ main(void)
   while (TRUE)
     {
       chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
-#ifdef UGFX_WALL
-	fcwall_update();
-#endif
+
     }
 }
 

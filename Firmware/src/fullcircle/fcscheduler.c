@@ -27,6 +27,10 @@
 #include "fcserver.h" /* Necessary the timing supervision */
 #include "dmx/dmx.h"
 
+#ifdef UGFX_WALL
+#include "fcwall.h"
+#endif
+
 #define FCSCHED_WALLCFG_FILE	"fc/conf/wall"
 #define FCSCHED_CONFIG_FILE     "fc/conf/controller"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
@@ -371,7 +375,9 @@ fc_scheduler(void *p)
     hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
 
     ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
-
+#ifdef UGFX_WALL
+    fcwall_init(wallcfg.width, wallcfg.height);
+#endif
   /* Prepare Mailbox to communicate with the others */
   chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
   path[0] = 0;
@@ -554,7 +560,7 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
   int row, col, offset;
   dmx_buffer.length = width * height * 3;
 
-  if (pWallcfg && pWallcfg->height == height && pWallcfg->width == width)
+  if (pWallcfg /*&& pWallcfg->height == height && pWallcfg->width == width*/)
     {
       for (row = 0; row < pWallcfg->height; row++)
         {
@@ -567,6 +573,10 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
                   pBuffer[offset * 3 + 1], pWallcfg->dimmFactor);
               dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 2] = dimmValue(
                   pBuffer[offset * 3 + 2], pWallcfg->dimmFactor);
+#ifdef UGFX_WALL
+              setBox(col,row, pBuffer[offset * 3 + 0], pBuffer[offset * 3 + 1], pBuffer[offset * 3 + 2]);
+              FCSCHED_PRINT("Draw Box");
+#endif
             }
         }
     }

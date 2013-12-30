@@ -17,7 +17,7 @@ extern "C"
 {
 #endif
  
- void fcwall_update(void);
+void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue);
 
  void fcwall_init(int width, int height);
 

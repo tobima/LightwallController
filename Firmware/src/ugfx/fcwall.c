@@ -21,67 +21,43 @@
 static int boxWidth;
 static int boxHeight;
 
-static int wallWidth;
-static int wallHeight;
-
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
-
-static void setBox(int x, int y, color_t c) {
-        gdispFillArea(x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, c);
-        gdispDrawBox (x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, Yellow);
-}
 
 /******************************************************************************
  * EXTERN FUNCTIONS
  ******************************************************************************/
 
-void fcwall_init(int width, int height)
-{
-	wallWidth = width;
-	wallHeight = height;
+void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue) {
+
+		int hexCol = red << 16 | green << 8 | blue;
+
+		color_t col = HTML2COLOR(hexCol);
+
+        gdispFillArea(x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, col);
+        gdispDrawBox (x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, Yellow);
 }
 
-void fcwall_update(void)
+void fcwall_init(int w, int h)
 {
-	int width, height;
-	int boxWidth, boxHeight;
+	coord_t width, height;
+	int x = 0;
+	int y = 0;
+
 	width = gdispGetWidth();
 	height = gdispGetHeight();
 
-	static int col = 0xc8c8c8;
-	static int x = 0;
-	static int y = 0;
+	boxWidth = ((int) (width / w))-1;
+	boxHeight = ((int) ((height-25) / h))-1;
 
-	boxWidth = ((int) (width / wallWidth))-1;
-	boxHeight = ((int) ((height-25) / wallHeight))-1;
-
-	for(x=0; x < wallWidth; x++)
+	for(x=0; x < w; x++)
 	{
-		for(y=0; y < wallHeight; y++)
+		for(y=0; y < h; y++)
 		{
-			setBox(x,y, Blue);
+			setBox(x,y, 0,0,0);
 		}
 	}
-
-	x = 0;
-	y = 0;
-	setBox(x,y, HTML2COLOR(col));
-	x++;
-	col += 0x000010;
-	if (x >= wallWidth)
-	{
-		x = 0;
-		y++;
-		col += 0x001000;
-	}
-	if (y >= wallHeight)
-	{
-		col += 0x100000;
-		x =0;
-		y=0;
-	}
-	gfxSleepMilliseconds(200);
-
 }
+
+
