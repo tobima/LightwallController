@@ -20,8 +20,11 @@
 
 #include "dmx/dmx.h"
 
+#include "lwip/api.h" /* Necessary to extract the IP address */
+
 #ifdef UGFX_WALL
 #include "gfx.h"
+#include "ugfx/ugfx_util.h"
 #endif
 
 #define OUTPUT_MAILBOX_SIZE		10
@@ -118,6 +121,13 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
 void
 onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
+  struct netconn *conn = (struct netconn *) clientsocket;
+  ip_addr_t addr;
+  u16_t port;
+
+  /* Extract the IP address */
+  netconn_addr(conn, &addr, &port);
+
   /* Update the scheduler about the actual amount of connected client. */
   gFcConnectedClients = totalAmount;
 
@@ -130,7 +140,7 @@ onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
       {
       case FCCLIENT_STATUS_WAITING:
         gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
-                         "Client %d waiting for a GO", clientsocket);
+                         "Client %d.%d.%d.%d: %d waiting for a GO", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr), port);
         break;
       case FCCLIENT_STATUS_CONNECTED:
         gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
