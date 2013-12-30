@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include "gfx.h"
 
-#define	CHECK_BUFFER_LENGTH		if (i > bufferlength)  { return; }
+#define	CHECK_BUFFER_LENGTH		if (i > bufferlength)  { continue; }
 
 #define MAX_FILLER 11
 
@@ -10,7 +10,8 @@
 static char *long_to_string_with_divisor(char *p,
                                          long num,
                                          unsigned radix,
-                                         long divisor) {
+                                         long divisor)
+{
   int i;
   char *q;
   long l, ll;
@@ -58,7 +59,8 @@ static char *ftoa(char *p, double num) {
 }
 #endif
 
-static void util_vprintf(char *buffer, int bufferlength, const char *fmt, va_list ap) {
+static void util_vprintf(char *buffer, int bufferlength, const char *fmt, va_list ap)
+{
   char *p, *s, c, filler;
   int i, precision, width;
   bool_t is_long, left_align;
@@ -82,7 +84,7 @@ static void util_vprintf(char *buffer, int bufferlength, const char *fmt, va_lis
       /* Check if the buffer is big enough */
       CHECK_BUFFER_LENGTH
       /* Update the buffer */
-      buffer[j] = (uint8_t) c;
+      buffer[j++] = (uint8_t) c;
       continue;
     }
     p = tmpbuf;
@@ -202,7 +204,7 @@ unsigned_common:
 	/* Check if the buffer is big enough */
         CHECK_BUFFER_LENGTH
         /* Update the buffer */
-        buffer[j] = (uint8_t)*s++;
+        buffer[j++] = (uint8_t)*s++;
         i--;
       }
 
@@ -211,7 +213,7 @@ unsigned_common:
 	/* Check if the buffer is big enough */
 	CHECK_BUFFER_LENGTH
 	/* Update the buffer */
-	buffer[j] = (uint8_t) filler;
+	buffer[j++] = (uint8_t) filler;
       }
       while (++width != 0);
     }
@@ -221,7 +223,7 @@ unsigned_common:
       /* Check if the buffer is big enough */
       CHECK_BUFFER_LENGTH
       /* Update the buffer */
-      buffer[j] = (uint8_t)*s++;
+      buffer[j++] = (uint8_t)*s++;
     }
 
     while (width)
@@ -229,7 +231,7 @@ unsigned_common:
       /* Check if the buffer is big enough */
       CHECK_BUFFER_LENGTH
       /* Update the buffer */
-      buffer[j] = (uint8_t)filler;
+      buffer[j++] = (uint8_t)filler;
       width--;
     }
   }
@@ -238,11 +240,20 @@ unsigned_common:
 extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferlength, char* text, ...)
 {
 	va_list ap;
+	int i;
 	char buffer[bufferlength];
+	int displayWidth, displayHeight;
+
+	for(i=0; i < bufferlength; i++)
+	{
+		buffer[i]=0;
+	}
+	displayWidth = gdispGetWidth();
+        displayHeight = gdispGetHeight();
 
 	va_start(ap, text);
 	util_vprintf(buffer, bufferlength, text, ap);
 	va_end(ap);
-	gdispDrawString(x, y, text, font, color);
+	gdispFillString(x, y, buffer, font, color, Black);
 }
 

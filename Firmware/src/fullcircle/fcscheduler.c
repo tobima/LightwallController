@@ -425,7 +425,9 @@ fc_scheduler(void *p)
                 filename);
             if (res)
               {
-		gdispPrintf(0, gdispGetHeight() - 15, font, Red, 512, "File: %s", path);
+		gdispPrintf(0, gdispGetHeight() - 15, font, Red, 512, 
+			"%d x %d, File %s playing.", 
+			wallcfg.width, wallcfg.height, path);
                 FCSCHED_PRINT("%s ...\r\n", path);
 
                 /* Initialize the file for playback */
