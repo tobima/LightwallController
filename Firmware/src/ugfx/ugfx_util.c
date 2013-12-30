@@ -241,8 +241,8 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 {
 	va_list ap;
 	int i;
-	int width = gdispGetWidth(); /*FIXME calculate by the width of the text to display */
-	int height = 12; /*FIXME calculate theses numbers */
+	int width = gdispGetFontMetric(font, fontMaxWidth) * bufferlength;
+	int height = gdispGetFontMetric(font, fontHeight);
 	char buffer[bufferlength];
 
 	for(i=0; i < bufferlength; i++)
