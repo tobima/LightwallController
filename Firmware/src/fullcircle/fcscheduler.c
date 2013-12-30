@@ -189,6 +189,16 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
           FCSCHED_PRINT("FcDyn timeout %6d / %6d [ms]\r\n",
               FCSCHED_DYNSERVER_RESETVALUE - gDynamicServerTimeout, FCSCHED_DYNSERVER_RESETVALUE);
 
+#ifdef UGFX_WALL
+	gdispDrawLine(0, gdispGetHeight() - 1, 
+		gdispGetWidth(),
+		gdispGetHeight() - 1, Black);
+
+	gdispDrawLine(0, gdispGetHeight() - 1, 
+		(FCSCHED_DYNSERVER_RESETVALUE - gDynamicServerTimeout) * gdispGetWidth() / FCSCHED_DYNSERVER_RESETVALUE, 
+		gdispGetHeight() - 1, Red);
+#endif
+
           if (gDynamicServerTimeout == 0)
             {
               /* Monitoring is deactivated */
