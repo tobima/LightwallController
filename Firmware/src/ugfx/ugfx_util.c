@@ -242,14 +242,11 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 	va_list ap;
 	int i;
 	char buffer[bufferlength];
-	int displayWidth, displayHeight;
 
 	for(i=0; i < bufferlength; i++)
 	{
 		buffer[i]=0;
 	}
-	displayWidth = gdispGetWidth();
-        displayHeight = gdispGetHeight();
 
 	va_start(ap, text);
 	util_vprintf(buffer, bufferlength, text, ap);

@@ -425,9 +425,13 @@ fc_scheduler(void *p)
                 filename);
             if (res)
               {
-		gdispPrintf(0, gdispGetHeight() - 15, font, Red, 512, 
-			"%d x %d, File %s playing.", 
-			wallcfg.width, wallcfg.height, path);
+#ifdef UGFX_WALL
+		gdispPrintf(0, gdispGetHeight() - 30, font, White, 256, 
+			"%d x %d , %d fps [dimmed to %d%%]", 
+			wallcfg.width, wallcfg.height, wallcfg.fps, wallcfg.dimmFactor);
+		gdispPrintf(0, gdispGetHeight() - 15, font, White, 256, 
+			"File %s playing.", path);
+#endif
                 FCSCHED_PRINT("%s ...\r\n", path);
 
                 /* Initialize the file for playback */
@@ -562,7 +566,8 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
   int row, col, offset;
   dmx_buffer.length = width * height * 3;
 
-  if (pWallcfg /*&& pWallcfg->height == height && pWallcfg->width == width*/)
+  
+  if (pWallcfg && pWallcfg->height == height && pWallcfg->width == width)
     {
       for (row = 0; row < pWallcfg->height; row++)
         {
@@ -577,13 +582,20 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
                   pBuffer[offset * 3 + 2], pWallcfg->dimmFactor);
 #ifdef UGFX_WALL
               setBox(col,row, pBuffer[offset * 3 + 0], pBuffer[offset * 3 + 1], pBuffer[offset * 3 + 2]);
-              FCSCHED_PRINT("Draw Box");
 #endif
             }
         }
     }
   else
     {
+	
+#ifdef UGFX_WALL
+	font_t font = gdispOpenFont("DejaVu*");
+	gdispPrintf(0, gdispGetHeight() - 15, font, Red, 512, 
+			"WRONG Resolution: Wall has %d x %d, but file is %d x %d", 
+			wallcfg.width, wallcfg.height, width, height);
+                
+#endif
       /* Set the DMX buffer directly */
       memcpy(dmx_buffer.buffer, pBuffer, dmx_buffer.length);
     }

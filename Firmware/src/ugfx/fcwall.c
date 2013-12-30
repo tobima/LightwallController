@@ -21,6 +21,8 @@
 static int boxWidth;
 static int boxHeight;
 
+static int wallWidth;
+static int wallHeight;
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -29,11 +31,17 @@ static int boxHeight;
  * EXTERN FUNCTIONS
  ******************************************************************************/
 
-void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue) {
+void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
+{
+	int hexCol;
 
-		int hexCol = red << 16 | green << 8 | blue;
+	/* same orienatation as the pyhsical wall: */
+	y = (wallHeight - 1) - y;
 
-		color_t col = HTML2COLOR(hexCol);
+	/* Calculate the wall */
+	hexCol = red << 16 | green << 8 | blue;
+
+	color_t col = HTML2COLOR(hexCol);
 
         gdispFillArea(x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, col);
         gdispDrawBox (x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, Yellow);
@@ -44,6 +52,8 @@ void fcwall_init(int w, int h)
 	coord_t width, height;
 	int x = 0;
 	int y = 0;
+	wallWidth = w;
+	wallHeight = h;
 
 	width = gdispGetWidth();
 	height = gdispGetHeight();
