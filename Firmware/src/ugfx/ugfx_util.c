@@ -241,6 +241,8 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 {
 	va_list ap;
 	int i;
+	int width = gdispGetWidth(); /*FIXME calculate by the width of the text to display */
+	int height = 12; /*FIXME calculate theses numbers */
 	char buffer[bufferlength];
 
 	for(i=0; i < bufferlength; i++)
@@ -251,6 +253,6 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 	va_start(ap, text);
 	util_vprintf(buffer, bufferlength, text, ap);
 	va_end(ap);
-	gdispFillString(x, y, buffer, font, color, Black);
+	gdispFillStringBox(x, y, width, height, buffer, font, color, Black, justifyLeft);
 }
 
