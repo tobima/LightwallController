@@ -28,6 +28,7 @@ APPDEFS += -DPRINT_DEBUG
 
 
 # Append the WALL
-APPSRC += src/ugfx/fcwall.c
+APPSRC += src/ugfx/fcwall.c \
+	src/ugfx/ugfx_util.c
 APPINC += src/ugfx
 APPDEFS += -DUGFX_WALL

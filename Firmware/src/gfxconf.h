@@ -46,7 +46,7 @@
 
 /* Builtin Fonts */
 #define GDISP_INCLUDE_FONT_DEJAVUSANS12_AA              TRUE
-#define GDISP_INCLUDE_FONT_DEJAVUSANS24_AA              TRUE
+//#define GDISP_INCLUDE_FONT_DEJAVUSANS24_AA              TRUE
 #define GDISP_NEED_ANTIALIAS                            TRUE
 
 

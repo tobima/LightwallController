@@ -29,6 +29,7 @@
 
 #ifdef UGFX_WALL
 #include "fcwall.h"
+#include "ugfx_util.h"
 #endif
 
 #define FCSCHED_WALLCFG_FILE	"fc/conf/wall"
@@ -341,6 +342,10 @@ fc_scheduler(void *p)
   uint32_t clusters;
   FATFS *fsp;
 
+  /* Initiaize the font */
+  font_t font = gdispOpenFont("DejaVu*");
+  
+
   /* File reading variables */
   fcsequence_t seq;
   fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
@@ -420,6 +425,7 @@ fc_scheduler(void *p)
                 filename);
             if (res)
               {
+		gdispPrintf(0, gdispGetHeight() - 15, font, Red, 512, "File: %s", path);
                 FCSCHED_PRINT("%s ...\r\n", path);
 
                 /* Initialize the file for playback */
