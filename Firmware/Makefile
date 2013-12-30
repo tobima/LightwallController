@@ -65,6 +65,7 @@ PROJECT = ch
 
 # Imported source files and paths
 CHIBIOS = lib/ChibiOS
+GFXLIB = lib/ugfx
 BOARD = board
 include $(BOARD)/board.mk
 include $(CHIBIOS)/os/hal/platforms/STM32F4xx/platform.mk
@@ -73,6 +74,18 @@ include $(CHIBIOS)/os/ports/GCC/ARMCMx/STM32F4xx/port.mk
 include $(CHIBIOS)/os/kernel/kernel.mk
 include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
 include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
+
+include $(GFXLIB)/gfx.mk
+#include $(GFXLIB)/boards/base/Embest-STM32-DMSTF4BB/board.mk	
+
+GFXINC  += $(GFXLIB)/boards/base/Embest-STM32-DMSTF4BB
+GFXSRC  +=
+GFXDEFS += -DGFX_USE_CHIBIOS=TRUE -DGFX_USE_GDISP=TRUE
+
+#include $(GFXLIB)/boards/base/Embest-STM32-DMSTF4BB/chibios_board/board.mk
+include $(GFXLIB)/drivers/gdisp/SSD2119/gdisp_lld.mk
+include $(GFXLIB)/drivers/ginput/touch/STMPE811/ginput_lld.mk
+
 
 # Init custom extensions
 LIBSRC = 
@@ -95,6 +108,7 @@ CSRC = $(PORTSRC) \
        $(HALSRC) \
        $(PLATFORMSRC) \
        $(BOARDSRC) \
+       $(GFXSRC) \
        $(LWSRC) \
        $(FATFSSRC) \
        $(CHIBIOS)/os/various/evtimer.c \
@@ -134,6 +148,7 @@ INCDIR = $(PORTINC) $(KERNINC) $(LIBINC) \
          $(HALINC) $(PLATFORMINC) $(BOARDINC) \
          $(LWINC)  \
          $(FATFSINC) \
+         $(GFXINC) \
          $(CHIBIOS)/os/various \
          $(APPINC)
 

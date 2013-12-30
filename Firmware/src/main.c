@@ -20,6 +20,7 @@
 
 #include "ch.h"
 #include "hal.h"
+#include "gfx.h"
 #include "ini/ini.h"
 
 #include "chprintf.h"
@@ -320,26 +321,7 @@ static struct EventListener el0, el1;
 static const evhandler_t evhndl[] =
   { InsertHandler, RemoveHandler };
 
-/*
- * This is a periodic thread that does absolutely nothing except flashing
- * a LED.
- */
-static WORKING_AREA(waThread1, 128);
 
-__attribute__((noreturn))
- static msg_t
-Thread1(void *arg)
-{
-
-  (void) arg;
-  chRegSetThreadName("blinker");
-  while (TRUE)
-    {
-      palSetPad(GPIOD, GPIOD_LED3); /* Orange.  */
-      chThdSleepMilliseconds(500); palClearPad(GPIOD, GPIOD_LED3); /* Orange.  */
-      chThdSleepMilliseconds(500);
-    }
-}
 
 /*
  * Application entry point.
@@ -357,6 +339,7 @@ main(void)
    */
   halInit();
   chSysInit();
+  gfxInit();
 
   /*
    * Activates the serial driver 6 using the driver default configuration.
@@ -394,11 +377,6 @@ main(void)
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
   chprintf((BaseSequentialStream *) &SD6, "Start blinker thread ...");
-
-  /*
-   * Creates the example thread.
-   */
-  chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
 
   /** 
    * Booting ...
