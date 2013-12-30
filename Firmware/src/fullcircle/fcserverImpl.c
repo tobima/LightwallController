@@ -107,14 +107,12 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
 {
   if (gFcServerActive)
   {
-      FCS_PRINT("Start filling DMX\r\n");
       /* Write the DMX buffer */
       fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
       
       chSysLock();
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
       chSysUnlock();
-      FCS_PRINT("filling DMX completed\r\n");
   }
 }
 
@@ -126,7 +124,7 @@ onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
   u16_t port;
 
   /* Extract the IP address */
-  netconn_addr(conn, &addr, &port);
+  netconn_peer(conn, &addr, &port);
 
   /* Update the scheduler about the actual amount of connected client. */
   gFcConnectedClients = totalAmount;
@@ -140,23 +138,23 @@ onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
       {
       case FCCLIENT_STATUS_WAITING:
         gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
-                         "Client %d.%d.%d.%d: %d waiting for a GO", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr), port);
+                         "Client %d.%d.%d.%d waiting for a GO", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_CONNECTED:
         gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
-                         "Client %d is CONNECTED to the wall", clientsocket);
+			"Client %d.%d.%d.%d is CONNECTED to the wall", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_DISCONNECTED:
         gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
-                         "Client %d hast left", clientsocket);
+			 "Client %d.%d.%d.%d has left", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_INITING:
         gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
-                         "Client %d found this server", clientsocket);
+			 "Client %d.%d.%d.%d found this server", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_TOOMUTCH:
         gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
-                         "Client %d is one too mutch", clientsocket);
+			 "Client %d.%d.%d.%d is one too mutch", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       default:
         break;
@@ -166,8 +164,8 @@ onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 
   if (gDebugShell)
     {
-      chprintf(gDebugShell, "FcServer - Callback client %d did %X '",
-          clientsocket, action);
+      chprintf(gDebugShell, "FcServer - Callback client %d.%d.%d.%d:%d ",
+     	ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr), port);
       switch (action)
         {
       case FCCLIENT_STATUS_WAITING:
