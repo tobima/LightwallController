@@ -480,8 +480,7 @@ fc_scheduler(void *p)
         fcstatic_remove_filename(path, &filename, filenameLength);
         gSourceState = FCSRC_STATE_NOBODY;
 
-        FCSCHED_PRINT("Check Ethernet interface %d\r\n", gFcConnectedClients)
-        ;
+        FCSCHED_PRINT("Check Ethernet interface %d\r\n", gFcConnectedClients);
 
         if (gFcConnectedClients)
           {
@@ -489,6 +488,10 @@ fc_scheduler(void *p)
             gFcServerActive = TRUE;
             gSourceState = FCSRC_STATE_NETWORK;
             gDynamicServerTimeout = 0;
+#ifdef UGFX_WALL
+		gdispPrintf(0, gdispGetHeight() - 15, font, Green, 256, 
+			"Using Network");
+#endif
           }
         break;
       case FCSRC_STATE_FILE:
@@ -513,7 +516,11 @@ fc_scheduler(void *p)
         if (gFcConnectedClients <= 0)
           {
             gSourceState = FCSRC_STATE_NOBODY;
-            FCSCHED_PRINT("CLient disconnected %d\r\n", gSourceState);
+#ifdef UGFX_WALL
+		gdispPrintf(0, gdispGetHeight() - 15, font, Green, 256, 
+			"Network disconnected");
+#endif
+            FCSCHED_PRINT("Client disconnected %d\r\n", gSourceState);
           }
         break;
       default:

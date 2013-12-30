@@ -24,7 +24,7 @@ APPDEFS =
 
 # Fullcricle (fc_c) specific:
 # Debugging for the underling library
-APPDEFS += -DPRINT_DEBUG
+#APPDEFS += -DPRINT_DEBUG
 
 
 # Append the WALL

@@ -20,6 +20,10 @@
 
 #include "dmx/dmx.h"
 
+#ifdef UGFX_WALL
+#include "gfx.h"
+#endif
+
 #define OUTPUT_MAILBOX_SIZE		10
 #define FCSERVER_MAILBOX_SIZE		10
 
@@ -114,6 +118,12 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
 void
 onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
 {
+
+#ifdef UGFX_WALL
+   /* Initiaize the font */
+   font_t font = gdispOpenFont("DejaVu*");
+#endif
+
   /* Update the scheduler about the actual amount of connected client. */
   gFcConnectedClients = totalAmount;
 
@@ -124,12 +134,24 @@ onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
       switch (action)
         {
       case FCCLIENT_STATUS_WAITING:
+#ifdef UGFX_WALL
+        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+                         "Client %d waiting for a GO", clientsocket);
+#endif
         chprintf(gDebugShell, "waiting for a GO");
         break;
       case FCCLIENT_STATUS_CONNECTED:
+#ifdef UGFX_WALL
+        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+                         "Client %d is CONNECTED to the wall", clientsocket);
+#endif
         chprintf(gDebugShell, "is CONNECTED to the wall");
         break;
       case FCCLIENT_STATUS_DISCONNECTED:
+#ifdef UGFX_WALL
+        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+                         "Client %d hast left", clientsocket);
+#endif
         chprintf(gDebugShell, "has left");
         /* The actual client left -> update the counter */
         if (gFcConnectedClients > 0)
@@ -138,9 +160,17 @@ onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
           }
         break;
       case FCCLIENT_STATUS_INITING:
+#ifdef UGFX_WALL
+        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+                         "Client %d found this server", clientsocket);
+#endif
         chprintf(gDebugShell, "found this server");
         break;
       case FCCLIENT_STATUS_TOOMUTCH:
+#ifdef UGFX_WALL
+        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+                         "Client %d is one too mutch", clientsocket);
+#endif
         chprintf(gDebugShell, "is one too much");
         break;
       default:
