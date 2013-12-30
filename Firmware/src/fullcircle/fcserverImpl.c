@@ -31,6 +31,7 @@
 #define FCSERVER_MAILBOX_SIZE		10
 
 #define FCS_PRINT( ... )	if (gDebugShell) { chprintf(gDebugShell, __VA_ARGS__); }
+#define LightGrey	HTML2COLOR(0xc8c8c8)
 
 /******************************************************************************
  * GLOBAL VARIABLES of this module
@@ -137,23 +138,23 @@ onClientChange(uint8_t totalAmount, fclientstatus_t action, int clientsocket)
       switch (action)
       {
       case FCCLIENT_STATUS_WAITING:
-        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+        gdispPrintf(0, gdispGetHeight() - 15, font, LightGrey, 256,
                          "Client %d.%d.%d.%d waiting for a GO", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_CONNECTED:
-        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+        gdispPrintf(0, gdispGetHeight() - 15, font, LightGrey, 256,
 			"Client %d.%d.%d.%d is CONNECTED to the wall", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_DISCONNECTED:
-        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+        gdispPrintf(0, gdispGetHeight() - 15, font, LightGrey, 256,
 			 "Client %d.%d.%d.%d has left", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_INITING:
-        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+        gdispPrintf(0, gdispGetHeight() - 15, font, LightGrey, 256,
 			 "Client %d.%d.%d.%d found this server", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       case FCCLIENT_STATUS_TOOMUTCH:
-        gdispPrintf(0, gdispGetHeight() - 15, font, White, 256,
+        gdispPrintf(0, gdispGetHeight() - 15, font, LightGrey, 256,
 			 "Client %d.%d.%d.%d is one too mutch", ip4_addr1(&addr), ip4_addr2(&addr), ip4_addr3(&addr), ip4_addr4(&addr));
         break;
       default:
