@@ -25,3 +25,9 @@ APPDEFS =
 # Fullcricle (fc_c) specific:
 # Debugging for the underling library
 APPDEFS += -DPRINT_DEBUG
+
+
+# Append the WALL
+APPSRC += src/ugfx/fcwall.c
+APPINC += src/ugfx
+APPDEFS += -DUGFX_WALL

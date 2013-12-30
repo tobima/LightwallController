@@ -44,6 +44,7 @@
 #include "cmd/cmd.h"
 
 #include "ff.h"
+#include "fcwall.h"
 
 /*===========================================================================*/
 /* Card insertion monitor.                                                   */
@@ -340,7 +341,11 @@ main(void)
    */
   halInit();
   chSysInit();
+
+#ifdef UGFX_WALL
   gfxInit();
+  fcwall_init(12, 10);
+#endif
 
   /*
    * Activates the serial driver 6 using the driver default configuration.
@@ -471,65 +476,9 @@ main(void)
   while (TRUE)
     {
       chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
+#ifdef UGFX_WALL
+	fcwall_update();
+#endif
     }
 }
-
-/*
- * Preperation for GFX
- *
- *
-
-static int boxWidth;
-static int boxHeight;
-
-void setBox(int x, int y, color_t c) {
-	gdispFillArea(x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, c);
-	gdispDrawBox (x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, Yellow);
-}
-
-
-// MAIN
-    width = gdispGetWidth();
-    height = gdispGetHeight();
-
-    // HTML2COLOR(0x1234556)
-    boxWidth = ((int) (width / wallWidth))-1;
-    boxHeight = ((int) ((height-25) / wallHeight))-1;
-
-    for(x=0; x < wallWidth; x++)
-    {
-    	for(y=0; y < wallHeight; y++)
-    	{
-    		setBox(x,y, Blue);
-    	}
-    }
-
-    x = 0;
-    y = 0;
-    int col = 0xc8c8c8;
-    while(TRUE) {
-    	setBox(x,y, HTML2COLOR(col));
-    	x++;
-    	col += 0x000010;
-    	if (x >= wallWidth)
-    	{
-    		x = 0;
-    		y++;
-    		col += 0x001000;
-    	}
-    	if (y >= wallHeight)
-    	{
-    		col += 0x100000;
-    		x =0;
-    		y=0;
-    	}
-    	gfxSleepMilliseconds(200);
-    }
-
-
- *
- *
- *
- * */
-
 
