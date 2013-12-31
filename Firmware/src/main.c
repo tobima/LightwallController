@@ -364,7 +364,9 @@ main(void)
   chThdCreateStatic(waThreadBlink, sizeof(waThreadBlink), NORMALPRIO, blinkerThread, NULL);
 
 #ifdef UGFX_WALL
+  chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
   gfxInit();
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 
   /*
@@ -389,29 +391,26 @@ main(void)
 
   chEvtRegister(&inserted_event, &el0, 0);
   chEvtRegister(&removed_event, &el1, 1);
-
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
 #ifndef UGFX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
-
   DMXInit();
-
   /*
    * Creates the DMX thread.
    */
-
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
+
   chprintf((BaseSequentialStream *) &SD6, "Start blinker thread ...");
+
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
   /** 
    * Booting ...
    * - search for configuration on SD-card
    */
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-
   chprintf((BaseSequentialStream *) &SD6, "Searching filesystem ...");
 
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
