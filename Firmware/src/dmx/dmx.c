@@ -16,10 +16,10 @@ DMXBuffer dmx_buffer;
 static Semaphore sem;
 
 /*
- * GPT3 callback.
+ * GPT5 callback.
  */
 static void
-gpt1cb(GPTDriver *gptp)
+gpt5cb(GPTDriver *gptp)
 {
   (void) gptp;
 }
@@ -87,16 +87,16 @@ static const UARTConfig uart3cfg =
   { txend1, txend2, rxend, rxchar, rxerr, 250000 /* 250kbaud */, 0,
       USART_CR2_STOP2_BITS, 0 };
 
-static const GPTConfig gpt1cfg =
+static const GPTConfig gpt5cfg =
   { 200000, /* 200KHz timer clock.*/
-  gpt1cb, /* Timer callback.*/
+  gpt5cb, /* Timer callback.*/
   0 };
 
 void
 DMXInit(void)
 {
   chSemInit(&sem, 1);
-  gptStart(&GPTD1, &gpt1cfg);
+  gptStart(&GPTD5, &gpt5cfg);
   uartStart(&UARTD3, &uart3cfg);
 
   /* Set the initial length of DMX to one */
@@ -132,9 +132,9 @@ dmxthread(void *arg)
     {
       /* Send Reset. */
       palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_OUTPUT | PAL_STM32_OTYPE_PUSHPULL |PAL_STM32_PUDR_PULLDOWN); palClearPad(GPIOD, GPIOD_DMX_BREAK);
-      gptPolledDelay(&GPTD1, 25); /* wait for 125 us */
+      gptPolledDelay(&GPTD5, 25); /* wait for 125 us */
       palSetPad(GPIOD, GPIOD_DMX_BREAK); palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_INPUT | PAL_STM32_PUDR_FLOATING);
-      gptPolledDelay(&GPTD1, 2); /* Mark and Reset of 10 us */
+      gptPolledDelay(&GPTD5, 2); /* Mark and Reset of 10 us */
 
       /* Send the startbyte */
       uartStartSend(&UARTD3, (size_t) 1, (void*) &(dmx_buffer.startbyte));
