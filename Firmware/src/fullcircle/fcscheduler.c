@@ -354,9 +354,10 @@ fc_scheduler(void *p)
   uint32_t clusters;
   FATFS *fsp;
 
+#ifdef UGFX_WALL
   /* Initiaize the font */
   font_t font = gdispOpenFont("DejaVu*");
-  
+#endif
 
   /* File reading variables */
   fcsequence_t seq;
