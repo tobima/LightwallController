@@ -363,9 +363,6 @@ main(void)
 
   chThdCreateStatic(waThreadBlink, sizeof(waThreadBlink), NORMALPRIO, blinkerThread, NULL);
 
-#ifdef UGFX_WALL
-  gfxInit();
-#endif
 
   /*
    * Activates the serial driver 6 using the driver default configuration.
@@ -374,6 +371,25 @@ main(void)
 
   chprintf((BaseSequentialStream *) &SD6,
       "\x1b[1J\x1b[0;0HStarting ChibiOS\r\n");
+
+#ifndef UGFX_WALL
+  chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
+
+  DMXInit();
+
+  /*
+   * Creates the DMX thread.
+   */
+
+  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+#endif
+
+#ifdef UGFX_WALL
+  chprintf((BaseSequentialStream *) &SD6, "Initialazing GFX driver ...");
+  gfxInit();
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+#endif
 
   chprintf((BaseSequentialStream *) &SD6, "Initialazing SDCARD driver ...");
 
@@ -392,18 +408,6 @@ main(void)
 
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
-#ifndef UGFX_WALL
-  chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
-
-  DMXInit();
-
-  /*
-   * Creates the DMX thread.
-   */
-
-  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-#endif
   chprintf((BaseSequentialStream *) &SD6, "Start blinker thread ...");
 
   /** 
