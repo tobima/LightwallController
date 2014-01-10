@@ -415,7 +415,6 @@ main(void)
   if (!fs_ready)
     {
       chprintf((BaseSequentialStream *) &SD6, "\x1b[31m Failed!\r\n\x1b[0m");
-      chprintf((BaseSequentialStream *) &SD6, "File System not mounted\r\n");
     }
   else
     {
@@ -472,15 +471,13 @@ main(void)
    */
   //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
   //                server_thread, NULL);
-  chprintf((BaseSequentialStream *) &SD6, "Initialazing Shell...");
 
   /*
    * Shell manager initialization.
    */
+  chprintf((BaseSequentialStream *) &SD6, "Initialazing Shell...");
   shellInit();
-
   chprintf((BaseSequentialStream *) &SD6, "Done\r\nCreate new Shell\r\n");
-
   shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
 
   /*
