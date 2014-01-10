@@ -232,7 +232,7 @@ wall_handler(void* config, const char* section, const char* name,
   wallconf_t* pconfig = (wallconf_t*) config;
   int row = strtol(section, NULL, 10);
   int col;
-  int memoryLength = 0;
+  uint32_t memoryLength = 0;
   uint32_t dmxval;
 
   if (MATCH("global", "width"))
@@ -335,7 +335,7 @@ fc_scheduler(void *p)
   schedulerconf_t schedConfiguration;
 
   /* SD card initing variables */
-  FRESULT err;
+  FRESULT err = FR_INT_ERR;
   uint32_t clusters;
   FATFS *fsp;
 
@@ -357,15 +357,25 @@ fc_scheduler(void *p)
 
   /* Initialize the SDcard */
   for (res = 0 /* reuse res to avoid endless loop*/;
-      res < MAXIMUM_INITIALIZATION; res++)
+      res < MAXIMUM_INITIALIZATION && err != FR_OK; res++)
     {
       err = f_getfree("/", &clusters, &fsp);
       chThdSleep(MS2ST(100));
     }
-  while (err != FR_OK);
+
+  /* Stop the thread, if the filesystem could not be found */
+  if (res >= MAXIMUM_INITIALIZATION)
+    {
+      chprintf((BaseSequentialStream *) &SD6, "Stop Scheduler thread, no SD card present.\r\n");
+      return RDY_OK;
+    }
 
   /* Load wall configuration */
-  readConfigurationFile(&wallcfg);
+  if (readConfigurationFile(&wallcfg) != 0)
+  {
+      /* There was a problem, on reading the configuration from the SD card, stop the thread */
+      return RDY_OK;
+  }
 
     /* Load the configuration */
     hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
@@ -536,7 +546,7 @@ dimmValue(uint8_t incoming, int factor)
   return (uint8_t) tmp;
 }
 
-extern void
+extern int
 readConfigurationFile(wallconf_t* pConfiguration)
 {
   hwal_memset(pConfiguration, 0, sizeof(wallconf_t));
@@ -544,7 +554,7 @@ readConfigurationFile(wallconf_t* pConfiguration)
   pConfiguration->fps = -1;
 
   /* Load the configuration */
-  ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
+  return ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
 }
 
 extern void
@@ -644,6 +654,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 	else if (strcmp(argv[0], "config") == 0)
 	{
 	  wallconf_t demo;
+	  int retConfig;
 
 	  if ( !gSchedulerActive )
 	  {
@@ -652,9 +663,9 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 	  }
 
 	  /* Load wall configuration */
-	  readConfigurationFile(&demo);
+	  retConfig = readConfigurationFile(&demo);
           
-          chprintf(chp, "Width and height are %dx%d\r\n", demo.width, demo.height);
+          chprintf(chp, "Width and height are %dx%d (parsing returned %d, 0: success, all other values indicate problems)\r\n", demo.width, demo.height, retConfig);
 	}
     }
 

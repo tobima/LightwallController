@@ -74,8 +74,9 @@ typedef struct
  * The static configuration with the wall.
  
  * @param[out]	pConfiguration	Read configuration
+ * @return 0 on success,
  */
-extern void
+extern int
 readConfigurationFile(wallconf_t* pConfiguration);
 
 /** @fn void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
@@ -97,13 +98,11 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
 /**
  * Debug interface for the commandline
  */
-void
-fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
+void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
 
 /** @fn void fcscheduler_startThread()
  * @brief function to start a thread
  */
-void
-fcscheduler_startThread();
+void fcscheduler_startThread( void );
 
 #endif /* End of _FCSCHEDULER_H */

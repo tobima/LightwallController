@@ -182,7 +182,11 @@ fc_server(void *p)
   FCSERVER_MAILBOX_SIZE);
 
   /* read the dimension from the configuration file */
-  readConfigurationFile(&wallcfg);
+  if (readConfigurationFile(&wallcfg) != 0)
+    {
+        /* There was a problem, on reading the configuration from the SD card, stop the thread */
+        return RDY_OK;
+    }
 
   ret = fcserver_init(&server, &onNewImage, &onClientChange, wallcfg.width,
       wallcfg.height);
