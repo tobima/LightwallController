@@ -372,7 +372,7 @@ main(void)
   chprintf((BaseSequentialStream *) &SD6,
       "\x1b[1J\x1b[0;0HStarting ChibiOS\r\n");
 
-#ifndef UGFX_WALL
+
   chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
 
   DMXInit();
@@ -383,7 +383,7 @@ main(void)
 
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-#endif
+
 
 #ifdef UGFX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Initialazing GFX driver ...");

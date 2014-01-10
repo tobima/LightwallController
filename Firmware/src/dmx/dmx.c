@@ -130,9 +130,11 @@ dmxthread(void *arg)
   while (1)
     {
       /* Send Reset. */
-      palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_OUTPUT | PAL_STM32_OTYPE_PUSHPULL |PAL_STM32_PUDR_PULLDOWN); palClearPad(GPIOD, GPIOD_DMX_BREAK);
+      palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_OUTPUT | PAL_STM32_OTYPE_PUSHPULL |PAL_STM32_PUDR_PULLDOWN);
+      palClearPad(GPIOD, GPIOD_DMX_BREAK);
       gptPolledDelay(&GPTD5, 25); /* wait for 125 us */
-      palSetPad(GPIOD, GPIOD_DMX_BREAK); palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_INPUT | PAL_STM32_PUDR_FLOATING);
+      palSetPad(GPIOD, GPIOD_DMX_BREAK);
+      palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_INPUT | PAL_STM32_PUDR_FLOATING);
       gptPolledDelay(&GPTD5, 2); /* Mark and Reset of 10 us */
 
       /* Send the startbyte */
