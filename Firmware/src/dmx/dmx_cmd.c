@@ -44,6 +44,9 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
               int offset = atoi(argv[1]);
               int value = atoi(argv[2]);
 
+	      /*Offset adaption: */
+	      offset--;
+
               if (dmx_buffer.length < offset)
                 {
                   chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
