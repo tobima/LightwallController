@@ -13,20 +13,8 @@
 
 #define SHELL_WA_SIZE THD_WA_SIZE(1024)
 
-
 struct netconn *conn, *newconn;
-static  void toggleLED04() {
-    
-	palTogglePad(GPIOD,GPIOD_LED4);
-}
-static  void toggleLED05() {
-    
-	palTogglePad(GPIOD,GPIOD_LED5);
-}
-static  void toggleLED06() {
-    
-	palTogglePad(GPIOD,GPIOD_LED6);
-}
+
 /*
  * TCP server thread.
  */
@@ -73,11 +61,15 @@ msg_t telnet_server(void *arg)
     return RDY_OK;
 }
 
-void exitTelnet(BaseSequentialStream *chp, int argc, char *argv[]) {
-    
-    shellExit(RDY_OK);
-    
-    
+void exitTelnet(BaseSequentialStream *chp, int argc, char *argv[])
+{
+    /* Cast unused (but necessary by callback) arguments to VOID, to solve compiler warnings */
+    (void) chp;
+    (void) argc;
+    (void) argv;
+
+    /*FIXME implicite declaration
+    shellExit(RDY_OK); */
 }
 
 
