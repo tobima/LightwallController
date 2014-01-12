@@ -791,19 +791,24 @@ main(void)
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
 
-    /*
-     * Creates the Telnet Server thread (it changes priority internally).
-     */
-    chThdCreateStatic(wa_telnet_server, sizeof(wa_telnet_server), NORMALPRIO + 1,
-                      telnet_server, commands);
   /*
    * Shell manager initialization.
    */
   shellInit();
 
-  chprintf((BaseSequentialStream *) &SD6, "Done\r\nCreate new Shell\r\n");
+#if WITH_TELNET
+    /*
+     * Creates the Telnet Server thread (it changes priority internally).
+     */
+    chThdCreateStatic(wa_telnet_server, sizeof(wa_telnet_server), NORMALPRIO + 1,
+                      telnet_server, (void *) commands);
+#endif
+
+  /* Deactivate the shell*/
+  chprintf((BaseSequentialStream *) &SD6, "Create new Shell\r\n");
 
   shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
+  chprintf((BaseSequentialStream *) &SD6, "Done\r\n");
 
   /*
    * Normal main() thread activity, in this demo it does nothing except
