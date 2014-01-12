@@ -5,22 +5,20 @@
 #define NET_SHELL_THREAD_STACK_SIZE   THD_WA_SIZE(512)
 #endif
 
-#ifndef NET_SHELL__PORT
-#define NET_SHELL_PORT         22
+#ifndef NET_SHELL_PORT
+#define NET_SHELL_PORT         23
 #endif
 
 #ifndef NET_SHELL_THREAD_PRIORITY
 #define NET_SHELL_THREAD_PRIORITY     (LOWPRIO + 2)
 #endif
 
-extern WORKING_AREA(wa_net_shell_server, NET_SHELL_THREAD_STACK_SIZE);
-
+extern WORKING_AREA(wa_telnet_server, NET_SHELL_THREAD_STACK_SIZE);
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-  msg_t
-  server_thread(void *p);
+    msg_t telnet_server(void *p);
+    void exitTelnet(BaseSequentialStream *chp, int argc, char *argv[]);
 #ifdef __cplusplus
 }
 #endif
