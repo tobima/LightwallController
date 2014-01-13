@@ -801,11 +801,6 @@ main(void)
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
 
-  /*
-   * Shell manager initialization.
-   */
-  shellInit();
-
 #if WITH_TELNET
     /*
      * Creates the Telnet Server thread (it changes priority internally).
