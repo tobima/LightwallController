@@ -576,6 +576,11 @@ static const ShellCommand commands[] =
 static const ShellConfig shell_cfg1 =
   { (BaseSequentialStream *) &SD6, commands };
 
+static const ShellConfig shell_cfg2 = {
+    (BaseSequentialStream *)&SDU1,
+    commands
+};
+
 /*===========================================================================*/
 /* Main and generic code.                                                    */
 /*===========================================================================*/
@@ -654,6 +659,7 @@ Thread1(void *arg)
 int
 main(void)
 {
+    static Thread *shelltp = NULL;
 
   /*
    * System initializations.
@@ -681,23 +687,27 @@ main(void)
     usbStart(serusbcfg.usbp, &usbcfg);
     usbConnectBus(serusbcfg.usbp);
     
+    /*
+     * Shell manager initialization.
+     */
+    shellInit();
+  
+    
 
-  /*
-   * Activates the serial driver 6 using the driver default configuration.
-   */
-  sdStart(&SD6, NULL);
+    /*
+     * Activates the serial driver 6 and SDC driver 1 using default
+     * configuration.
+     */
+    sdStart(&SD6, NULL);
+    sdcStart(&SDCD1, NULL);
+
 
   chprintf((BaseSequentialStream *) &SD6,
       "\x1b[1J\x1b[0;0HStarting ChibiOS\r\n");
 
   chprintf((BaseSequentialStream *) &SD6, "Initialazing SDCARD driver ...");
 
-  /*
-   * Activates the SDC driver 1 using default configuration.
-   */
-  sdcStart(&SDCD1, NULL);
-
-  /*
+    /*
    * Activates the card insertion monitor.
    */
   tmr_init(&SDCD1);
@@ -804,7 +814,6 @@ main(void)
                       telnet_server, (void *) commands);
 #endif
 
-  /* Deactivate the shell*/
   chprintf((BaseSequentialStream *) &SD6, "Create new Shell\r\n");
 
   shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
@@ -818,6 +827,12 @@ main(void)
    */
   while (TRUE)
     {
+        if (!shelltp && (SDU1.config->usbp->state == USB_ACTIVE))
+            shelltp = shellCreate(&shell_cfg2, SHELL_WA_SIZE, NORMALPRIO);
+        else if (chThdTerminated(shelltp)) {
+            chThdRelease(shelltp);    /* Recovers memory of the previous shell.   */
+            shelltp = NULL;           /* Triggers spawning of a new shell.        */
+        }
       chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
     }
 }
