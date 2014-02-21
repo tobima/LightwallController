@@ -564,13 +564,15 @@ cmd_tree(BaseSequentialStream *chp, int argc, char *argv[])
 static const ShellCommand commands[] =
   {
     { "mem", cmd_mem },
-    { "tree", cmd_tree },
     { "threads", cmd_threads },
+    { "dmx", cmd_dmx_modify },
+#ifndef FILESYSTEM_ONLY
+    { "tree", cmd_tree },
     { "cat", cmd_cat },
     { "ifconfig", cmd_ifconfig },
-    { "dmx", cmd_dmx_modify },
     { "fcdyn", fcsserverImpl_cmdline },
     { "fcsched", fcscheduler_cmdline },
+#endif
     { NULL, NULL } };
 
 static const ShellConfig shell_cfg1 =
@@ -740,6 +742,7 @@ main(void)
    */
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
+#ifndef FILESYSTEM_ONLY
   chprintf((BaseSequentialStream *) &SD6, "Searching filesystem ...");
 
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
@@ -754,8 +757,9 @@ main(void)
   else
     {
       chprintf((BaseSequentialStream *) &SD6, "\x1b[32m OK\r\n\x1b[0m");
-
+#endif
       print_fsusage((BaseSequentialStream *) &SD6, 0, NULL);
+#ifndef FILESYSTEM_ONLY
     }
 
   int use_config = 0;
@@ -800,6 +804,7 @@ main(void)
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
+#endif
 
 #if WITH_TELNET
     /*
