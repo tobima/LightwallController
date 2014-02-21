@@ -26,4 +26,4 @@ APPDEFS =
 # Debugging for the underling library
 # APPDEFS += -DPRINT_DEBUG
 
-APPDEFS += -DWITH_TELNET
+#APPDEFS += -DWITH_TELNET
