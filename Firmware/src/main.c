@@ -375,15 +375,14 @@ main(void)
 
   chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
 
+  /* test only the initialization */
   DMXInit();
 
   /*
    * Creates the DMX thread.
    */
-
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-
 
 #ifdef UGFX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Initialazing GFX driver ...");

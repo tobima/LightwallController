@@ -16,7 +16,7 @@ DMXBuffer dmx_buffer;
 static Semaphore sem;
 
 /*
- * GPT3 callback.
+ * GPT5 callback.
  */
 static void
 gpt5cb(GPTDriver *gptp)
@@ -83,7 +83,7 @@ rxend(UARTDriver *uartp)
 /**
  * Use the third UART to spread DMX into the world.
  */
-static const UARTConfig uart3cfg =
+static const UARTConfig uart1cfg =
   { txend1, txend2, rxend, rxchar, rxerr, 250000 /* 250kbaud */, 0,
       USART_CR2_STOP2_BITS, 0 };
 
@@ -97,7 +97,10 @@ DMXInit(void)
 {
   chSemInit(&sem, 1);
   gptStart(&GPTD5, &gpt5cfg); // Another
-  uartStart(&UARTD3, &uart3cfg);
+
+  /* Use UART 1 (UART3 is needed for the LCD) */
+  uartStart(&UARTD1, &uart1cfg);
+
   /* Set the initial length of DMX to one */
   dmx_buffer.length = 1;
 }
@@ -138,15 +141,15 @@ dmxthread(void *arg)
       gptPolledDelay(&GPTD5, 2); /* Mark and Reset of 10 us */
 
       /* Send the startbyte */
-      uartStartSend(&UARTD3, (size_t) 1, (void*) &(dmx_buffer.startbyte));
+      uartStartSend(&UARTD1, (size_t) 1, (void*) &(dmx_buffer.startbyte));
 
       /* send the universe */
-      uartStartSend(&UARTD3, (size_t)(dmx_buffer.length),
+      uartStartSend(&UARTD1, (size_t)(dmx_buffer.length),
           (void*) &(dmx_buffer.buffer));
 
       chSemWait(&sem);
 
-      uartStopSend(&UARTD3);
+      uartStopSend(&UARTD1);
 
     }
 
