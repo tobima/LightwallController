@@ -566,7 +566,7 @@ static const ShellCommand commands[] =
     { "mem", cmd_mem },
     { "threads", cmd_threads },
     { "dmx", cmd_dmx_modify },
-#ifndef FILESYSTEM_ONLY
+#ifndef DISABLE_FILESYSTEM
     { "tree", cmd_tree },
     { "cat", cmd_cat },
     { "ifconfig", cmd_ifconfig },
@@ -742,7 +742,7 @@ main(void)
    */
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
-#ifndef FILESYSTEM_ONLY
+#ifndef DISABLE_FILESYSTEM
   chprintf((BaseSequentialStream *) &SD6, "Searching filesystem ...");
 
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
@@ -759,7 +759,7 @@ main(void)
       chprintf((BaseSequentialStream *) &SD6, "\x1b[32m OK\r\n\x1b[0m");
 #endif
       print_fsusage((BaseSequentialStream *) &SD6, 0, NULL);
-#ifndef FILESYSTEM_ONLY
+#ifndef DISABLE_FILESYSTEM
     }
 
   int use_config = 0;
