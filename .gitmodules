@@ -6,7 +6,7 @@
 	url = https://github.com/C3MA/fc_c.git
 [submodule "Firmware/board"]
 	path = Firmware/board
-	url = https://github.com/tobima/CH_board_element14_STM32F4DIS-BB.git
+	url = https://github.com/0110/CH_board_element14_STM32F4DIS-BB.git
 [submodule "Firmware/lib/ugfx"]
 	path = Firmware/lib/ugfx
 	url = https://bitbucket.org/Tectu/ugfx
