@@ -37,17 +37,33 @@
 //#define GFX_USE_OS_OSX		FALSE
 
 /* GFX sub-systems to turn on */
-#define GFX_USE_GDISP			TRUE
+#define GFX_USE_GDISP                   TRUE
+#define GFX_USE_GWIN                    TRUE
+#define GFX_USE_GINPUT                  TRUE
+#define GFX_USE_GEVENT                  TRUE
+#define GFX_USE_GTIMER                  TRUE
 
 /* Features for the GDISP sub-system. */
-#define GDISP_NEED_VALIDATION	TRUE
+#define GDISP_NEED_VALIDATION	        TRUE
 #define GDISP_NEED_CLIP			TRUE
 #define GDISP_NEED_TEXT                 TRUE
+#define GDISP_NEED_CIRCLE               TRUE
 
 /* Builtin Fonts */
 #define GDISP_INCLUDE_FONT_DEJAVUSANS12_AA              TRUE
-//#define GDISP_INCLUDE_FONT_DEJAVUSANS24_AA              TRUE
+//#define GDISP_INCLUDE_FONT_DEJAVUSANS24_AA            TRUE
 #define GDISP_NEED_ANTIALIAS                            TRUE
+
+/* GDISP fonts to include */
+#define GDISP_INCLUDE_FONT_UI2          TRUE
+
+/* Features for the GWIN subsystem. */
+#define GWIN_NEED_WINDOWMANAGER         TRUE
+#define GWIN_NEED_WIDGET                TRUE
+#define GWIN_NEED_BUTTON                TRUE
+
+/* Features for the GINPUT subsystem. */
+#define GINPUT_NEED_MOUSE               TRUE
 
 
 #endif /* _GFXCONF_H */

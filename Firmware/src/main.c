@@ -387,6 +387,8 @@ main(void)
 #ifdef UGFX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Initialazing GFX driver ...");
   gfxInit();
+
+  fcwall_initWindow();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 
@@ -501,7 +503,9 @@ main(void)
   while (TRUE)
     {
       chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
-
+#ifdef UGFX_WALL
+      fcwall_processEvents();
+#endif
     }
 }
 
