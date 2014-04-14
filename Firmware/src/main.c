@@ -31,6 +31,7 @@
 #include "netshell/netshell.h"
 #include "dmx/dmx.h"
 #include "dmx/dmx_cmd.h"
+#include "dmx/rgb.h"
 #include "fullcircle/fcserverImpl.h"
 #include "fullcircle/fcscheduler.h"
 #include "fullcircle/fcstatic.h"
@@ -566,6 +567,7 @@ static const ShellCommand commands[] =
     { "mem", cmd_mem },
     { "threads", cmd_threads },
     { "dmx", cmd_dmx_modify },
+    { "rgb" , dmx_rgb_modify },
 #ifndef FILESYSTEM_ONLY
     { "tree", cmd_tree },
     { "cat", cmd_cat },
