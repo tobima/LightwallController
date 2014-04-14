@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "ch.h"
 #include "hal.h"
@@ -70,33 +71,56 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
           else if (argc < 4)
             {
 		char tmpHex[3];
+		uint8_t* tmpDMX;
 		int i=0;
 		int offset = atoi(argv[1]);
-		int length = strlen(argv[2]) / 2; /* HEX values -> therefore divided by two) */
-		if (length <= 0 || (offset + length) >= DMX_BUFFER_MAX)
+		int strLength = strlen(argv[2]);
+		int length = strLength / 2; /* HEX values -> therefore divided by two) */
+		long value;
+		char* end;
+		if (length <= 0 || (offset + length) >= DMX_BUFFER_MAX || (strLength % 2 != 0))
 		{
-		 chprintf(chp, "Could not extract HEX value, maximum of %d (got %d)\r\n", DMX_BUFFER_MAX, (offset + length) );
+		 chprintf(chp, "Could not extract HEX value, maximum of %d (got %d, %s, must be even)\r\n", DMX_BUFFER_MAX, (offset + length), (strLength % 2) ? "odd" : "even" );
 		 chprintf(chp, "Usage: dmx fill (start offset) (hex values, without spaces)\r\n");		
 		 return;
 		}
 		
 		chprintf(chp, "Updating %d bytes beginning at %d\r\n", length, offset);
+		/* allocate working buffer */		
+		tmpDMX = chHeapAlloc(NULL, length);
+		if (tmpDMX == 0)
+		{
+		  chprintf(chp, "Could allocate memory\r\n");
+		  return;
+		}
+
 		/* valid data to write on the buffer */
 		for(i = 0; i < length; i++)
 		{
 		  memcpy( tmpHex, (argv[2] + (i*2)), 2);
 		  tmpHex[2] = 0; /* mark the last as end */	
 		  
-		  dmx_buffer.buffer[offset + i] = strtol(tmpHex, NULL, 16);
+		  value =  strtol(tmpHex, &end, 16);
+		  tmpDMX[i] = (uint8_t) value;
+		  if ( *end )
+		  {
+		    chprintf(chp, "Could not extract '%s'\r\n", tmpHex); 
+		    chHeapFree(tmpDMX);
+		    return;
+		  }
 		}
 
+		/* Update the DMX buffer */
+		memcpy( &(dmx_buffer.buffer[offset]), tmpDMX, length);
 		if (dmx_buffer.length < (offset + length) )
                 {
                   chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
                       dmx_buffer.length, (offset + length));
                   dmx_buffer.length = (offset + length);
                 }
-
+		
+		/* clean the memory again */
+		chHeapFree(tmpDMX);
             }
           else
             {
