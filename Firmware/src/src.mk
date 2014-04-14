@@ -21,7 +21,7 @@ APPINC = ${APP} \
        src/fullcircle
 
 # List all user C define here
-APPDEFS =
+APPDEFS = -DSHELL_MAX_ARGUMENTS=5
 
 # Fullcricle (fc_c) specific:
 # Debugging for the underling library

@@ -16,7 +16,7 @@
 #include "shell.h"
 
 
-#define RGB_USAGE_HELP	"Possible commands are:\r\nfill\r\nset\r\n"
+#define RGB_USAGE_HELP	"Possible commands are:\r\nfill\r\nwrite\r\n"
 
 void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
 {
@@ -41,9 +41,32 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
         dmx_rgb_fill(red, green, blue);
      }
     }
-    else if (strcmp(argv[0], "set") == 0)
+    else if (strcmp(argv[0], "write") == 0)
     {
-	
+	if (argc < 5)
+        {
+           chprintf(chp, "Usage: rgb write (offset, starting from zero) (red) (green) (blue)\r\n");
+        }
+        else
+        {
+          int offset = atoi(argv[1]);
+	  int red = atoi(argv[2]);
+          int green = atoi(argv[3]);
+          int blue = atoi(argv[4]);
+
+          if (dmx_buffer.length < ((offset * 3) + 3) )
+          {
+            chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
+              dmx_buffer.length, ((offset * 3) + 3) );
+            dmx_buffer.length = ((offset * 3) + 3);
+          }
+
+	  /* Works perfect with an offset starting at zero */
+          dmx_buffer.buffer[(offset * 3) + 0] = red;
+	  dmx_buffer.buffer[(offset * 3) + 1] = green;
+	  dmx_buffer.buffer[(offset * 3) + 2] = blue;
+          chprintf(chp, "Set DMX at %d with 0x%2X%2X%2X\r\n", (offset * 3),           			red, green, blue);
+        }
     }
 }
 
