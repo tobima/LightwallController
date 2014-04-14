@@ -22,7 +22,7 @@
 void
 cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 {
-#define DMX_USAGE_HELP "Possible commands are:\r\nshow\tprint content\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\nshrink (size)\tUpdate the length of the universe\r\n"
+#define DMX_USAGE_HELP "Possible commands are:\r\nshow\tprint content\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\nfill (start offset) (hex to send, without spaces!)\r\nshrink (size)\tUpdate the length of the universe\r\n"
 
   if (argc < 1)
     {
@@ -61,9 +61,42 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
         }
       else if (strcmp(argv[0], "fill") == 0)
         {
-          if (argc < 4)
-            {
+	  if (argc < 3)
+          {
               chprintf(chp, "Usage: dmx fill (start offset) (end) (value)\r\n");
+              chprintf(chp, "Usage: dmx fill (start offset) (hex values, without spaces)\r\n");
+	      return;
+	  }
+          else if (argc < 4)
+            {
+		char tmpHex[3];
+		int i=0;
+		int offset = atoi(argv[1]);
+		int length = strlen(argv[2]) / 2; /* HEX values -> therefore divided by two) */
+		if (length <= 0 || (offset + length) >= DMX_BUFFER_MAX)
+		{
+		 chprintf(chp, "Could not extract HEX value, maximum of %d (got %d)\r\n", DMX_BUFFER_MAX, (offset + length) );
+		 chprintf(chp, "Usage: dmx fill (start offset) (hex values, without spaces)\r\n");		
+		 return;
+		}
+		
+		chprintf(chp, "Updating %d bytes beginning at %d\r\n", length, offset);
+		/* valid data to write on the buffer */
+		for(i = 0; i < length; i++)
+		{
+		  memcpy( tmpHex, (argv[2] + (i*2)), 2);
+		  tmpHex[2] = 0; /* mark the last as end */	
+		  
+		  dmx_buffer.buffer[offset + i] = strtol(tmpHex, NULL, 16);
+		}
+
+		if (dmx_buffer.length < (offset + length) )
+                {
+                  chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
+                      dmx_buffer.length, (offset + length));
+                  dmx_buffer.length = (offset + length);
+                }
+
             }
           else
             {
