@@ -87,3 +87,55 @@ void dmx_rgb_fill(uint8_t red, uint8_t green, uint8_t blue)
   }
 }
 
+/**
+ * Map a value to a rainbow color.
+ * (Source: http://blog.csharphelper.com/2010/05/20/map-numeric-values-to-colors-in-a-rainbow-in-c.aspx)
+ * @param[in] value current value (between 0 and 1023)
+ * @param[in|out] red	minumal value (and output for red)
+ * @param[in|out] blue  maximum value (also the result for blue)
+ * @param[out]    green	output value for the green value
+ * @return used color
+ */
+static void rgb_rainbowcolor(uint16_t value, uint8_t* red, uint8_t* blue, uint8_t* green)
+{
+	// Convert into a value between 0 and 1023.
+	int int_value = (int)(1023 * (value - *red) / (*blue - red*));
+	
+	// Map different color bands.
+	if (int_value < 256)
+	{
+		// Red to yellow. (255, 0, 0) to (255, 255, 0).
+		*red = 255;
+		*green = int_value;
+		*blue = 0;
+	}
+	else if (int_value < 512)
+	{
+		// Yellow to green. (255, 255, 0) to (0, 255, 0).
+		int_value -= 256;
+		*red = 255 - int_value;
+		*green = 255;
+		*blue = 0;
+	}
+	else if (int_value < 768)
+	{
+		// Green to aqua. (0, 255, 0) to (0, 255, 255).
+		int_value -= 512;
+		*red = 0;
+		*green = 255;
+		*blue = int_value;
+	}
+	else
+	{
+		// Aqua to blue. (0, 255, 255) to (0, 0, 255).
+		int_value -= 768;
+		*red = 0;
+		*green = 255 - int_value;
+		*blue = 255;
+	}
+}
+
+void dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration)
+{
+	
+}

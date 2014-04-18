@@ -37,6 +37,16 @@ extern "C"
    * @param blue	value for all blue LEDs
    */
   void dmx_rgb_fill(uint8_t red, uint8_t green, uint8_t blue);
+	
+  /* @brief Fade a given lamp to the corresponding target color
+   * (the length of the DMX universe is not increased)
+   *
+   * @param red		target value of red
+   * @param green	target value of green
+   * @param blue	target value of blue
+   * @param offset	offset of the lamp (starting with zero)
+   */
+  void dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration);
 
 #ifdef __cplusplus
 }
