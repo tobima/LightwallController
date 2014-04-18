@@ -16,7 +16,17 @@
 #include "shell.h"
 
 
-#define RGB_USAGE_HELP	"Possible commands are:\r\nfill\r\nwrite\r\n"
+#define RGB_USAGE_HELP	"Possible commands are:\r\nfill\r\nwrite\r\nfade\r\n"
+
+#define COLORMAX	256 /**< Maximum for each color */
+
+/** @define  CONVERT_RGB2INT(red, green, blue)
+ * @brief converts the RGB24 value to one numeric value from 0 to 768 (3*COLORMAX)
+ * Range for color red: 0 - 255
+ * Range for color green: 256 - 511
+ * Range for color blue: 512 - 768
+ */
+#define	CONVERT_RGB2INT(red, green, blue)	((red) + ((green) + COLORMAX) + ((blue) + COLORMAX + COLORMAX))
 
 void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
 {
@@ -43,7 +53,7 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
     }
     else if (strcmp(argv[0], "write") == 0)
     {
-	if (argc < 5)
+	    if (argc < 5)
         {
            chprintf(chp, "Usage: rgb write (offset, starting from zero) (red) (green) (blue)\r\n");
         }
@@ -66,6 +76,24 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
 	      dmx_buffer.buffer[(offset * 3) + 1] = green;
 	      dmx_buffer.buffer[(offset * 3) + 2] = blue;
           chprintf(chp, "Set DMX at %d with 0x%2X%2X%2X\r\n", (offset * 3),           			red, green, blue);
+        }
+    }
+	else if (strcmp(argv[0], "fade") == 0)
+    {
+	    if (argc < 6)
+        {
+			chprintf(chp, "Usage: rgb write (offset, starting from zero) (red) (green) (blue)\r\n");
+        }
+        else
+        {
+			int offset = atoi(argv[1]);
+			int red = atoi(argv[2]);
+			int green = atoi(argv[3]);
+			int blue = atoi(argv[4]);
+			int duration = atoi(argv[5]);
+			
+			
+			dmx_rgb_fade(offset, red, green, blue, duration, chp);
         }
     }
 }
@@ -127,10 +155,12 @@ void rgb_rainbowcolor(uint16_t value, uint8_t* red, uint8_t* blue, uint8_t* gree
 	}
 }
 
-uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration)
+uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration, 
+					 BaseSequentialStream *chp)
 {
 	uint8_t red_start, green_start, blue_start;
 	uint8_t returnValue = DMX_RGB_RET_OK;
+	int value, maximum;
 	
 	if (((offset * 3) + 3) >= DMX_BUFFER_MAX)
 	{
@@ -139,6 +169,8 @@ uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, u
 	
 	if (dmx_buffer.length < ((offset * 3) + 3) )
 	{
+		chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
+				 dmx_buffer.length, ((offset * 3) + 3) );
 		dmx_buffer.length = ((offset * 3) + 3);
 		returnValue = DMX_RGB_RET_INCREASE;
 	}
@@ -148,5 +180,27 @@ uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, u
 	green_start = dmx_buffer.buffer[(offset * 3) + 1];
 	blue_start = dmx_buffer.buffer[(offset * 3) + 2];
 	
+	/** the range, to walk through */
+	maximum = CONVERT_RGB2INT(red, green, blue);
+	value =	  CONVERT_RGB2INT(red_start, green_start, blue_start);
+	while (value < maximum)
+	{
+		red_start = 0;
+		blue_start = maximum;
+		rgb_rainbowcolor(value, &red_start, &blue_start, &green_start);
+		chprintf(chp, "Fade DMX at %d with 0x%2X%2X%2X [calculated: %d of %d]\r\n", (offset * 3),           	
+				 red_start, green_start, blue_start,
+				 value, maximum); /*TODO remove debug code */
+		
+		/*FIXME update intervall*/
+		value += 10;
+		chThdSleep(MS2ST(50 /* milliseconds */));
+		
+		/* Update the dmx buffer */
+		dmx_buffer.buffer[(offset * 3) + 0] = red_start;
+		dmx_buffer.buffer[(offset * 3) + 1] = green_start;
+		dmx_buffer.buffer[(offset * 3) + 2] = blue_start;
+	}
 	
+	return returnValue;
 }

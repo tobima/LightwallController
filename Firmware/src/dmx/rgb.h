@@ -17,9 +17,9 @@
 #include "ch.h"
 #include "chprintf.h"
 
-#define DMX_RGB_RET_OK			0
-#define DMX_RGB_RET_INCREASE	1 /**< The DMX universe was increased */
-#define DMX_RGB_RET_ERR_MAXBUF	2 /**< The requested offset was larger, than one DMX universe supports */
+#define DMX_RGB_RET_OK			0x0
+#define DMX_RGB_RET_INCREASE	0x1 /**< The DMX universe was increased */
+#define DMX_RGB_RET_ERR_MAXBUF	0x2 /**< The requested offset was larger, than one DMX universe supports */
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C"
@@ -54,7 +54,8 @@ extern "C"
    * @return	DMX_RGB_RET_INCREASE
    * @return	DMX_RGB_RET_ERR_MAXBUF
    */
-  uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration);
+  uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration,
+					   BaseSequentialStream *chp /*FIXME remove debug output, so this parameter*/ );
 
 	
   /**
