@@ -50,7 +50,7 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
         else
         {
           int offset = atoi(argv[1]);
-	  int red = atoi(argv[2]);
+		  int red = atoi(argv[2]);
           int green = atoi(argv[3]);
           int blue = atoi(argv[4]);
 
@@ -61,10 +61,10 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
             dmx_buffer.length = ((offset * 3) + 3);
           }
 
-	  /* Works perfect with an offset starting at zero */
+	      /* Works perfect with an offset starting at zero */
           dmx_buffer.buffer[(offset * 3) + 0] = red;
-	  dmx_buffer.buffer[(offset * 3) + 1] = green;
-	  dmx_buffer.buffer[(offset * 3) + 2] = blue;
+	      dmx_buffer.buffer[(offset * 3) + 1] = green;
+	      dmx_buffer.buffer[(offset * 3) + 2] = blue;
           chprintf(chp, "Set DMX at %d with 0x%2X%2X%2X\r\n", (offset * 3),           			red, green, blue);
         }
     }
@@ -87,19 +87,11 @@ void dmx_rgb_fill(uint8_t red, uint8_t green, uint8_t blue)
   }
 }
 
-/**
- * Map a value to a rainbow color.
- * (Source: http://blog.csharphelper.com/2010/05/20/map-numeric-values-to-colors-in-a-rainbow-in-c.aspx)
- * @param[in] value current value (between 0 and 1023)
- * @param[in|out] red	minumal value (and output for red)
- * @param[in|out] blue  maximum value (also the result for blue)
- * @param[out]    green	output value for the green value
- * @return used color
- */
-static void rgb_rainbowcolor(uint16_t value, uint8_t* red, uint8_t* blue, uint8_t* green)
+
+void rgb_rainbowcolor(uint16_t value, uint8_t* red, uint8_t* blue, uint8_t* green)
 {
 	// Convert into a value between 0 and 1023.
-	int int_value = (int)(1023 * (value - *red) / (*blue - red*));
+	int int_value = (int)(1023 * (value - *red) / (*blue - *red));
 	
 	// Map different color bands.
 	if (int_value < 256)
@@ -135,7 +127,26 @@ static void rgb_rainbowcolor(uint16_t value, uint8_t* red, uint8_t* blue, uint8_
 	}
 }
 
-void dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration)
+uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration)
 {
+	uint8_t red_start, green_start, blue_start;
+	uint8_t returnValue = DMX_RGB_RET_OK;
+	
+	if (((offset * 3) + 3) >= DMX_BUFFER_MAX)
+	{
+		return DMX_RGB_RET_ERR_MAXBUF;
+	}
+	
+	if (dmx_buffer.length < ((offset * 3) + 3) )
+	{
+		dmx_buffer.length = ((offset * 3) + 3);
+		returnValue = DMX_RGB_RET_INCREASE;
+	}
+	
+	/* Initialize the algorithm with the actual color */
+	red_start = dmx_buffer.buffer[(offset * 3) + 0];
+	green_start = dmx_buffer.buffer[(offset * 3) + 1];
+	blue_start = dmx_buffer.buffer[(offset * 3) + 2];
+	
 	
 }

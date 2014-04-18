@@ -17,6 +17,10 @@
 #include "ch.h"
 #include "chprintf.h"
 
+#define DMX_RGB_RET_OK			0
+#define DMX_RGB_RET_INCREASE	1 /**< The DMX universe was increased */
+#define DMX_RGB_RET_ERR_MAXBUF	2 /**< The requested offset was larger, than one DMX universe supports */
+
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C"
 {
@@ -45,9 +49,25 @@ extern "C"
    * @param green	target value of green
    * @param blue	target value of blue
    * @param offset	offset of the lamp (starting with zero)
+   *
+   * @return	DMX_RGB_RET_OK
+   * @return	DMX_RGB_RET_INCREASE
+   * @return	DMX_RGB_RET_ERR_MAXBUF
    */
-  void dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration);
+  uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration);
 
+	
+  /**
+   * Map a value to a rainbow color.
+   * (Source: http://blog.csharphelper.com/2010/05/20/map-numeric-values-to-colors-in-a-rainbow-in-c.aspx)
+   * @param[in] value current value (between 0 and 1023)
+   * @param[in|out] red	minumal value (and output for red)
+   * @param[in|out] blue  maximum value (also the result for blue)
+   * @param[out]    green	output value for the green value
+   * @return used color
+   */
+  void rgb_rainbowcolor(uint16_t value, uint8_t* red, uint8_t* blue, uint8_t* green);
+	
 #ifdef __cplusplus
 }
 #endif
