@@ -20,6 +20,17 @@
 #define DMX_RGB_RET_OK			0x0
 #define DMX_RGB_RET_INCREASE	0x1 /**< The DMX universe was increased */
 #define DMX_RGB_RET_ERR_MAXBUF	0x2 /**< The requested offset was larger, than one DMX universe supports */
+#define DMX_RGB_RET_ERR_PARAM	0x4 /**< necessary parameter were not set */
+
+/**
+ * @typdef RGB24Color_t
+ * @brief Type for the color, red, green and blue with each an length of 256 (0-255) shades
+ */
+typedef struct {
+	uint8_t red;	/**< amount of red in the color (0-255) */
+	uint8_t green;	/**< amount of green in the color (0-255) */
+	uint8_t blue;	/**< amount of blue in the color (0-255) */
+} RGB24Color_t;
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C"
@@ -41,21 +52,31 @@ extern "C"
    * @param blue	value for all blue LEDs
    */
   void dmx_rgb_fill(uint8_t red, uint8_t green, uint8_t blue);
+
+  /** @fn (*FadeCallback_t)
+   * Color, that must be written out
+   *
+   * @param[in] red		value for red, needs to be updated
+   * @param[in] green	value for green, needs to be updated
+   * @param[in] blue	value for blue, needs to be updated
+   * @param[in] pParam	pointer to additional parameter (optional, as needed by the user)
+   *
+   * @return NOTHING
+   */
+  typedef void (*FadeCallback_t) (uint8_t red, uint8_t green, uint8_t blue, void* pParam);	
 	
   /* @brief Fade a given lamp to the corresponding target color
    * (the length of the DMX universe is not increased)
    *
-   * @param red		target value of red
-   * @param green	target value of green
-   * @param blue	target value of blue
-   * @param offset	offset of the lamp (starting with zero)
+   * @param[in] start			actual displayed color
+   * @param[in] target			color to reach
+   * @param[in] onColorChange	callback function, for the algorithm
+   * @param[in] pParam			pointer to additional parameter for callback (onColorChange)
    *
    * @return	DMX_RGB_RET_OK
-   * @return	DMX_RGB_RET_INCREASE
-   * @return	DMX_RGB_RET_ERR_MAXBUF
+   * @return	DMX_RGB_RET_ERR_PARAM
    */
-  uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration,
-					   BaseSequentialStream *chp /*FIXME remove debug output, so this parameter*/ );
+  uint8_t dmx_rgb_fade(RGB24Color_t* start, RGB24Color_t* target, FadeCallback_t onColorChange, void* pParam);
 
 	
   /**

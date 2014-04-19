@@ -28,6 +28,9 @@
  */
 #define	CONVERT_RGB2INT(red, green, blue)	((red) + ((green) + COLORMAX) + ((blue) + COLORMAX + COLORMAX))
 
+uint8_t dmx_rgb_fade_cmd(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration, 
+					 BaseSequentialStream *chp);
+
 void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
 {
     if (argc < 1)
@@ -93,7 +96,7 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
 			int duration = atoi(argv[5]);
 			
 			
-			dmx_rgb_fade(offset, red, green, blue, duration, chp);
+			dmx_rgb_fade_cmd(offset, red, green, blue, duration, chp);
         }
     }
 }
@@ -155,52 +158,104 @@ void rgb_rainbowcolor(uint16_t value, uint8_t* red, uint8_t* blue, uint8_t* gree
 	}
 }
 
-uint8_t dmx_rgb_fade(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration, 
+typedef struct {
+	int dmxOffset;				/**< For the algorithm, to know which address to update */
+	BaseSequentialStream *chp;	/**< Necessary for debugging output */
+} FadeParam_t;
+
+void updateBuffer(uint8_t red, uint8_t green, uint8_t blue, void* pParam)
+{
+	FadeParam_t* p = (FadeParam_t*) pParam;
+	
+	if (pParam == NULL)
+	{
+		return; /* Fatal error, no parameter were given */
+	}
+	
+	chprintf(p->chp, "Fade DMX at %d with 0x%2X%2X%2X \r\n", (p->dmxOffset),           	
+			 red, green, blue); /*TODO remove debug code */
+	
+	/* Update the dmx buffer */
+	dmx_buffer.buffer[(p->dmxOffset) + 0] = red;
+	dmx_buffer.buffer[(p->dmxOffset) + 1] = green;
+	dmx_buffer.buffer[(p->dmxOffset) + 2] = blue;
+}
+
+uint8_t dmx_rgb_fade_cmd(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration, 
 					 BaseSequentialStream *chp)
 {
-	uint8_t red_start, green_start, blue_start;
+	RGB24Color_t start;
+	RGB24Color_t target;
 	uint8_t returnValue = DMX_RGB_RET_OK;
-	int value, maximum;
+	/* store some parameter in the structure for debuggin purposes */
+	FadeParam_t param;
+	param.chp = chp;
 	
 	if (((offset * 3) + 3) >= DMX_BUFFER_MAX)
 	{
 		return DMX_RGB_RET_ERR_MAXBUF;
 	}
 	
-	if (dmx_buffer.length < ((offset * 3) + 3) )
+	param.dmxOffset = (offset * 3);
+	if (dmx_buffer.length < (param.dmxOffset + 3) )
 	{
 		chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
-				 dmx_buffer.length, ((offset * 3) + 3) );
-		dmx_buffer.length = ((offset * 3) + 3);
+				 dmx_buffer.length, (param.dmxOffset + 3) );
+		dmx_buffer.length = (param.dmxOffset + 3);
 		returnValue = DMX_RGB_RET_INCREASE;
 	}
 	
 	/* Initialize the algorithm with the actual color */
-	red_start = dmx_buffer.buffer[(offset * 3) + 0];
-	green_start = dmx_buffer.buffer[(offset * 3) + 1];
-	blue_start = dmx_buffer.buffer[(offset * 3) + 2];
+	start.red   = dmx_buffer.buffer[(offset * 3) + 0];
+	start.green = dmx_buffer.buffer[(offset * 3) + 1];
+	start.blue  = dmx_buffer.buffer[(offset * 3) + 2];
+	
+	
+	/* prepare the struct for target color */
+	target.red = red;
+	target.green = green;
+	target.blue = blue;
+	
+	dmx_rgb_fade(&start, &target, &updateBuffer, (void *) &param);
+	
+	chprintf(chp, "-----------\r\n" );
+	return returnValue;
+}
+
+
+uint8_t dmx_rgb_fade(RGB24Color_t* start, RGB24Color_t* target, FadeCallback_t onColorChange, void* pParam)
+{
+	uint8_t red, green, blue;
+	int value, maximum;
+	
+	if (onColorChange == NULL || start == NULL || target == NULL)
+	{
+		return DMX_RGB_RET_ERR_PARAM;
+	}
+	
+	/* initialize */
+	red = start->red;
+	green = start->green;
+	blue = start->blue;
 	
 	/** the range, to walk through */
-	maximum = CONVERT_RGB2INT(red, green, blue);
-	value =	  CONVERT_RGB2INT(red_start, green_start, blue_start);
+	maximum = CONVERT_RGB2INT(target->red, target->green, target->blue);
+	value =	  CONVERT_RGB2INT(start->red, start->green, start->blue);
 	while (value < maximum)
 	{
-		red_start = 0;
-		blue_start = maximum;
-		rgb_rainbowcolor(value, &red_start, &blue_start, &green_start);
-		chprintf(chp, "Fade DMX at %d with 0x%2X%2X%2X [calculated: %d of %d]\r\n", (offset * 3),           	
-				 red_start, green_start, blue_start,
-				 value, maximum); /*TODO remove debug code */
+		red = 0;
+		blue = maximum;
+		
+		/* calculate the next color to show */
+		rgb_rainbowcolor(value, &red, &blue, &green);
+		
+		/* inform the user what he needs to draw */
+		onColorChange(red, green, blue, pParam);
 		
 		/*FIXME update intervall*/
 		value += 10;
 		chThdSleep(MS2ST(50 /* milliseconds */));
-		
-		/* Update the dmx buffer */
-		dmx_buffer.buffer[(offset * 3) + 0] = red_start;
-		dmx_buffer.buffer[(offset * 3) + 1] = green_start;
-		dmx_buffer.buffer[(offset * 3) + 2] = blue_start;
 	}
 	
-	return returnValue;
+	return DMX_RGB_RET_OK;
 }
