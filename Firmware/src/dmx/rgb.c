@@ -85,7 +85,7 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
     {
 	    if (argc < 6)
         {
-			chprintf(chp, "Usage: rgb write (offset, starting from zero) (red) (green) (blue)\r\n");
+			chprintf(chp, "Usage: rgb fade (offset, starting from zero) (red) (green) (blue) (duration)\r\n");
         }
         else
         {
