@@ -26,6 +26,12 @@ static int wallHeight;
 
 static GListener gl;
 static GHandle   ghButton1;
+
+/*
+* Serial over USB Driver structure.
+*/
+static SerialUSBDriver* gSDU1 = NULL;
+
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -94,10 +100,15 @@ static void createWidgets(void) {
 }
 
 
-void fcwall_initWindow(void)
+void fcwall_initWindow(SerialUSBDriver* SDU1)
 {
+  /* Intialize USB */
+  gSDU1 = SDU1;
+
   // Set the widget defaults
   gwinSetDefaultFont(gdispOpenFont("UI2"));
+
+  /*FIXME merge the "createWIdgets" with current init */
 
   // Attach the mouse input
   gwinAttachMouse(0);
@@ -119,12 +130,13 @@ void fcwall_processEvents(void)
                           // Our button has been pressed
                 	      chprintf((BaseSequentialStream *) &SD6, "Button clicked\r\n");
                   }
+        	      chprintf((BaseSequentialStream *) gSDU1, "Button clicked\r\n");
                   break;
 
           default:
         	  chprintf((BaseSequentialStream *) &SD6, "Input Event %d\r\n", pe->type);
-        	  /*TODO activate also output via USB */
-        	  /*  chprintf((BaseSequentialStream *) &SDU1, "Input Event %d\r\n", pe->type); */
+
+        	  chprintf((BaseSequentialStream *) gSDU1, "Input Event %d\r\n", pe->type);
                   break;
   }
 

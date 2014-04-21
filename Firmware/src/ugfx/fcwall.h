@@ -24,7 +24,7 @@ void fcwall_init(int width, int height);
 /** @fn void fcwall_initWindow(void)
  * Initialize the window system (necessary for input)
  */
-void fcwall_initWindow(void);
+void fcwall_initWindow(SerialUSBDriver* SDU1);
 
 void fcwall_processEvents(void);
 
