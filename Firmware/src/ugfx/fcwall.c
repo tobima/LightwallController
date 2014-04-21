@@ -99,7 +99,7 @@ void fcwall_initWindow(void)
   // Set the widget defaults
   gwinSetDefaultFont(gdispOpenFont("UI2"));
   gwinSetDefaultStyle(&WhiteWidgetStyle, FALSE);
-  gdispClear(White);
+  gdispClear(Blue);
 
   // Attach the mouse input
   gwinAttachMouse(0);
@@ -122,7 +122,7 @@ void fcwall_processEvents(void)
           case GEVENT_GWIN_BUTTON:
                   if (((GEventGWinButton*)pe)->button == ghButton1) {
                           // Our button has been pressed
-                          printf("Button clicked\r\n");
+                	      chprintf((BaseSequentialStream *) &SD6, "Button clicked\r\n");
                   }
                   break;
 
