@@ -1,5 +1,5 @@
 /*
- *  dmx_cmd.c
+^ *  dmx_cmd.c
  *
  *  Created by ollo on 14.04.14.
  *  Copyright 2013 C3MA. All rights reserved.
@@ -216,14 +216,14 @@ uint8_t dmx_rgb_fade_cmd(uint8_t offset, uint8_t red, uint8_t green, uint8_t blu
 	target.green = green;
 	target.blue = blue;
 	
-	dmx_rgb_fade(&start, &target, &updateBuffer, (void *) &param);
+	dmx_rgb_fade(&start, &target, duration, &updateBuffer, (void *) &param);
 	
 	chprintf(chp, "-----------\r\n" );
 	return returnValue;
 }
 
 
-uint8_t dmx_rgb_fade(RGB24Color_t* start, RGB24Color_t* target, FadeCallback_t onColorChange, void* pParam)
+uint8_t dmx_rgb_fade(RGB24Color_t* start, RGB24Color_t* target, uint32_t duration, FadeCallback_t onColorChange, void* pParam)
 {
 	uint8_t red, green, blue;
 	int value, maximum;

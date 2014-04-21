@@ -70,13 +70,14 @@ extern "C"
    *
    * @param[in] start			actual displayed color
    * @param[in] target			color to reach
+   * @param[in] duration		time in milliseconds the fading may last
    * @param[in] onColorChange	callback function, for the algorithm
    * @param[in] pParam			pointer to additional parameter for callback (onColorChange)
    *
    * @return	DMX_RGB_RET_OK
    * @return	DMX_RGB_RET_ERR_PARAM
    */
-  uint8_t dmx_rgb_fade(RGB24Color_t* start, RGB24Color_t* target, FadeCallback_t onColorChange, void* pParam);
+  uint8_t dmx_rgb_fade(RGB24Color_t* start, RGB24Color_t* target, uint32_t duration, FadeCallback_t onColorChange, void* pParam);
 
 	
   /**
