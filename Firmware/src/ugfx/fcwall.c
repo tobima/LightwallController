@@ -98,14 +98,9 @@ void fcwall_initWindow(void)
 {
   // Set the widget defaults
   gwinSetDefaultFont(gdispOpenFont("UI2"));
-  gwinSetDefaultStyle(&WhiteWidgetStyle, FALSE);
-  gdispClear(Blue);
 
   // Attach the mouse input
   gwinAttachMouse(0);
-
-  // create the widget
-  createWidgets();
 
   // We want to listen for widget events
   geventListenerInit(&gl);
@@ -127,6 +122,9 @@ void fcwall_processEvents(void)
                   break;
 
           default:
+        	  chprintf((BaseSequentialStream *) &SD6, "Input Event %d\r\n", pe->type);
+        	  /*TODO activate also output via USB */
+        	  /*  chprintf((BaseSequentialStream *) &SDU1, "Input Event %d\r\n", pe->type); */
                   break;
   }
 
