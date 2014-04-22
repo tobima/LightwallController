@@ -71,7 +71,7 @@ msg_t ucfx_configstore(void* configuration)
       chprintf((BaseSequentialStream *) gSDU1, "File opend %s, returned %d %s:%d\r\n", TOUCHCALIBRATION_FILE, ferr, __FILE__, __LINE__);
   }
 
-  if (ferr != FR_OK)
+  if (ferr == FR_OK)
   {
     f_write(&fi, &bsize, 1, &wr);
     f_write(&fi, calbuf, bsize, &wr);
@@ -88,6 +88,12 @@ msg_t ucfx_configstore(void* configuration)
   }
 
   f_close(&fi);
+
+  if (gSDU1)
+  {
+    chprintf((BaseSequentialStream *) gSDU1,
+        "-------- configuration stored [%s:%d] -------\r\n", __FILE__, __LINE__);
+  }
 
   return RDY_OK;
 }
@@ -131,15 +137,12 @@ const char *ugfx_cmd_cfgload(uint16_t instance)
 
         ferr = f_open(&fi, TOUCHCALIBRATION_FILE, FA_READ);
 
-        if (ferr != FR_OK)
+        if (ferr == FR_OK)
         {
           ferr = f_read(&fi, &bsize, 1, &br);
-          if (ferr != FR_OK)      return buffer;
-
           buffer = gfxAlloc(bsize);
-
           ferr = f_read(&fi, buffer, bsize, &br);
-          if (ferr != FR_OK)      return buffer;
+
         }
         f_close(&fi);
 
