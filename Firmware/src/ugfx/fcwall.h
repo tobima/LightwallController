@@ -7,10 +7,12 @@
  *
  */
 
-#include "gfx.h"
 
 #ifndef FCWALL_H
 #define FCWALL_H
+
+#include "gfx.h"
+#include "chprintf.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -24,9 +26,13 @@ void fcwall_init(int width, int height);
 /** @fn void fcwall_initWindow(void)
  * Initialize the window system (necessary for input)
  */
-void fcwall_initWindow(SerialUSBDriver* SDU1);
+void fcwall_initWindow();
 
-void fcwall_processEvents(void);
+/**
+ * @fn void fcwall_processEvents(SerialUSBDriver* pSDU1)
+ * @param[in] pSDU1     (optinal) parameter necessary to print debug messages on the serial console
+ */
+void fcwall_processEvents(SerialUSBDriver* pSDU1);
 
 #ifdef __cplusplus
 }

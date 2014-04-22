@@ -10,6 +10,8 @@
 #include "fcwall.h"
 #include "gfx.h"
 
+#define INFO_TEXT_HEIGHT        25
+
 /******************************************************************************
  * GLOBAL VARIABLES of this module
  ******************************************************************************/
@@ -25,12 +27,7 @@ static int wallWidth;
 static int wallHeight;
 
 static GListener gl;
-static GHandle   ghButton1;
-
-/*
-* Serial over USB Driver structure.
-*/
-static SerialUSBDriver* gSDU1 = NULL;
+static GHandle   ghButton1 = NULL;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -68,7 +65,7 @@ void fcwall_init(int w, int h)
 	height = gdispGetHeight();
 
 	boxWidth = ((int) (width / w))-1;
-	boxHeight = ((int) ((height-25) / h))-1;
+	boxHeight = ((int) ((height-INFO_TEXT_HEIGHT) / h))-1;
 
 	for(x=0; x < w; x++)
 	{
@@ -82,43 +79,53 @@ void fcwall_init(int w, int h)
 static void createWidgets(void) {
         GWidgetInit     wi;
 
+        // Generate Black with Black on Black
+        GColorSet blackSet = { Black, Black, Black, Black};
+        GWidgetStyle black;
+        black.background = Black;       // @< The window background color
+        black.enabled = blackSet;       // @< The colors when enabled
+        black.disabled = blackSet;      // @< The colors when disabled
+        black.pressed = blackSet;       // @< The colors when pressed
+
         // Apply some default values for GWIN
         wi.customDraw = 0;
         wi.customParam = 0;
-        wi.customStyle = 0;
+        wi.customStyle = &black;
         wi.g.show = TRUE;
 
         // Apply the button parameters
-        wi.g.width = 100;
-        wi.g.height = 30;
-        wi.g.y = 10;
-        wi.g.x = 10;
-        wi.text = "Push Button";
+        wi.g.width = gdispGetWidth();
+        wi.g.height = gdispGetHeight();
+        wi.g.y = 0;
+        wi.g.x = 0;
+        wi.text = "";
 
         // Create the actual button
         ghButton1 = gwinButtonCreate(0, &wi);
 }
 
 
-void fcwall_initWindow(SerialUSBDriver* SDU1)
+void fcwall_initWindow(void)
 {
-  /* Intialize USB */
-  gSDU1 = SDU1;
 
   // Set the widget defaults
   gwinSetDefaultFont(gdispOpenFont("UI2"));
-
-  /*FIXME merge the "createWIdgets" with current init */
+  gwinSetDefaultStyle(&BlackWidgetStyle, FALSE);
+  gwinSetDefaultBgColor(Black);
+  gwinSetDefaultColor(Black);
+  gdispClear(Black);
 
   // Attach the mouse input
   gwinAttachMouse(0);
+
+  createWidgets();
 
   // We want to listen for widget events
   geventListenerInit(&gl);
   gwinAttachListener(&gl);
 }
 
-void fcwall_processEvents(void)
+void fcwall_processEvents(SerialUSBDriver* pSDU1)
 {
   GEvent* pe;
   // Get an Event
@@ -126,17 +133,22 @@ void fcwall_processEvents(void)
 
   switch(pe->type) {
           case GEVENT_GWIN_BUTTON:
-                  if (((GEventGWinButton*)pe)->button == ghButton1) {
+                  if (ghButton1 != NULL && ((GEventGWinButton*)pe)->button == ghButton1) {
                           // Our button has been pressed
                 	      chprintf((BaseSequentialStream *) &SD6, "Button clicked\r\n");
                   }
-        	      chprintf((BaseSequentialStream *) gSDU1, "Button clicked\r\n");
+                  if (pSDU1)
+                  {
+        	      chprintf((BaseSequentialStream *) pSDU1, "Button clicked\r\n");
+                  }
                   break;
 
           default:
         	  chprintf((BaseSequentialStream *) &SD6, "Input Event %d\r\n", pe->type);
-
-        	  chprintf((BaseSequentialStream *) gSDU1, "Input Event %d\r\n", pe->type);
+        	  if (pSDU1)
+        	  {
+        	      chprintf((BaseSequentialStream *) pSDU1, "Input Event %d\r\n", pe->type);
+        	  }
                   break;
   }
 

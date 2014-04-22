@@ -839,7 +839,7 @@ main(void)
 	  }
       chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
 #ifdef UGFX_WALL
-      fcwall_processEvents();
+      fcwall_processEvents(&SDU1);
 #endif
     }
 }
