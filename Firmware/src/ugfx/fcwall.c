@@ -34,6 +34,7 @@ static int wallHeight;
 static GListener gl;
 static GHandle   ghButton1 = NULL;
 static GHandle   ghButtonCalibrate = NULL;
+static GHandle   ghButtonManualTesting = NULL;
 
 /* The handles for our two Windows */
 static GHandle GWmenu = NULL;
@@ -96,7 +97,7 @@ static void createMenuWindow(void)
   GWmenu = gwinWindowCreate(0, &wi);
   gwinClear(GWmenu);
 
-  // Apply the button parameters
+  /* Apply the button parameters */
   widgi.customDraw = 0;
   widgi.customParam = 0;
   widgi.customStyle = 0;
@@ -107,8 +108,14 @@ static void createMenuWindow(void)
   widgi.g.show = TRUE;
   widgi.text = "Calibrate screen";
 
-  // Create the actual button
+  /* Create the first button */
   ghButtonCalibrate = gwinButtonCreate(0, &widgi);
+
+  /* Second button */
+  widgi.g.y = wi.y + 40;
+  widgi.g.x = wi.x + 10;
+  widgi.text = "Manual tests";
+  ghButtonManualTesting = gwinButtonCreate(0, &widgi);
 }
 
 static void deleteMenuWindow(void)
@@ -243,13 +250,13 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   }
                   else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
                   {
-                      if (pSDU1)
-                      {
-                          chprintf((BaseSequentialStream *) pSDU1, "Calibrate\r\n");
-                      }
                       stopUIUpdate = TRUE;
                       ugfx_cmd_calibrate(pSDU1);
                       stopUIUpdate = FALSE;
+                  }
+                  else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
+                  {
+                      ugfx_cmd_manualtesting();
                   }
                   else
                   {

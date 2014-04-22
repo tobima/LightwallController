@@ -41,11 +41,17 @@ static SerialUSBDriver* gSDU1 = NULL;
 /******************************************************************************
  * EXTERN FUNCTIONS
  ******************************************************************************/
+
 void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1)
 {
   gSDU1 = pSDU1;
   ginputCalibrateMouse(0);
   return;
+}
+
+void ugfx_cmd_manualtesting(void)
+{
+
 }
 
 msg_t ucfx_configstore(void* configuration)

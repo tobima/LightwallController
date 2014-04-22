@@ -16,6 +16,8 @@
  */
 void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1);
 
+void ugfx_cmd_manualtesting(void);
+
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size);
 
 const char *ugfx_cmd_cfgload(uint16_t instance);
