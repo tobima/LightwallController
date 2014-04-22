@@ -29,6 +29,10 @@ static int wallHeight;
 static GListener gl;
 static GHandle   ghButton1 = NULL;
 
+/* The handles for our two Windows */
+static GHandle GWdefault = NULL;
+static GHandle GWmenu = NULL;
+
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -69,6 +73,11 @@ void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 {
 	int hexCol;
 
+	if (GWdefault == NULL)
+	{
+	    return; /* The display is not initialized */
+	}
+
 	/* same orienatation as the pyhsical wall: */
 	y = (wallHeight - 1) - y;
 
@@ -76,9 +85,10 @@ void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 	hexCol = red << 16 | green << 8 | blue;
 
 	color_t col = HTML2COLOR(hexCol);
-
-        gdispFillArea(x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, col);
-        gdispDrawBox (x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight, Yellow);
+	gwinSetColor(GWdefault, col);
+        gwinFillArea(GWdefault, x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight);
+        gwinSetColor(GWdefault, Yellow);
+        gwinDrawBox (GWdefault, x*(boxWidth+1), y*(boxHeight+1), boxWidth, boxHeight);
 }
 
 void fcwall_init(int w, int h)
@@ -107,12 +117,20 @@ void fcwall_init(int w, int h)
 
 void fcwall_initWindow(void)
 {
+  GWindowInit     wi;
+
+  wi.show = TRUE;
+  wi.x = 0;
+  wi.y = 0;
+  wi.width = gdispGetWidth();
+  wi.height = gdispGetHeight();
+  GWdefault = gwinWindowCreate(0, &wi);
 
   // Set the widget defaults
-  gwinSetDefaultFont(gdispOpenFont("UI2"));
-  gwinSetDefaultStyle(&BlackWidgetStyle, FALSE);
-  gwinSetDefaultBgColor(Black);
-  gwinSetDefaultColor(Black);
+  gwinSetDefaultFont( gdispOpenFont("UI2"));
+  gwinSetDefaultStyle( &BlackWidgetStyle, FALSE);
+  /*gwinSetDefaultBgColor(GWdefault, Black);
+  gwinSetDefaultColor(GWdefault, Black);*/
   gdispClear(Black);
 
   // Attach the mouse input
