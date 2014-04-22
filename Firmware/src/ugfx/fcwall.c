@@ -57,12 +57,13 @@ static void createWidgets(void) {
         wi.g.show = TRUE;
 
         // Apply the button parameters
-        wi.g.width = gdispGetWidth();
-        wi.g.height = gdispGetHeight();
+        wi.g.width = 100;
+        wi.g.height = gdispGetHeight() - (INFO_TEXT_HEIGHT + 20 /* distance, so the button is behind the boxes */);
         wi.g.y = 0;
         wi.g.x = 0;
         wi.text = "";
 
+        gwinClear(gGWdefault);
         // Create the actual button
         ghButton1 = gwinButtonCreate(0, &wi);
 }
@@ -73,7 +74,7 @@ static void createMenuWindow(void)
   GWidgetInit     widgi;
 
   /* Create the window for the menu */
-  gwinSetDefaultStyle( &WhiteWidgetStyle, FALSE);
+  gwinSetDefaultStyle( &BlackWidgetStyle, FALSE);
   wi.show = TRUE;
   if (wallWidth > 0 && wallHeight > 0)
   { /* calculate dimension for overlay window, that fits between boxes*/
@@ -88,23 +89,29 @@ static void createMenuWindow(void)
     wi.y = 10;
   }
   GWmenu = gwinWindowCreate(0, &wi);
-  /*FIXME debug code */
-  gwinSetColor(gGWdefault, Purple);
-  gwinFillCircle(GWmenu, 10, 60, 15);
+  gwinClear(GWmenu);
 
   // Apply the button parameters
   widgi.customDraw = 0;
   widgi.customParam = 0;
   widgi.customStyle = 0;
+  widgi.g.width = 100;
+  widgi.g.height = 20;
+  widgi.g.y = wi.y + 10;
+  widgi.g.x = wi.x + 10;
   widgi.g.show = TRUE;
-  widgi.g.width = 60;
-  widgi.g.height = 15;
-  widgi.g.y = 2;
-  widgi.g.x = 2;
-  widgi.text = "Calibrate";
+  widgi.text = "Calibrate screen";
 
   // Create the actual button
   ghButtonCalibrate = gwinButtonCreate(0, &widgi);
+}
+
+static void deleteMenuWindow(void)
+{
+  gwinDestroy(ghButtonCalibrate);
+  ghButtonCalibrate = NULL;
+  gwinDestroy(GWmenu);
+  GWmenu = NULL;
 }
 
 /******************************************************************************
@@ -208,28 +215,39 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
   switch(pe->type)
   {
           case GEVENT_GWIN_BUTTON:
-                  if (ghButton1 != NULL && ((GEventGWinButton*)pe)->button == ghButton1)
+                  if  (((GEventGWinButton*)pe)->button == ghButton1)
                   {
-                    // Our button has been pressed
-                    if (!GWmenu)
-                    {
-                        createMenuWindow();
-                    }
-
                     /* toggle visibility */
-                    if (gwinGetVisible(GWmenu))
+                    if (GWmenu != NULL && gwinGetVisible(GWmenu))
                     {
                         gwinSetVisible(GWmenu, FALSE);
+                        /* clear the window away */
+                        gwinSetColor(gGWdefault, Black);
+                        gwinDrawBox (gGWdefault, gwinGetScreenX(GWmenu), gwinGetScreenY(GWmenu),
+                            gwinGetWidth(GWmenu), gwinGetHeight(GWmenu));
+
+                        deleteMenuWindow();
                     }
                     else
                     {
+                        createMenuWindow();
                         gwinSetVisible(GWmenu, TRUE);
                     }
+                  }
+                  else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
+                  {
+                      if (pSDU1)
+                      {
+                          chprintf((BaseSequentialStream *) pSDU1, "Calibrate\r\n");
+                      }
 
-                    if (pSDU1)
-                    {
-                        chprintf((BaseSequentialStream *) pSDU1, "Button clicked, window %d\r\n", gwinGetVisible(GWmenu));
-                    }
+                  }
+                  else
+                  {
+                      if (pSDU1)
+                      {
+                          chprintf((BaseSequentialStream *) pSDU1, "Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
+                      }
                   }
                   break;
 
