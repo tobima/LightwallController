@@ -28,6 +28,7 @@ static int wallHeight;
 
 static GListener gl;
 static GHandle   ghButton1 = NULL;
+static GHandle   ghButtonCalibrate = NULL;
 
 /* The handles for our two Windows */
 GHandle gGWdefault = NULL;
@@ -118,6 +119,14 @@ void fcwall_init(int w, int h)
 void fcwall_initWindow(void)
 {
   GWindowInit     wi;
+  GWidgetInit     widgi;
+
+  // Set the widget defaults
+  gwinSetDefaultFont( gdispOpenFont("UI2"));
+  gwinSetDefaultStyle( &BlackWidgetStyle, FALSE);
+  /*gwinSetDefaultBgColor(gGWdefault, Black);
+  gwinSetDefaultColor(gGWdefault, Black);*/
+  gdispClear(Black);
 
   wi.show = TRUE;
   wi.x = 0;
@@ -126,12 +135,6 @@ void fcwall_initWindow(void)
   wi.height = gdispGetHeight();
   gGWdefault = gwinWindowCreate(0, &wi);
 
-  // Set the widget defaults
-  gwinSetDefaultFont( gdispOpenFont("UI2"));
-  gwinSetDefaultStyle( &BlackWidgetStyle, FALSE);
-  /*gwinSetDefaultBgColor(gGWdefault, Black);
-  gwinSetDefaultColor(gGWdefault, Black);*/
-  gdispClear(Black);
 
   // Attach the mouse input
   gwinAttachMouse(0);
@@ -141,6 +144,27 @@ void fcwall_initWindow(void)
   // We want to listen for widget events
   geventListenerInit(&gl);
   gwinAttachListener(&gl);
+
+
+  /* Create the window for the menu */
+  gwinSetDefaultStyle( &WhiteWidgetStyle, FALSE);
+  wi.show = FALSE;
+  wi.width = 150;
+  wi.height = 200;
+  wi.x = (int) ((gdispGetWidth() - wi.width) / 2);
+  wi.y = 10;
+  GWmenu = gwinWindowCreate(0, &wi);
+  gwinFillCircle(GWmenu, 20, 20, 15);
+
+  // Apply the button parameters
+  widgi.g.width = 60;
+  widgi.g.height = 15;
+  widgi.g.y = 2;
+  widgi.g.x = 0;
+  widgi.text = "Calibrate";
+
+  // Create the actual button
+  ghButtonCalibrate = gwinButtonCreate(0, &widgi);
 }
 
 void fcwall_processEvents(SerialUSBDriver* pSDU1)
@@ -156,9 +180,10 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   {
                     // Our button has been pressed
                     chprintf((BaseSequentialStream *) &SD6, "Button clicked\r\n");
+                    gwinSetVisible(GWmenu, TRUE);
                     if (pSDU1)
                     {
-                        chprintf((BaseSequentialStream *) pSDU1, "Button clicked\r\n");
+                        chprintf((BaseSequentialStream *) pSDU1, "Button clicked, window %d\r\n", gwinGetVisible(GWmenu));
                     }
                   }
                   break;
