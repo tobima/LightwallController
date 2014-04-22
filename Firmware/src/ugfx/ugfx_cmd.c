@@ -6,7 +6,6 @@
  */
 
 #include "ugfx_cmd.h"
-#include "gfx.h"
 #include "ff.h"
 
 /******************************************************************************
@@ -21,6 +20,16 @@
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
+
+/******************************************************************************
+ * EXTERN FUNCTIONS
+ ******************************************************************************/
+void ugfx_cmd_calibrate(void)
+{
+  ginputSetMouseCalibrationRoutines(0, ugfx_cmd_cfgsave, ugfx_cmd_cfgload, FALSE);
+  ginputCalibrateMouse(0);
+  return;
+}
 
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 {
@@ -61,14 +70,4 @@ const char *ugfx_cmd_cfgload(uint16_t instance)
         f_close(&fi);
 */
         return buffer;
-}
-
-/******************************************************************************
- * EXTERN FUNCTIONS
- ******************************************************************************/
-void ugfx_cmd_calibrate(void)
-{
-  ginputSetMouseCalibrationRoutines(0, ugfx_cmd_cfgsave, ugfx_cmd_cfgload, FALSE);
-  ginputCalibrateMouse(0);
-  return;
 }
