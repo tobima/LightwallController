@@ -29,6 +29,8 @@ APPDEFS =
 
 # Append the WALL
 APPSRC += src/ugfx/fcwall.c \
-	src/ugfx/ugfx_util.c
+		  src/ugfx/ugfx_util.c \
+		  src/ugfx/ugfx_cmd.c
+		  		  
 APPINC += src/ugfx
 APPDEFS += -DUGFX_WALL
