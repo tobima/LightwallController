@@ -9,11 +9,12 @@
 #define UGFX_CMD_H_
 
 #include "gfx.h"
+#include "chprintf.h"
 
 /** @fn void ugfx_cmd_calibrate(void)
  *
  */
-void ugfx_cmd_calibrate(void);
+void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1);
 
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size);
 

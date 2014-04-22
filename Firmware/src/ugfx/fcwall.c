@@ -248,7 +248,7 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                           chprintf((BaseSequentialStream *) pSDU1, "Calibrate\r\n");
                       }
                       stopUIUpdate = TRUE;
-                      ugfx_cmd_calibrate();
+                      ugfx_cmd_calibrate(pSDU1);
                       stopUIUpdate = FALSE;
                   }
                   else
