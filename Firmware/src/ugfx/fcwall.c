@@ -9,6 +9,7 @@
 
 #include "fcwall.h"
 #include "gfx.h"
+#include "ugfx_cmd.h"
 
 #define INFO_TEXT_HEIGHT        25
 #define WIN_MENU_TOPMARGIN      10
@@ -17,6 +18,8 @@
  * GLOBAL VARIABLES of this module
  ******************************************************************************/
 
+/* The handles for our two Windows */
+GHandle gGWdefault = NULL;
 
 /******************************************************************************
  * LOCAL VARIABLES for this module
@@ -32,8 +35,9 @@ static GHandle   ghButton1 = NULL;
 static GHandle   ghButtonCalibrate = NULL;
 
 /* The handles for our two Windows */
-GHandle gGWdefault = NULL;
 static GHandle GWmenu = NULL;
+
+static uint8_t stopUIUpdate = FALSE;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -125,7 +129,7 @@ void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 	int yBox = y*(boxHeight+1);
 
 
-	if (gGWdefault == NULL)
+	if (gGWdefault == NULL || stopUIUpdate)
 	{
 	    return; /* The display is not initialized */
 	}
@@ -240,7 +244,9 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                       {
                           chprintf((BaseSequentialStream *) pSDU1, "Calibrate\r\n");
                       }
-
+                      stopUIUpdate = TRUE;
+                      ugfx_cmd_calibrate();
+                      stopUIUpdate = FALSE;
                   }
                   else
                   {
