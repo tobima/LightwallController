@@ -1,6 +1,7 @@
 
 #include <stdarg.h>
 #include "gfx.h"
+#include "fcwall.h"     /* necessary, to know the window to print into */
 
 #define	CHECK_BUFFER_LENGTH		if (i > bufferlength)  { continue; }
 
@@ -66,6 +67,10 @@ static void util_vprintf(char *buffer, int bufferlength, const char *fmt, va_lis
   bool_t is_long, left_align;
   long l;
   int j;
+
+  /* initializing */
+  i = 0;
+
 #if CHPRINTF_USE_FLOAT
   float f;
   char tmpbuf[2*MAX_FILLER + 1];
@@ -240,7 +245,7 @@ unsigned_common:
 extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferlength, char* text, ...)
 {
 	va_list ap;
-	int i;
+	int i = 0;
 	int width = gdispGetFontMetric(font, fontMaxWidth) * bufferlength;
 	int height = gdispGetFontMetric(font, fontHeight);
 	char buffer[bufferlength];
@@ -253,6 +258,16 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 	va_start(ap, text);
 	util_vprintf(buffer, bufferlength, text, ap);
 	va_end(ap);
-	gdispFillStringBox(x, y, width, height, buffer, font, color, Black, justifyLeft);
+
+	/*if (gGWdefault)
+	{ FIXME also make the window-printf working
+	    gwinSetColor(gGWdefault, color);
+	    gwinSetBgColor(gGWdefault, Black);
+	    gwinDrawStringBox(gGWdefault, x, y, width, height, buffer, justifyLeft);
+	}
+	else */
+	{
+	    gdispFillStringBox(x, y, width, height, buffer, font, color, Black, justifyLeft);
+	}
 }
 

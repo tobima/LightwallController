@@ -717,7 +717,7 @@ main(void)
   chprintf((BaseSequentialStream *) &SD6, "Initialazing GFX driver ...");
   gfxInit();
 
-  fcwall_initWindow(&SDU1);
+  fcwall_initWindow();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 

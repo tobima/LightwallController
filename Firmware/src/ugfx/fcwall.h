@@ -18,7 +18,12 @@
 extern "C"
 {
 #endif
- 
+
+/** @type gGWdefault
+ * @brief Window, where the visualization of the complete wall is present
+ */
+extern GHandle gGWdefault;
+
 void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue);
 
 void fcwall_init(int width, int height);
@@ -26,7 +31,7 @@ void fcwall_init(int width, int height);
 /** @fn void fcwall_initWindow(void)
  * Initialize the window system (necessary for input)
  */
-void fcwall_initWindow();
+void fcwall_initWindow(void);
 
 /**
  * @fn void fcwall_processEvents(SerialUSBDriver* pSDU1)
