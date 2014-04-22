@@ -26,7 +26,6 @@
  ******************************************************************************/
 void ugfx_cmd_calibrate(void)
 {
-  ginputSetMouseCalibrationRoutines(0, ugfx_cmd_cfgsave, ugfx_cmd_cfgload, FALSE);
   ginputCalibrateMouse(0);
   return;
 }

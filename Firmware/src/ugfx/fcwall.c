@@ -9,6 +9,7 @@
 
 #include "fcwall.h"
 #include "gfx.h"
+#include "ff.h"
 #include "ugfx_cmd.h"
 
 #define INFO_TEXT_HEIGHT        25
@@ -199,6 +200,8 @@ void fcwall_initWindow(void)
   wi.height = gdispGetHeight();
   gGWdefault = gwinWindowCreate(0, &wi);
 
+  /* automatically load a configuration at startup */
+  ginputSetMouseCalibrationRoutines(0, ugfx_cmd_cfgsave, ugfx_cmd_cfgload, FALSE);
 
   // Attach the mouse input
   gwinAttachMouse(0);
