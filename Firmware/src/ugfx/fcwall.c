@@ -33,6 +33,34 @@ static GHandle   ghButton1 = NULL;
  * LOCAL FUNCTIONS
  ******************************************************************************/
 
+static void createWidgets(void) {
+        GWidgetInit     wi;
+
+        // Generate Black with Black on Black
+        GColorSet blackSet = { Black, Black, Black, Black};
+        GWidgetStyle black;
+        black.background = Black;       // @< The window background color
+        black.enabled = blackSet;       // @< The colors when enabled
+        black.disabled = blackSet;      // @< The colors when disabled
+        black.pressed = blackSet;       // @< The colors when pressed
+
+        // Apply some default values for GWIN
+        wi.customDraw = 0;
+        wi.customParam = 0;
+        wi.customStyle = &black;
+        wi.g.show = TRUE;
+
+        // Apply the button parameters
+        wi.g.width = gdispGetWidth();
+        wi.g.height = gdispGetHeight();
+        wi.g.y = 0;
+        wi.g.x = 0;
+        wi.text = "";
+
+        // Create the actual button
+        ghButton1 = gwinButtonCreate(0, &wi);
+}
+
 /******************************************************************************
  * EXTERN FUNCTIONS
  ******************************************************************************/
@@ -76,34 +104,6 @@ void fcwall_init(int w, int h)
 	}
 }
 
-static void createWidgets(void) {
-        GWidgetInit     wi;
-
-        // Generate Black with Black on Black
-        GColorSet blackSet = { Black, Black, Black, Black};
-        GWidgetStyle black;
-        black.background = Black;       // @< The window background color
-        black.enabled = blackSet;       // @< The colors when enabled
-        black.disabled = blackSet;      // @< The colors when disabled
-        black.pressed = blackSet;       // @< The colors when pressed
-
-        // Apply some default values for GWIN
-        wi.customDraw = 0;
-        wi.customParam = 0;
-        wi.customStyle = &black;
-        wi.g.show = TRUE;
-
-        // Apply the button parameters
-        wi.g.width = gdispGetWidth();
-        wi.g.height = gdispGetHeight();
-        wi.g.y = 0;
-        wi.g.x = 0;
-        wi.text = "";
-
-        // Create the actual button
-        ghButton1 = gwinButtonCreate(0, &wi);
-}
-
 
 void fcwall_initWindow(void)
 {
@@ -131,15 +131,17 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
   // Get an Event
   pe = geventEventWait(&gl, TIME_INFINITE);
 
-  switch(pe->type) {
+  switch(pe->type)
+  {
           case GEVENT_GWIN_BUTTON:
-                  if (ghButton1 != NULL && ((GEventGWinButton*)pe)->button == ghButton1) {
-                          // Our button has been pressed
-                	      chprintf((BaseSequentialStream *) &SD6, "Button clicked\r\n");
-                  }
-                  if (pSDU1)
+                  if (ghButton1 != NULL && ((GEventGWinButton*)pe)->button == ghButton1)
                   {
-        	      chprintf((BaseSequentialStream *) pSDU1, "Button clicked\r\n");
+                    // Our button has been pressed
+                    chprintf((BaseSequentialStream *) &SD6, "Button clicked\r\n");
+                    if (pSDU1)
+                    {
+                        chprintf((BaseSequentialStream *) pSDU1, "Button clicked\r\n");
+                    }
                   }
                   break;
 
