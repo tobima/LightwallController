@@ -19,6 +19,8 @@ extern "C"
 {
 #endif
 
+
+#define MENU_BUTTON_WIDTH       75     /**< offset for the info text, aka size of the button */
 /** @type gGWdefault
  * @brief Window, where the visualization of the complete wall is present
  */

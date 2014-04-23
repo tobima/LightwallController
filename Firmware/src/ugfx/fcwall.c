@@ -48,26 +48,18 @@ static uint8_t stopUIUpdate = FALSE;
 static void createWidgets(void) {
         GWidgetInit     wi;
 
-        // Generate Black with Black on Black
-        GColorSet blackSet = { Black, Black, Black, Black};
-        GWidgetStyle black;
-        black.background = Black;       // @< The window background color
-        black.enabled = blackSet;       // @< The colors when enabled
-        black.disabled = blackSet;      // @< The colors when disabled
-        black.pressed = blackSet;       // @< The colors when pressed
-
         // Apply some default values for GWIN
         wi.customDraw = 0;
         wi.customParam = 0;
-        wi.customStyle = &black;
+        wi.customStyle = 0;
         wi.g.show = TRUE;
 
-        // Apply the button parameters
-        wi.g.width = 100;
-        wi.g.height = gdispGetHeight() - (INFO_TEXT_HEIGHT + 20 /* distance, so the button is behind the boxes */);
-        wi.g.y = 0;
-        wi.g.x = 0;
-        wi.text = "";
+        // Apply the menu button parameters
+        wi.g.width = MENU_BUTTON_WIDTH - 4;
+        wi.g.height = INFO_TEXT_HEIGHT - 2;
+        wi.g.y = gdispGetHeight() - (INFO_TEXT_HEIGHT + 4);
+        wi.g.x = 2;
+        wi.text = "Menu";
 
         gwinClear(gGWdefault);
         // Create the actual button
@@ -196,8 +188,6 @@ void fcwall_initWindow(void)
   // Set the widget defaults
   gwinSetDefaultFont( gdispOpenFont("UI2"));
   gwinSetDefaultStyle( &BlackWidgetStyle, FALSE);
-  /*gwinSetDefaultBgColor(gGWdefault, Black);
-  gwinSetDefaultColor(gGWdefault, Black);*/
   gdispClear(Black);
 
   wi.show = TRUE;

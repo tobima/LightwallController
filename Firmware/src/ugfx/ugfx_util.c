@@ -267,7 +267,7 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 	}
 	else */
 	{
-	    gdispFillStringBox(x, y, width, height, buffer, font, color, Black, justifyLeft);
+	    gdispFillStringBox(MENU_BUTTON_WIDTH + x, y, width, height, buffer, font, color, Black, justifyLeft);
 	}
 }
 
