@@ -248,7 +248,7 @@ wall_handler(void* config, const char* section, const char* name,
   int row = strtol(section, NULL, 10);
   int col;
   int memoryLength = 0;
-  uint32_t dmxval;
+  int dmxval;
 
   if (MATCH("global", "width"))
     {

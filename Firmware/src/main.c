@@ -649,6 +649,7 @@ static msg_t blinkerThread(void *arg) {
     palClearPad(GPIOD, GPIOD_LED4);     /* Green.  */
     chThdSleepMilliseconds(500);
   }
+  return RDY_OK;
 }
 
 /*

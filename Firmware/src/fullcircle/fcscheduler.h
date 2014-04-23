@@ -104,6 +104,6 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
  * @brief function to start a thread
  */
 void
-fcscheduler_startThread();
+fcscheduler_startThread(void);
 
 #endif /* End of _FCSCHEDULER_H */
