@@ -355,7 +355,7 @@ fc_scheduler(void *p)
   FATFS *fsp;
 
 #ifdef UGFX_WALL
-  /* Initiaize the font */
+  /* Initialize the font */
   font_t font = gdispOpenFont("DejaVu*");
 #endif
 
@@ -381,8 +381,11 @@ fc_scheduler(void *p)
     {
       err = f_getfree("/", &clusters, &fsp);
       chThdSleep(MS2ST(100));
+      if (err == FR_OK) { /* found it */
+          res = MAXIMUM_INITIALIZATION;
+      }
     }
-  while (err != FR_OK);
+
 
   /* Load wall configuration */
   readConfigurationFile(&wallcfg);

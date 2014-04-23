@@ -7,6 +7,7 @@
 
 #include "ugfx_cmd.h"
 #include "ff.h"
+#include "ugfx_util.h"
 
 #define TOUCHCALIBRATION_FILE   "tchcalib"
 
@@ -113,7 +114,6 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 
   (void)instance;
 
-
   if (gSDU1)
   {
       chprintf((BaseSequentialStream *) gSDU1, "ugfx_cmd_cfgsave %s:%d\r\n", __FILE__, __LINE__);
@@ -142,6 +142,8 @@ const char *ugfx_cmd_cfgload(uint16_t instance)
         (void)instance;
 
         ferr = f_open(&fi, TOUCHCALIBRATION_FILE, FA_READ);
+
+        (void)instance;
 
         if (ferr == FR_OK)
         {

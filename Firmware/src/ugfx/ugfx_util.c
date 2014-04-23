@@ -2,10 +2,12 @@
 #include <stdarg.h>
 #include "gfx.h"
 #include "fcwall.h"     /* necessary, to know the window to print into */
+#include "ff.h"
 
 #define	CHECK_BUFFER_LENGTH		if (i > bufferlength)  { continue; }
 
-#define MAX_FILLER 11
+#define MAX_FILLER                      11
+#define MAXIMUM_INITIALIZATION          10
 
 /* ----------- exported from Chibios: chprintf.c ------------ */
 static char *long_to_string_with_divisor(char *p,
@@ -271,3 +273,21 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 	}
 }
 
+extern void wait4sdcard(void)
+{
+  int res;
+  FRESULT err;
+  uint32_t clusters;
+  FATFS *fsp;
+
+  /* Initialize the SDcard */
+  for (res = 0 /* reuse res to avoid endless loop*/;
+      res < MAXIMUM_INITIALIZATION; res++)
+    {
+      err = f_getfree("/", &clusters, &fsp);
+      chThdSleep(MS2ST(100));
+      if (err == FR_OK) { /* found it */
+          res = MAXIMUM_INITIALIZATION;
+      }
+    }
+}

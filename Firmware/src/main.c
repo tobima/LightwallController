@@ -24,6 +24,7 @@
 #ifdef UGFX_WALL
 #include "gfx.h"
 #include "fcwall.h"
+#include "ugfx_util.h"
 #endif
 
 #include "ini/ini.h"
@@ -708,27 +709,21 @@ main(void)
   /* test only the initialization */
   DMXInit();
 
-  /*
+  /*************************************
    * Creates the DMX thread.
    */
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
-#ifdef UGFX_WALL
-  chprintf((BaseSequentialStream *) &SD6, "Initialazing GFX driver ...");
-  gfxInit();
-
-  fcwall_initWindow();
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-#endif
-
+  /*************************************
+   * SDCard
+   */
   chprintf((BaseSequentialStream *) &SD6, "Initialazing SDCARD driver ...");
 
   /*
    * Activates the SDC driver 1 using default configuration.
    */
   sdcStart(&SDCD1, NULL);
-
   /*
    * Activates the card insertion monitor.
    */
@@ -739,9 +734,21 @@ main(void)
 
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
+  /**************************************/
+#ifdef UGFX_WALL
+  chprintf((BaseSequentialStream *) &SD6, "Wait for SD card ...");
+  wait4sdcard();
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\nInitialazing GFX driver ...");
+  gfxInit();
+
+  fcwall_initWindow();
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+#endif
+
+
   chprintf((BaseSequentialStream *) &SD6, "Start blinker thread ...");
 
-  /** 
+  /**************************************
    * Booting ...
    * - search for configuration on SD-card
    */
@@ -785,37 +792,37 @@ main(void)
 
     }
 
-  /*
+  /**************************************
    * Creates the LWIP threads (it changes priority internally).
    */
   chThdCreateStatic(wa_lwip_thread, LWIP_THREAD_STACK_SIZE, NORMALPRIO + 2,
       lwip_thread, (use_config) ? &(config.network) : NULL);
 
-  /*
+  /**************************************
    * Creates the scheduler thread.
    */
   fcscheduler_startThread();
 
-  /*
+  /**************************************
    * Creates the Fullcircle server thread.
    */
   chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
       fc_server, NULL);
 
-  /*
+  /**************************************
    * Creates the HTTP thread.
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
 
-  /*
+  /**************************************
    * Creates the Net Shell thread.
    */
   //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
   //                server_thread, NULL);
   chprintf((BaseSequentialStream *) &SD6, "Initialazing Shell...");
 
-  /*
+  /**************************************
    * Shell manager initialization.
    */
   shellInit();
