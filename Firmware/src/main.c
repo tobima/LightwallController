@@ -734,7 +734,9 @@ main(void)
 
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
-  /**************************************/
+  /**************************************
+   * Screen and Touchscr.-Driver
+   */
 #ifdef UGFX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Wait for SD card ...");
   wait4sdcard();
