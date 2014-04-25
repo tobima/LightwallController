@@ -51,11 +51,11 @@ struct test_flashreadwrite_data
 
 void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
 {
-  chprintf(chp, "Flash test\r\n");
   int j;
   char readBufferBefore[32];
-
   flashsector_t i;
+  chprintf(chp, "Flash test\r\n");
+
   for (i = 0; i < FLASH_SECTOR_COUNT; ++i)
   {
 	  const struct flash_sector_def* sector = &f407_flash[i];
@@ -64,13 +64,15 @@ void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
 	                   sector->beginAddress,
 	                   sector->endAddress,
 	                   sector->size);
+#if 0
 	  flashRead(sector->beginAddress,
 	  			  readBufferBefore, sector->size);
 	  for(j=0; j < 32; j++)
 	  {
-		  chprintf(chp, "%0.2X");
+		  chprintf(chp, "%0.2X", readBufferBefore[j]);
 	  }
 	  chprintf(chp, "\r\n");
+#endif
   }
 
 }
