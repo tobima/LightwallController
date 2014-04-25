@@ -52,8 +52,19 @@ void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1)
   return;
 }
 
-void ugfx_cmd_manualtesting(void)
+void ugfx_cmd_manualtesting(uint8_t status)
 {
+  if (status == UGFX_CMD_MANUAL_START)
+  {
+      fcscheduler_startThread();
+  }
+  else if (status != UGFX_CMD_MANUAL_START)
+  {
+      return; /* Unkown command executed */
+  }
+
+  /********** stop normal mode and start the manual testing *********/
+
   /* Stop all fullcircle threads first */
   fcscheduler_stopThread();
 

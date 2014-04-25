@@ -15,6 +15,9 @@
 #define INFO_TEXT_HEIGHT        25
 #define WIN_MENU_TOPMARGIN      10
 
+#define MANUALTEST_TXT_START    "Start manual tests"
+#define MANUALTEST_TXT_ENDED    "Stop manual testing"
+
 /******************************************************************************
  * GLOBAL VARIABLES of this module
  ******************************************************************************/
@@ -40,6 +43,8 @@ static GHandle   ghButtonManualTesting = NULL;
 static GHandle GWmenu = NULL;
 
 static uint8_t stopUIUpdate = FALSE;
+
+static uint8_t gManualStatus = 0;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -93,7 +98,7 @@ static void createMenuWindow(void)
   widgi.customDraw = 0;
   widgi.customParam = 0;
   widgi.customStyle = 0;
-  widgi.g.width = 100;
+  widgi.g.width = 120;
   widgi.g.height = 20;
   widgi.g.y = wi.y + 10;
   widgi.g.x = wi.x + 10;
@@ -106,12 +111,29 @@ static void createMenuWindow(void)
   /* Second button */
   widgi.g.y = wi.y + 40;
   widgi.g.x = wi.x + 10;
-  widgi.text = "Manual tests";
+  switch (gManualStatus)
+  {
+  case 2:
+  default:
+    widgi.text = MANUALTEST_TXT_START;
+    gManualStatus = 1;
+    break;
+  case 1:
+    widgi.text = MANUALTEST_TXT_ENDED;
+    gManualStatus = 2;
+  }
   ghButtonManualTesting = gwinButtonCreate(0, &widgi);
+
 }
 
 static void deleteMenuWindow(void)
 {
+  gwinSetVisible(GWmenu, FALSE);
+  /* clear the window away */
+  gwinSetColor(gGWdefault, Black);
+  gwinDrawBox (gGWdefault, gwinGetScreenX(GWmenu), gwinGetScreenY(GWmenu),
+      gwinGetWidth(GWmenu), gwinGetHeight(GWmenu));
+
   gwinDestroy(ghButtonCalibrate);
   ghButtonCalibrate = NULL;
   gwinDestroy(GWmenu);
@@ -224,12 +246,6 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                     /* toggle visibility */
                     if (GWmenu != NULL && gwinGetVisible(GWmenu))
                     {
-                        gwinSetVisible(GWmenu, FALSE);
-                        /* clear the window away */
-                        gwinSetColor(gGWdefault, Black);
-                        gwinDrawBox (gGWdefault, gwinGetScreenX(GWmenu), gwinGetScreenY(GWmenu),
-                            gwinGetWidth(GWmenu), gwinGetHeight(GWmenu));
-
                         deleteMenuWindow();
                     }
                     else
@@ -240,13 +256,16 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   }
                   else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
                   {
+                      deleteMenuWindow();
                       stopUIUpdate = TRUE;
                       ugfx_cmd_calibrate(pSDU1);
                       stopUIUpdate = FALSE;
                   }
                   else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
                   {
-                      ugfx_cmd_manualtesting();
+                      deleteMenuWindow();
+
+                      //ugfx_cmd_manualtesting(gManualStatus);
                   }
                   else
                   {
