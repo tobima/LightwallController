@@ -18,6 +18,9 @@
 #define MANUALTEST_TXT_START    "Start manual tests"
 #define MANUALTEST_TXT_ENDED    "Stop manual testing"
 
+#define FCWALL_USBPRINT( ... )    if (pSDU1) { chprintf((BaseSequentialStream *) pSDU1,  __VA_ARGS__); }
+#define FCWALL_UARTPRINT( ... )    chprintf((BaseSequentialStream *) &SD6, __VA_ARGS__);
+
 /******************************************************************************
  * GLOBAL VARIABLES of this module
  ******************************************************************************/
@@ -264,25 +267,19 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
                   {
                       deleteMenuWindow();
-
+                      FCWALL_UARTPRINT("Manual status %d\r\n", gManualStatus);
                       //ugfx_cmd_manualtesting(gManualStatus);
                   }
                   else
                   {
-                      if (pSDU1)
-                      {
-                          chprintf((BaseSequentialStream *) pSDU1, "Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
-                      }
+                      FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
                   }
                   break;
 
           default:
-        	  chprintf((BaseSequentialStream *) &SD6, "Input Event %d\r\n", pe->type);
-        	  if (pSDU1)
-        	  {
-        	      chprintf((BaseSequentialStream *) pSDU1, "Input Event %d\r\n", pe->type);
-        	  }
-                  break;
+            FCWALL_UARTPRINT("Input Event %d\r\n", pe->type);
+            FCWALL_USBPRINT("Input Event %d\r\n", pe->type);
+            break;
   }
 
 }
