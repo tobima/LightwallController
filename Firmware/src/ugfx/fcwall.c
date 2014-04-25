@@ -18,6 +18,8 @@
 #define MANUALTEST_TXT_START    "Start manual tests"
 #define MANUALTEST_TXT_ENDED    "Stop manual testing"
 
+#define IF_MENU_VISIBLE         if (GWmenu != NULL && gwinGetVisible(GWmenu))
+
 #define FCWALL_USBPRINT( ... )    if (pSDU1) { chprintf((BaseSequentialStream *) pSDU1,  __VA_ARGS__); }
 #define FCWALL_UARTPRINT( ... )    chprintf((BaseSequentialStream *) &SD6, __VA_ARGS__);
 
@@ -101,7 +103,7 @@ static void createMenuWindow(void)
   widgi.customDraw = 0;
   widgi.customParam = 0;
   widgi.customStyle = 0;
-  widgi.g.width = 120;
+  widgi.g.width = 125;
   widgi.g.height = 20;
   widgi.g.y = wi.y + 10;
   widgi.g.x = wi.x + 10;
@@ -116,14 +118,12 @@ static void createMenuWindow(void)
   widgi.g.x = wi.x + 10;
   switch (gManualStatus)
   {
-  case 2:
-  default:
+  case 0:
     widgi.text = MANUALTEST_TXT_START;
-    gManualStatus = 1;
     break;
   case 1:
+  default:
     widgi.text = MANUALTEST_TXT_ENDED;
-    gManualStatus = 2;
   }
   ghButtonManualTesting = gwinButtonCreate(0, &widgi);
 
@@ -246,13 +246,16 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
           case GEVENT_GWIN_BUTTON:
                   if  (((GEventGWinButton*)pe)->button == ghButton1)
                   {
+                      FCWALL_USBPRINT("Menu status %d\r\n", (GWmenu != NULL && gwinGetVisible(GWmenu)) );
                     /* toggle visibility */
-                    if (GWmenu != NULL && gwinGetVisible(GWmenu))
+                    IF_MENU_VISIBLE
                     {
+                        FCWALL_USBPRINT("delete menu\r\n");
                         deleteMenuWindow();
                     }
                     else
                     {
+                        FCWALL_USBPRINT("show menu\r\n");
                         createMenuWindow();
                         gwinSetVisible(GWmenu, TRUE);
                     }
@@ -266,9 +269,14 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   }
                   else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
                   {
-                      deleteMenuWindow();
-                      FCWALL_UARTPRINT("Manual status %d\r\n", gManualStatus);
-                      //ugfx_cmd_manualtesting(gManualStatus);
+                      /* do only something if window is visible */
+                      IF_MENU_VISIBLE
+                      {
+                          deleteMenuWindow();
+                          gManualStatus = !gManualStatus;
+                          FCWALL_USBPRINT("Manual status %d\r\n", gManualStatus);
+                          //ugfx_cmd_manualtesting(gManualStatus);
+                      }
                   }
                   else
                   {
