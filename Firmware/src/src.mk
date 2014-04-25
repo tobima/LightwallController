@@ -5,7 +5,7 @@ APPSRC = src/main.c \
        src/dmx/rgb.c \
        src/cmd/cmd_threads.c \
        src/cmd/cmd_mem.c \
-       src/main.c 
+       
 
 # Required include directories
 APPINC = ${APP} \
