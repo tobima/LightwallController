@@ -576,6 +576,7 @@ static const ShellCommand commands[] =
     { "dmx", cmd_dmx_modify },
     { "fcdyn", fcserverImpl_cmdline },
     { "fcsched", fcscheduler_cmdline },
+    { "flash", cmd_flash },
     { NULL, NULL } };
 
 static const ShellConfig shell_cfg1 =
