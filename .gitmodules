@@ -10,3 +10,6 @@
 [submodule "Firmware/lib/ugfx"]
 	path = Firmware/lib/ugfx
 	url = https://bitbucket.org/Tectu/ugfx
+[submodule "Firmware/lib/flash"]
+	path = Firmware/lib/flash
+	url = https://github.com/tegesoft/flash-stm32f407.git

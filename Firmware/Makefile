@@ -96,6 +96,7 @@ APP_LIBS = lib
 include $(APP_LIBS)/fc/chibios.mk
 APP = src
 include $(APP)/src.mk
+include $(APP)/flash.mk
 
 # Define linker script file here
 LDSCRIPT= $(PORTLD)/STM32F407xG.ld
@@ -115,6 +116,7 @@ CSRC = $(PORTSRC) \
        $(CHIBIOS)/os/various/chprintf.c \
        $(CHIBIOS)/os/various/shell.c \
        $(LIBSRC) \
+       $(FLASHSRC) \
        $(APPSRC)
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -150,6 +152,7 @@ INCDIR = $(PORTINC) $(KERNINC) $(LIBINC) \
          $(FATFSINC) \
          $(GFXINC) \
          $(CHIBIOS)/os/various \
+         $(FLASHINC) \
          $(APPINC)
 
 #
