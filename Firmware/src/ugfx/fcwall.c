@@ -246,16 +246,13 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
           case GEVENT_GWIN_BUTTON:
                   if  (((GEventGWinButton*)pe)->button == ghButton1)
                   {
-                      FCWALL_USBPRINT("Menu status %d\r\n", (GWmenu != NULL && gwinGetVisible(GWmenu)) );
                     /* toggle visibility */
                     IF_MENU_VISIBLE
                     {
-                        FCWALL_USBPRINT("delete menu\r\n");
                         deleteMenuWindow();
                     }
                     else
                     {
-                        FCWALL_USBPRINT("show menu\r\n");
                         createMenuWindow();
                         gwinSetVisible(GWmenu, TRUE);
                     }
@@ -274,8 +271,14 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                       {
                           deleteMenuWindow();
                           gManualStatus = !gManualStatus;
-                          FCWALL_USBPRINT("Manual status %d\r\n", gManualStatus);
-                          //ugfx_cmd_manualtesting(gManualStatus);
+                          if (gManualStatus)
+                          {
+                              ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_START);
+                          }
+                          else
+                          {
+                              ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_ENDED);
+                          }
                       }
                   }
                   else

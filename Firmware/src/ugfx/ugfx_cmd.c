@@ -54,7 +54,7 @@ void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1)
 
 void ugfx_cmd_manualtesting(uint8_t status)
 {
-  if (status == UGFX_CMD_MANUAL_START)
+  if (status == UGFX_CMD_MANUAL_ENDED)
   {
       fcscheduler_startThread();
   }
