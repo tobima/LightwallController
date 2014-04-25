@@ -10,6 +10,7 @@ APPSRC = src/web/web.c \
        src/cmd/ifconfig.c \
        src/cmd/cmd_mem.c \
        src/cmd/cmd_cat.c \
+       src/cmd/cmd_flash.c \
        src/ini/ini.c \
        src/conf/conf.c \
        src/fullcircle/fcserverImpl.c \

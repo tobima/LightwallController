@@ -18,6 +18,9 @@ extern "C"
   void
   cmd_cat(BaseSequentialStream *chp, int argc, char *argv[]);
 
+  void
+  cmd_flash(BaseSequentialStream *chp, int argc, char *argv[]);
+
 #ifdef __cplusplus
 }
 #endif
