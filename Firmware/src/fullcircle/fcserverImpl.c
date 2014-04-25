@@ -1,5 +1,5 @@
 /** @file fcserverImpl.h
- * @brief Dynamic fullcircle implementation for Chibios
+ * @brief Dynamic fullcircle server implementation for Chibios
  * @author Ollo
  *
  * @date 26.09.2013
@@ -268,7 +268,7 @@ fc_server(void *p)
 }
 
 void
-fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
+fcserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 {
   if (argc < 1)
     {

@@ -100,10 +100,18 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
 void
 fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
 
-/** @fn void fcscheduler_startThread()
+/** @fn void fcscheduler_startThread(void)
  * @brief function to start a thread
+ * This function is asynchron and will return immediately.
+ * FIXME WARNING: There is at the moment no logic to prevent multiple starts
  */
 void
 fcscheduler_startThread(void);
+
+/** @fn void fcscheduler_stopThread(void)
+ * @brief Stop the thread (Must be started, if needed again)
+ * Sends a message to the thread. This function is asynchron and will return immediately
+ */
+void fcscheduler_stopThread(void);
 
 #endif /* End of _FCSCHEDULER_H */

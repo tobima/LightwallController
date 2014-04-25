@@ -574,7 +574,7 @@ static const ShellCommand commands[] =
     { "cat", cmd_cat },
     { "ifconfig", cmd_ifconfig },
     { "dmx", cmd_dmx_modify },
-    { "fcdyn", fcsserverImpl_cmdline },
+    { "fcdyn", fcserverImpl_cmdline },
     { "fcsched", fcscheduler_cmdline },
     { NULL, NULL } };
 

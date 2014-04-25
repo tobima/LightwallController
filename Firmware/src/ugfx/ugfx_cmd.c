@@ -8,6 +8,7 @@
 #include "ugfx_cmd.h"
 #include "ff.h"
 #include "ugfx_util.h"
+#include "fcscheduler.h"
 
 #define TOUCHCALIBRATION_FILE   "tchcalib"
 
@@ -39,6 +40,7 @@ static SerialUSBDriver* gSDU1 = NULL;
  * LOCAL FUNCTIONS
  ******************************************************************************/
 
+
 /******************************************************************************
  * EXTERN FUNCTIONS
  ******************************************************************************/
@@ -52,7 +54,13 @@ void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1)
 
 void ugfx_cmd_manualtesting(void)
 {
+  /* Stop all fullcircle threads first */
+  fcscheduler_stopThread();
 
+  /*********************
+   * Update the UI:
+   * - Boxes are clickable to be changed
+   */
 }
 
 msg_t ucfx_configstore(void* configuration)

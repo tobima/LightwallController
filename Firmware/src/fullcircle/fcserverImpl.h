@@ -1,10 +1,10 @@
 /** @file fcserverImpl.h
- * @brief Dynamic fullcircle implementation for Chibios
+ * @brief Dynamic fullcircle server implementation for Chibios
  * @author Ollo
  *
  * @date 26.09.2013
  * @defgroup LightwallController
- *
+ * This module is controlled by the fcscheduler.h module (@see fcscheduler_startThread)
  */
 
 #include "ch.h"
@@ -39,7 +39,7 @@ extern uint32_t gFcServerActive;
 /**
  * @var gFcServerMailboxBuffer
  * @var gFcServerMailbox
- * External mailbox interface to communicate with the dynamic server
+ * External mailbox interface to communicate with this server (Responsible for the dynamic fc protocol)
  */
 extern uint32_t*	gFcServerMailboxBuffer;
 extern Mailbox *	gFcServerMailbox;
@@ -56,10 +56,9 @@ extern "C"
 }
 #endif
 
-/**
- * Debug interface for the commandline
+/** @fn void fcserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
+ * @brief Debug interface for the commandline
  */
-void
-fcsserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
+void fcserverImpl_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
 
 #endif /* End of FCSERVER_IMPL_H */

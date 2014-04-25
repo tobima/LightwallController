@@ -678,10 +678,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
         {
           /* Activate the debugging */
           chprintf(chp, "Fullcircle Scheduler - Stopped\r\n");
-          chSysLock();
-          chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
-          chMBPostI(&mailboxIn, (uint32_t) 1);
-          chSysUnlock();
+          fcscheduler_stopThread();
         }
 	else if (strcmp(argv[0], "start") == 0 )
 	{
@@ -714,4 +711,13 @@ fcscheduler_startThread(void)
   chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
       fc_scheduler, NULL);
 
+}
+
+void
+fcscheduler_stopThread(void)
+{
+  chSysLock();
+  chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
+  chMBPostI(&mailboxIn, (uint32_t) 1);
+  chSysUnlock();
 }
