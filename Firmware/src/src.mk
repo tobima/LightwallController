@@ -3,18 +3,9 @@ APPSRC = src/web/web.c \
        src/dmx/dmx.c \
        src/dmx/dmx_cmd.c \
        src/dmx/rgb.c \
-       src/main.c \
-       src/fullcircle/fcstatic.c \
-       src/netstream/netstream.c \
-       src/netshell/netshell.c \
        src/cmd/cmd_threads.c \
-       src/cmd/ifconfig.c \
        src/cmd/cmd_mem.c \
-       src/cmd/cmd_cat.c \
-       src/ini/ini.c \
-       src/conf/conf.c \
-       src/fullcircle/fcserverImpl.c \
-       src/fullcircle/fcscheduler.c 
+       src/main.c 
 
 # Required include directories
 APPINC = ${APP} \
