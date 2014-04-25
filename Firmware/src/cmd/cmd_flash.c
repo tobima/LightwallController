@@ -59,7 +59,7 @@ void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
   for (i = 0; i < FLASH_SECTOR_COUNT; ++i)
   {
 	  const struct flash_sector_def* sector = &f407_flash[i];
-	  chprintf(chp, "\r\n> test sector %u: 0x%x -> 0x%x (%u bytes)\r\n\r\n",
+	  chprintf(chp, "\r\n> test sector %u: 0x%x -> 0x%x (%u bytes)\r\n",
 	                   sector->index,
 	                   sector->beginAddress,
 	                   sector->endAddress,
