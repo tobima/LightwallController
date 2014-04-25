@@ -1,5 +1,5 @@
 # List of all the board related files.
-APPSRC = src/web/web.c \
+APPSRC = src/main.c \
        src/dmx/dmx.c \
        src/dmx/dmx_cmd.c \
        src/dmx/rgb.c \
@@ -12,7 +12,7 @@ APPINC = ${APP} \
        src/fullcircle
 
 # List all user C define here
-APPDEFS = -DSHELL_MAX_ARGUMENTS=5
+APPDEFS = -DSHELL_MAX_ARGUMENTS=6
 
 # Fullcricle (fc_c) specific:
 # Debugging for the underling library
