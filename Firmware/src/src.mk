@@ -7,8 +7,10 @@ APPSRC = src/main.c \
        src/cmd/cmd_mem.c \
        src/cmd/cmd_cat.c \
        src/cmd/cmd_flash.c \
+       src/cmd/ifconfig.c \
        src/ini/ini.c \
        src/conf/conf.c \
+       src/web/web.c \
        src/fullcircle/fcserverImpl.c \
        src/fullcircle/fcscheduler.c 
 
@@ -33,4 +35,4 @@ APPSRC += src/ugfx/fcwall.c \
 APPINC += src/ugfx
 APPDEFS += -DUGFX_WALL
 
-APPDEFS += -DFILESYSTEM_ONLY
+#APPDEFS += -DFILESYSTEM_ONLY
