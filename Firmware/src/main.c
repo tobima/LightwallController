@@ -793,9 +793,8 @@ main(void)
   else
     {
       chprintf((BaseSequentialStream *) &SD6, "\x1b[32m OK\r\n\x1b[0m");
-#endif
+
       print_fsusage((BaseSequentialStream *) &SD6, 0, NULL);
-#ifndef FILESYSTEM_ONLY
     }
 
   int use_config = 0;
@@ -817,6 +816,7 @@ main(void)
         }
 
     }
+
 
   /**************************************
    * Creates the LWIP threads (it changes priority internally).
@@ -875,6 +875,7 @@ main(void)
 		  shelltp = NULL; /* Triggers spawning of a new shell. */
 	  }
       chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
+
 #ifdef UGFX_WALL
       fcwall_processEvents(&SDU1);
 #endif

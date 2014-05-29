@@ -33,5 +33,4 @@ APPSRC += src/ugfx/fcwall.c \
 APPINC += src/ugfx
 APPDEFS += -DUGFX_WALL
 
-#APPDEFS += -DWITH_TELNET
 APPDEFS += -DFILESYSTEM_ONLY
