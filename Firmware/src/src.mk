@@ -23,7 +23,6 @@ APPDEFS = -DSHELL_MAX_ARGUMENTS=6
 
 # Fullcricle (fc_c) specific:
 # Debugging for the underling library
-
 #APPDEFS += -DPRINT_DEBUG
 
 
@@ -35,4 +34,5 @@ APPSRC += src/ugfx/fcwall.c \
 APPINC += src/ugfx
 APPDEFS += -DUGFX_WALL
 
+# Minimal variation: Only the top board without the expansion with Ethernet and SD card
 #APPDEFS += -DFILESYSTEM_ONLY
