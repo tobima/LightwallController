@@ -10,7 +10,7 @@
 #define PRINTABLE_CHARACTER_COUNT (PRINTABLE_CHARACTER_LAST - PRINTABLE_CHARACTER_FIRST + 1)
 
 #define TEST_BASE						0x08060000
-#define TEST_DATASIZE 					sizeof(flashdata_t)
+#define TEST_DATASIZE 					((int) sizeof(flashdata_t))
 #define TEST_READWRITE_TESTCASE_COUNT	8
 
 void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
