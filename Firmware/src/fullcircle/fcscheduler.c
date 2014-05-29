@@ -247,13 +247,8 @@ wall_handler(void* config, const char* section, const char* name,
   wallconf_t* pconfig = (wallconf_t*) config;
   int row = strtol(section, NULL, 10);
   int col;
-<<<<<<< HEAD
   int memoryLength = 0;
   int dmxval;
-=======
-  uint32_t memoryLength = 0;
-  uint32_t dmxval;
->>>>>>> e96f50159decb18da3e939dc5bb729621fcf4474
 
   if (MATCH("global", "width"))
     {
@@ -391,15 +386,12 @@ fc_scheduler(void *p)
       }
     }
 
-<<<<<<< HEAD
-=======
   /* Stop the thread, if the filesystem could not be found */
   if (res >= MAXIMUM_INITIALIZATION)
     {
       chprintf((BaseSequentialStream *) &SD6, "Stop Scheduler thread, no SD card present.\r\n");
       return RDY_OK;
     }
->>>>>>> e96f50159decb18da3e939dc5bb729621fcf4474
 
   /* Load wall configuration */
   if (readConfigurationFile(&wallcfg) != 0)

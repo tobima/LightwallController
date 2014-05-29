@@ -105,7 +105,7 @@ void fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[]);
  * This function is asynchron and will return immediately.
  * FIXME WARNING: There is at the moment no logic to prevent multiple starts
  */
-<<<<<<< HEAD
+
 void
 fcscheduler_startThread(void);
 
@@ -114,8 +114,5 @@ fcscheduler_startThread(void);
  * Sends a message to the thread. This function is asynchron and will return immediately
  */
 void fcscheduler_stopThread(void);
-=======
-void fcscheduler_startThread( void );
->>>>>>> e96f50159decb18da3e939dc5bb729621fcf4474
 
 #endif /* End of _FCSCHEDULER_H */
