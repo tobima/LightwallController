@@ -340,64 +340,79 @@ WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
 msg_t fc_scheduler(void *p)
 {
   int sleeptime = FCSERVER_IMPL_SLEEPTIME;
-  /* File handling variables: */
-  int res, resOpen;
-  char path[FILENAME_LENGTH];
-  char *filename = NULL;
-  uint32_t filenameLength = 0;
-  char* root = FCSCHED_FILE_ROOT;
-  schedulerconf_t schedConfiguration;
+    /* File handling variables: */
+    int res, resOpen;
+    char path[FILENAME_LENGTH];
+    char *filename = NULL;
+    uint32_t filenameLength = 0;
+    char* root = FCSCHED_FILE_ROOT;
+    schedulerconf_t schedConfiguration;
 
-#ifdef UGFX_WALL
-  /* Initialize the font */
-  font_t font = gdispOpenFont("DejaVu*");
-#endif
+    /* SD card initing variables */
+    FRESULT err;
+    uint32_t clusters;
+    FATFS *fsp;
 
-  /* File reading variables */
-  fcsequence_t seq;
-  fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
-  uint8_t* rgb24 = NULL;
+  #ifdef UGFX_WALL
+    /* Initiaize the font */
+    font_t font = gdispOpenFont("DejaVu*");
+  #endif
 
-  /* small hack to initialize the global variables */
-  gFcBuf4DynQueue = (uint32_t*) hwal_malloc(
-      sizeof(uint32_t) * INPUT_DYNMAILBOX_SIZE);
-  MAILBOX_DECL(fcMailboxDyn, gFcBuf4DynQueue, INPUT_DYNMAILBOX_SIZE);
-  gFcMailboxDyn = &fcMailboxDyn;
+    /* File reading variables */
+    fcsequence_t seq;
+    fcseq_ret_t seqRet = FCSEQ_RET_NOTIMPL;
+    uint8_t* rgb24 = NULL;
 
-  hwal_memset(&seq, 0, sizeof(fcsequence_t));
+    /* small hack to initialize the global variables */
+    gFcBuf4DynQueue = (uint32_t*) hwal_malloc(
+        sizeof(uint32_t) * INPUT_DYNMAILBOX_SIZE);
+    MAILBOX_DECL(fcMailboxDyn, gFcBuf4DynQueue, INPUT_DYNMAILBOX_SIZE);
+    gFcMailboxDyn = &fcMailboxDyn;
 
-  chRegSetThreadName("fcscheduler");
-  (void) p;
+    hwal_memset(&seq, 0, sizeof(fcsequence_t));
 
+    chRegSetThreadName("fcscheduler");
+    (void) p;
 
-  resOpen = fcstatic_open_sdcard();
+    /* Initialize the SDcard */
+    for (res = 0 /* reuse res to avoid endless loop*/;
+        res < MAXIMUM_INITIALIZATION; res++)
+      {
+        err = f_getfree("/", &clusters, &fsp);
+        chThdSleep(MS2ST(100));
+      }
+    while (err != FR_OK);
 
-    /* Load the configuration */
-    hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
+    /* Load wall configuration */
+    readConfigurationFile(&wallcfg);
 
-    ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
-#ifdef UGFX_WALL
-    fcwall_init(wallcfg.width, wallcfg.height);
-#endif
-  /* Prepare Mailbox to communicate with the others */
-  chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
-  path[0] = 0;
+      /* Load the configuration */
+      hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
 
-  /* Deactivate this thread, if necessary */
-  if (schedConfiguration.netOnly)
-    {
-      FCSCHED_PRINT("Deactivating Scheduler");
-      chSysLock();
-      chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
-      chMBPostI(&mailboxIn, (uint32_t) 1);
-      chSysUnlock();
-    }
+      ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
+  #ifdef UGFX_WALL
+      fcwall_init(wallcfg.width, wallcfg.height);
+  #endif
+    /* Prepare Mailbox to communicate with the others */
+    chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
+    path[0] = 0;
 
+    /* Deactivate this thread, if necessary */
+    if (schedConfiguration.netOnly)
+      {
+        FCSCHED_PRINT("Deactivating Scheduler");
+        chSysLock();
+        chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
+        chMBPostI(&mailboxIn, (uint32_t) 1);
+        chSysUnlock();
+      }
 
-  /* initialize the folder to search in */
-  hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
+    resOpen = fcstatic_open_sdcard();
 
-  while ( gSchedulerActive )
+    /* initialize the folder to search in */
+    hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));
+
+    while ( gSchedulerActive )
     {
       if (fcsched_handleInputMailbox())
         {

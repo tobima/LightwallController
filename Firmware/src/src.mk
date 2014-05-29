@@ -1,26 +1,29 @@
 # List of all the board related files.
-APPSRC = src/main.c \
+APPSRC = src/web/web.c \
        src/dmx/dmx.c \
-       src/dmx/dmx_cmd.c \
        src/dmx/rgb.c \
+       src/dmx/dmx_cmd.c \
+       src/main.c \
+       src/fullcircle/fcstatic.c \
+       src/netstream/netstream.c \
+       src/netshell/netshell.c \
        src/cmd/cmd_threads.c \
+       src/cmd/ifconfig.c \
        src/cmd/cmd_mem.c \
        src/cmd/cmd_cat.c \
        src/cmd/cmd_flash.c \
-       src/cmd/ifconfig.c \
        src/ini/ini.c \
        src/conf/conf.c \
-       src/web/web.c \
        src/fullcircle/fcserverImpl.c \
-       src/fullcircle/fcstatic.c \
        src/fullcircle/fcscheduler.c 
+
 
 # Required include directories
 APPINC = ${APP} \
        src/fullcircle
 
 # List all user C define here
-APPDEFS = -DSHELL_MAX_ARGUMENTS=6
+APPDEFS =
 
 # Fullcricle (fc_c) specific:
 # Debugging for the underling library
@@ -29,11 +32,7 @@ APPDEFS = -DSHELL_MAX_ARGUMENTS=6
 
 # Append the WALL
 APPSRC += src/ugfx/fcwall.c \
-		  src/ugfx/ugfx_util.c \
-		  src/ugfx/ugfx_cmd.c
-		  		  
+	src/ugfx/ugfx_cmd.c \
+	src/ugfx/ugfx_util.c
 APPINC += src/ugfx
 APPDEFS += -DUGFX_WALL
-
-# Minimal variation: Only the top board without the expansion with Ethernet and SD card
-#APPDEFS += -DFILESYSTEM_ONLY
