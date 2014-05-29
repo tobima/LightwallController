@@ -29,5 +29,6 @@
 *.b#*
 *.s#*
 
-# Temporary Mac-files
+# Temporary files
 .DS_Store
+*.swp
