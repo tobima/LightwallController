@@ -825,11 +825,6 @@ main(void)
       lwip_thread, (use_config) ? &(config.network) : NULL);
 
   /**************************************
-   * Creates the scheduler thread.
-   */
-  fcscheduler_startThread();
-
-  /**************************************
    * Creates the Fullcircle server thread.
    */
   chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
@@ -840,14 +835,21 @@ main(void)
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
-#endif
+
+  /**************************************
+   * Creates the scheduler thread.
+   */
+  chThdSleep(MS2ST(100));
+  fcscheduler_startThread();
 
   /**************************************
    * Creates the Net Shell thread.
    */
   //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
   //                server_thread, NULL);
-  chprintf((BaseSequentialStream *) &SD6, "Initialazing Shell...");
+#endif
+
+  chprintf((BaseSequentialStream *) &SD6, "Initializing Shell...");
 
   /**************************************
    * Shell manager initialization.

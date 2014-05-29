@@ -39,7 +39,7 @@
 #define	FILENAME_LENGTH			512	/**< Including the absolut path to the file */
 #define INPUT_MAILBOX_SIZE		4
 
-#define MAXIMUM_INITIALIZATION			10
+#define MAXIMUM_INITIALIZATION			100
 #define FCSCHED_DYNSERVER_RESETVALUE    (FRAME_ALIVE_STARTLEVEL * 2)
 
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
@@ -337,8 +337,7 @@ WORKING_AREA(wa_fc_scheduler, FCSCHEDULER_THREAD_STACK_SIZE);
 /**
  * Scheduling thread.
  */
-msg_t
-fc_scheduler(void *p)
+msg_t fc_scheduler(void *p)
 {
   int sleeptime = FCSERVER_IMPL_SLEEPTIME;
   /* File handling variables: */
@@ -348,11 +347,6 @@ fc_scheduler(void *p)
   uint32_t filenameLength = 0;
   char* root = FCSCHED_FILE_ROOT;
   schedulerconf_t schedConfiguration;
-
-  /* SD card initing variables */
-  FRESULT err = FR_INT_ERR;
-  uint32_t clusters;
-  FATFS *fsp;
 
 #ifdef UGFX_WALL
   /* Initialize the font */
@@ -375,30 +369,8 @@ fc_scheduler(void *p)
   chRegSetThreadName("fcscheduler");
   (void) p;
 
-  /* Initialize the SDcard */
-  for (res = 0 /* reuse res to avoid endless loop*/;
-      res < MAXIMUM_INITIALIZATION && err != FR_OK; res++)
-    {
-      err = f_getfree("/", &clusters, &fsp);
-      chThdSleep(MS2ST(100));
-      if (err == FR_OK) { /* found it */
-          res = MAXIMUM_INITIALIZATION;
-      }
-    }
 
-  /* Stop the thread, if the filesystem could not be found */
-  if (res >= MAXIMUM_INITIALIZATION)
-    {
-      chprintf((BaseSequentialStream *) &SD6, "Stop Scheduler thread, no SD card present.\r\n");
-      return RDY_OK;
-    }
-
-  /* Load wall configuration */
-  if (readConfigurationFile(&wallcfg) != 0)
-  {
-      /* There was a problem, on reading the configuration from the SD card, stop the thread */
-      return RDY_OK;
-  }
+  resOpen = fcstatic_open_sdcard();
 
     /* Load the configuration */
     hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
@@ -421,7 +393,6 @@ fc_scheduler(void *p)
       chSysUnlock();
     }
 
-  resOpen = fcstatic_open_sdcard();
 
   /* initialize the folder to search in */
   hwal_memcpy(path, root, strlen(FCSCHED_FILE_ROOT));

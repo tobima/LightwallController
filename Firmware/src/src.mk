@@ -12,6 +12,7 @@ APPSRC = src/main.c \
        src/conf/conf.c \
        src/web/web.c \
        src/fullcircle/fcserverImpl.c \
+       src/fullcircle/fcstatic.c \
        src/fullcircle/fcscheduler.c 
 
 # Required include directories
