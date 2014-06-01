@@ -777,7 +777,7 @@ main(void)
    */
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
-#ifndef FILESYSTEM_ONLY
+#ifndef DISABLE_FILESYSTEM
   chprintf((BaseSequentialStream *) &SD6, "Searching filesystem ...");
 
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
@@ -787,7 +787,6 @@ main(void)
   if (!fs_ready)
     {
       chprintf((BaseSequentialStream *) &SD6, "\x1b[31m Failed!\r\n\x1b[0m");
-      chprintf((BaseSequentialStream *) &SD6, "File System not mounted\r\n");
     }
   else
     {
