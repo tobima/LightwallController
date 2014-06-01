@@ -11,12 +11,16 @@
 
 void flash_usage(BaseSequentialStream *chp)
 {
-	chprintf(chp, "usage: [write|read]\r\n");
+	chprintf(chp, "usage: [write|read]\r\n"
+			"Parameter description\r\n"
+			"---------------------\r\n"
+			"read:  no additional parameter necessary\r\n"
+			"write: (block offset) (value)\r\n");
 }
 
 void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
 {
-	int j;
+	int j, blockoffset;
 	int status, address;
 	char readBufferBefore[32];
 	flashsector_t i;
@@ -27,13 +31,21 @@ void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
 	{
 		if (strncmp(argv[0], "write", sizeof("write")) == 0)
 		{
-			if (argc >= 2)
+			if (argc >= 3)
 			{
+				blockoffset = atoi(argv[1]);
+				if (blockoffset < 0 || blockoffset > FLASH_BLOCK_TESTCASE_COUNT)
+				{
+					chprintf(chp, "Offset must between %d and %d. Actual one was: %d \r\n",
+							0, FLASH_BLOCK_TESTCASE_COUNT, blockoffset);
+					return;
+				}
+
 				/* use the fourth memory block for the tests */
-				address = FLASH_BASEADDR + (4 * FLASH_BLOCKSIZE);
+				address = FLASH_BASEADDR + (blockoffset * FLASH_BLOCKSIZE);
 
 				/* extract the new value to store into it */
-				readBufferBefore[0] = atoi(argv[1]);
+				readBufferBefore[0] = atoi(argv[2]);
 
 				status = flashWrite(address, readBufferBefore, FLASH_BLOCKSIZE);
 				if (status != FLASH_RETURN_SUCCESS)
