@@ -8,12 +8,18 @@
 #include "ugfx_cmd.h"
 #include "ugfx_util.h"
 #include "fcscheduler.h"
+#include "flash.h"
 
 
 /******************************************************************************
  * GLOBAL VARIABLES of this module
  ******************************************************************************/
 
+#define FLASH_CONFIG_BASEADDR	0x8060020
+
+#ifndef FLASH_BLOCKSIZE
+#define FLASH_BLOCKSIZE 		((int) sizeof(flashdata_t))
+#endif
 
 /******************************************************************************
  * LOCAL VARIABLES for this module
@@ -62,15 +68,17 @@ void ugfx_cmd_manualtesting(uint8_t status)
 
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 {
-  int i=0;
+  unsigned int i=0;
+  int status;
   (void)instance;
+  const char* buffer = (const char*) calbuf;
 
   if (gSDU1)
   {
       chprintf((BaseSequentialStream *) gSDU1, "ugfx_cmd_cfgsave %s:%d\r\n", __FILE__, __LINE__);
 
         chprintf((BaseSequentialStream *) gSDU1, "Setting (%d bytes): ", size);
-        for(i=0; i < (int) size; i++)
+        for(i=0; i < (unsigned int) size; i++)
         {
             chprintf((BaseSequentialStream *) gSDU1, "%02X", calbuf[i]);
         }
@@ -78,6 +86,27 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
     }
 
 
+  	/* write the memory into the flash */
+    for (i=0; i < size / FLASH_BLOCKSIZE; i++)
+    {
+		status = flashWrite(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE), buffer + (i * 4), FLASH_BLOCKSIZE);
+		if (status != FLASH_RETURN_SUCCESS)
+		{
+			if (gSDU1)
+			{
+				chprintf((BaseSequentialStream *) gSDU1, "%d. block: Writing returned %d \r\n", i + 1, status);
+			}
+			return;
+		}
+		else
+		{
+			if (gSDU1)
+			{
+				chprintf((BaseSequentialStream *) gSDU1, "%d. block sector %u : stored at 0x%x\r\n", i + 1,
+										flashSectorAt(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE)), FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE));
+			}
+		}
+    }
 
     if (gSDU1)
     {

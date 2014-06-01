@@ -7,7 +7,7 @@
 
 #define FLASH_BASEADDR				0x08060000
 #define FLASH_BLOCKSIZE 			((int) sizeof(flashdata_t))
-#define FLASH_BLOCK_TESTCASE_COUNT	8
+#define FLASH_BLOCK_TESTCASE_COUNT	16
 
 void flash_usage(BaseSequentialStream *chp)
 {
