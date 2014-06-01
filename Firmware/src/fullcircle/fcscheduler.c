@@ -348,11 +348,6 @@ msg_t fc_scheduler(void *p)
     char* root = FCSCHED_FILE_ROOT;
     schedulerconf_t schedConfiguration;
 
-    /* SD card initing variables */
-    FRESULT err;
-    uint32_t clusters;
-    FATFS *fsp;
-
   #ifdef UGFX_WALL
     /* Initiaize the font */
     font_t font = gdispOpenFont("DejaVu*");
@@ -373,15 +368,6 @@ msg_t fc_scheduler(void *p)
 
     chRegSetThreadName("fcscheduler");
     (void) p;
-
-    /* Initialize the SDcard */
-    for (res = 0 /* reuse res to avoid endless loop*/;
-        res < MAXIMUM_INITIALIZATION; res++)
-      {
-        err = f_getfree("/", &clusters, &fsp);
-        chThdSleep(MS2ST(100));
-      }
-    while (err != FR_OK);
 
     /* Load wall configuration */
     readConfigurationFile(&wallcfg);
@@ -476,6 +462,11 @@ msg_t fc_scheduler(void *p)
           {
             FCSCHED_PRINT("Reopen SDcard\r\n");
             resOpen = fcstatic_open_sdcard();
+#ifdef UGFX_WALL
+		gdispPrintf(0, gdispGetHeight() - 15, font, Red, 256,
+			"Waiting for SDcard");
+#endif
+
           }
         break;
       case FCSRC_STATE_FILEENDED:
