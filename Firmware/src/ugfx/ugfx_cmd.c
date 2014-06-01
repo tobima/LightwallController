@@ -21,6 +21,8 @@
 #define FLASH_BLOCKSIZE 		((int) sizeof(flashdata_t))
 #endif
 
+#define CALIBRATION_SIZE		24 /**< bytes necessary for the touch screen calibration data */
+
 /******************************************************************************
  * LOCAL VARIABLES for this module
  ******************************************************************************/
@@ -119,12 +121,33 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 
 const char *ugfx_cmd_cfgload(uint16_t instance)
 {
-        char *buffer;
-        buffer = NULL;
+    unsigned int i=0;
+    int status;
+	char *buffer;
 
-        (void)instance;
+	buffer = NULL;
+	(void)instance;
 
-        /*FIXME buffer = gfxAlloc(bsize); */
+	buffer = gfxAlloc(CALIBRATION_SIZE);
 
-        return buffer;
+	/* read configuration from the flash */
+	for (i=0; i < CALIBRATION_SIZE / FLASH_BLOCKSIZE; i++)
+	{
+		status = flashRead(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE), buffer + (i * 4), FLASH_BLOCKSIZE);
+		if (status != FLASH_RETURN_SUCCESS)
+		{
+			if (gSDU1)
+			{
+				chprintf((BaseSequentialStream *) gSDU1, "%d. block: Reading returned %d \r\n", i + 1, status);
+
+				/* clean the buffer on a faulty configuration */
+				gfxFree(buffer);
+				buffer = NULL;
+
+				return buffer;
+			}
+		}
+	}
+
+	return buffer;
 }
