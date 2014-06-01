@@ -29,13 +29,16 @@ void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
 		{
 			if (argc >= 2)
 			{
-				address = FLASH_BASEADDR;
+				/* use the fourth memory block for the tests */
+				address = FLASH_BASEADDR + (4 * FLASH_BLOCKSIZE);
+
+				/* extract the new value to store into it */
 				readBufferBefore[0] = atoi(argv[1]);
 
 				status = flashWrite(address, readBufferBefore, FLASH_BLOCKSIZE);
 				if (status != FLASH_RETURN_SUCCESS)
 				{
-					chprintf(chp, "Writing returned %d\r\n", status);
+					chprintf(chp, "Writing returned %d \r\n", status);
 					return;
 				}
 				chprintf(chp, "test sector %u : stored at 0x%x %d\r\n",
@@ -65,7 +68,7 @@ void cmd_flash(BaseSequentialStream *chp, int argc, char *argv[])
 
 				for (j = 0; j < FLASH_BLOCKSIZE; j++)
 				{
-					chprintf(chp, "%0.2X", readBufferBefore[j]);
+					chprintf(chp, "%02X ", readBufferBefore[j]);
 				}
 				chprintf(chp, "\r\n");
 
