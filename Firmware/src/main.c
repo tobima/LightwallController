@@ -761,7 +761,6 @@ main(void)
    */
 #ifdef UGFX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Wait for SD card ...");
-  wait4sdcard();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\nInitialazing GFX driver ...");
   gfxInit();
 

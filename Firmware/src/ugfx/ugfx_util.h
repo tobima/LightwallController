@@ -19,12 +19,6 @@ extern "C"
 
 extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferlength, char* text, ...);
 
-/**
- * @fn void wait4sdcard(void)
- * @brief wait until the sdcard is ready
- */
-extern void wait4sdcard(void);
-
 #ifdef __cplusplus
 }
 #endif

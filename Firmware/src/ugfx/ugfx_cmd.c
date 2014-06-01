@@ -6,18 +6,9 @@
  */
 
 #include "ugfx_cmd.h"
-#include "ff.h"
 #include "ugfx_util.h"
 #include "fcscheduler.h"
 
-#define TOUCHCALIBRATION_FILE   "tchcalib"
-
-#define UGFX_CONFIGSTORE_THREAD_STACK_SIZE      THD_WA_SIZE(128)
-
-typedef struct UgfxConfig {
-  const uint8_t *calbuf;
-  uint32_t      size;
-} UgfxConfig_t;
 
 /******************************************************************************
  * GLOBAL VARIABLES of this module
@@ -28,11 +19,6 @@ typedef struct UgfxConfig {
  * LOCAL VARIABLES for this module
  ******************************************************************************/
 
-
-/**
- * Stack area for the scheduler thread.
- */
-WORKING_AREA(wa_ucfx_configstore, UGFX_CONFIGSTORE_THREAD_STACK_SIZE);
 
 static SerialUSBDriver* gSDU1 = NULL;
 
@@ -74,104 +60,42 @@ void ugfx_cmd_manualtesting(uint8_t status)
    */
 }
 
-msg_t ucfx_configstore(void* configuration)
-{
-  FIL fi;
-  FRESULT ferr = FR_INVALID_PARAMETER;
-  uint8_t bsize;
-  UINT wr;
-  int i = 0;
-  const uint8_t *calbuf;
-
-  UgfxConfig_t *config = (UgfxConfig_t *) configuration;
-  bsize = config->size;
-  calbuf = config->calbuf;
-
-  chRegSetThreadName("configstore");
-
-  ferr = f_open(&fi, (TCHAR*) TOUCHCALIBRATION_FILE, FA_CREATE_ALWAYS | FA_WRITE);
-
-
-  if (gSDU1)
-  {
-      chprintf((BaseSequentialStream *) gSDU1, "File opend %s, returned %d %s:%d\r\n", TOUCHCALIBRATION_FILE, ferr, __FILE__, __LINE__);
-  }
-
-  if (ferr == FR_OK)
-  {
-    f_write(&fi, &bsize, 1, &wr);
-    f_write(&fi, calbuf, bsize, &wr);
-
-    if (gSDU1)
-    {
-        chprintf((BaseSequentialStream *) gSDU1, "Stored at file: ");
-        for(i=0; i < bsize; i++)
-        {
-            chprintf((BaseSequentialStream *) gSDU1, "%0.2X", calbuf[i]);
-        }
-        chprintf((BaseSequentialStream *) gSDU1, "\r\n");
-    }
-  }
-
-  f_close(&fi);
-
-  if (gSDU1)
-  {
-    chprintf((BaseSequentialStream *) gSDU1,
-        "-------- configuration stored [%s:%d] -------\r\n", __FILE__, __LINE__);
-  }
-
-  return RDY_OK;
-}
-
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 {
   int i=0;
-  UgfxConfig_t config;
-  config.size = size;
-  config.calbuf = calbuf;
-
   (void)instance;
 
   if (gSDU1)
   {
       chprintf((BaseSequentialStream *) gSDU1, "ugfx_cmd_cfgsave %s:%d\r\n", __FILE__, __LINE__);
 
-        chprintf((BaseSequentialStream *) gSDU1, "Setting: ");
+        chprintf((BaseSequentialStream *) gSDU1, "Setting (%d bytes): ", size);
         for(i=0; i < (int) size; i++)
         {
-            chprintf((BaseSequentialStream *) gSDU1, "%0.2X", calbuf[i]);
+            chprintf((BaseSequentialStream *) gSDU1, "%02X", calbuf[i]);
         }
         chprintf((BaseSequentialStream *) gSDU1, "\r\n");
     }
-  chThdCreateStatic(wa_ucfx_configstore, sizeof(wa_ucfx_configstore), NORMALPRIO + 1,
-      ucfx_configstore, (void *) &config);
+
+
+
+    if (gSDU1)
+    {
+      chprintf((BaseSequentialStream *) gSDU1,
+          "-------- configuration stored [%s:%d] -------\r\n", __FILE__, __LINE__);
+    }
+
 
 }
 
 const char *ugfx_cmd_cfgload(uint16_t instance)
 {
-        FRESULT ferr;
-        FIL fi;
-        UINT br;
-        uint8_t bsize;
         char *buffer;
         buffer = NULL;
 
         (void)instance;
 
-        ferr = f_open(&fi, TOUCHCALIBRATION_FILE, FA_READ);
-
-        (void)instance;
-
-        if (ferr == FR_OK)
-        {
-          ferr = f_read(&fi, &bsize, 1, &br);
-          buffer = gfxAlloc(bsize);
-          ferr = f_read(&fi, buffer, bsize, &br);
-
-        }
-        f_close(&fi);
+        /*FIXME buffer = gfxAlloc(bsize); */
 
         return buffer;
 }

@@ -272,22 +272,3 @@ extern void gdispPrintf(int x, int y, font_t font, color_t color, int bufferleng
 	    gdispFillStringBox(MENU_BUTTON_WIDTH + x, y, width, height, buffer, font, color, Black, justifyLeft);
 	}
 }
-
-extern void wait4sdcard(void)
-{
-  int res;
-  FRESULT err;
-  uint32_t clusters;
-  FATFS *fsp;
-
-  /* Initialize the SDcard */
-  for (res = 0 /* reuse res to avoid endless loop*/;
-      res < MAXIMUM_INITIALIZATION; res++)
-    {
-      err = f_getfree("/", &clusters, &fsp);
-      chThdSleep(MS2ST(100));
-      if (err == FR_OK) { /* found it */
-          res = MAXIMUM_INITIALIZATION;
-      }
-    }
-}
