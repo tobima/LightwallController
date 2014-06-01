@@ -5,10 +5,6 @@
 #include "flash.h"
 #include "helper.h"
 
-#define PRINTABLE_CHARACTER_FIRST 0x20
-#define PRINTABLE_CHARACTER_LAST 0x7e
-#define PRINTABLE_CHARACTER_COUNT (PRINTABLE_CHARACTER_LAST - PRINTABLE_CHARACTER_FIRST + 1)
-
 #define TEST_BASE						0x08060000
 #define TEST_DATASIZE 					((int) sizeof(flashdata_t))
 #define TEST_READWRITE_TESTCASE_COUNT	8
