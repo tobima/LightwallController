@@ -9,6 +9,7 @@
 #include "ugfx_util.h"
 #include "fcscheduler.h"
 #include "flash.h"
+#include "hwal.h"	/* necessary for custom created memset */
 #include <string.h>
 
 
@@ -77,6 +78,8 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
   unsigned int j=0;
   int status;
   (void)instance;
+#define SIZE_TEMP_BUFFER	32
+  char tempBuffer[SIZE_TEMP_BUFFER];
   const char* buffer = (const char*) calbuf;
 
   if (gSDU1)
@@ -95,7 +98,22 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
   	/* write the memory into the flash */
     for (i=0; i < size / FLASH_BLOCKSIZE; i++)
     {
-		status = flashWrite(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE), buffer + (i * 4), FLASH_BLOCKSIZE);
+    	/* clean temporary buffer */
+    	hwal_memset(tempBuffer, 0, SIZE_TEMP_BUFFER);
+
+    	/* fill unique number to find out the storage logic */
+    	for(j=0; j < SIZE_TEMP_BUFFER; j++)
+		{
+			tempBuffer[j] = j;
+		}
+
+    	for(j=0; j < 4; j++)
+    	{
+    		/* update each fourth byte */
+    		tempBuffer[j*4] = buffer[(i * 4)+j];
+    	}
+
+		status = flashWrite(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE), tempBuffer, FLASH_BLOCKSIZE);
 		if (status != FLASH_RETURN_SUCCESS)
 		{
 			if (gSDU1)
@@ -115,6 +133,12 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 				{
 					chprintf((BaseSequentialStream *) gSDU1, "%02X", buffer[j]);
 				}
+				chprintf((BaseSequentialStream *) gSDU1, " ---FLASH---> ");
+				for(j= 0; j < SIZE_TEMP_BUFFER; j++)
+				{
+					chprintf((BaseSequentialStream *) gSDU1, "%02X", tempBuffer[j]);
+				}
+
 				chprintf((BaseSequentialStream *) gSDU1, "\r\n");
 			}
 		}
