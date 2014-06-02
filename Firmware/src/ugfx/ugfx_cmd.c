@@ -74,6 +74,7 @@ void ugfx_cmd_manualtesting(uint8_t status)
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 {
   unsigned int i=0;
+  unsigned int j=0;
   int status;
   (void)instance;
   const char* buffer = (const char*) calbuf;
@@ -107,8 +108,14 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 		{
 			if (gSDU1)
 			{
-				chprintf((BaseSequentialStream *) gSDU1, "%d. block sector %u : stored at 0x%x\r\n", i + 1,
+				chprintf((BaseSequentialStream *) gSDU1, "%d. block in sector %u : stored at 0x%x ", i + 1,
 										flashSectorAt(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE)), FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE));
+
+				for(j= (i * 4); j < ((i + 1) * 4); j++)
+				{
+					chprintf((BaseSequentialStream *) gSDU1, "%02X", buffer[j]);
+				}
+				chprintf((BaseSequentialStream *) gSDU1, "\r\n");
 			}
 		}
     }
