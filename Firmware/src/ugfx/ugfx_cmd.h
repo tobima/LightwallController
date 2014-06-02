@@ -30,4 +30,13 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size);
 
 const char *ugfx_cmd_cfgload(uint16_t instance);
 
+/**
+ * @fn void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[])
+ * @brief commands can also be triggered via the shell
+ * @param[in|out]	chp	IO-stream
+ * @param[in]		argc	amount of given arguments
+ * @param[in]		argv	arguments themselves
+ */
+void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[]);
+
 #endif /* UGFX_CMD_H_ */

@@ -25,6 +25,7 @@
 #include "gfx.h"
 #include "fcwall.h"
 #include "ugfx_util.h"
+#include "ugfx_cmd.h"
 #endif
 
 #include "ini/ini.h"
@@ -592,6 +593,9 @@ static const ShellCommand commands[] =
     { "ifconfig", cmd_ifconfig },
     { "fcdyn", fcserverImpl_cmdline },
     { "fcsched", fcscheduler_cmdline },
+#endif
+#ifdef UGFX_WALL
+    { "ugfx", ugfx_cmd_shell },
 #endif
     { "flash", cmd_flash },
     { NULL, NULL } };

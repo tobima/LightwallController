@@ -9,6 +9,7 @@
 #include "ugfx_util.h"
 #include "fcscheduler.h"
 #include "flash.h"
+#include <string.h>
 
 
 /******************************************************************************
@@ -23,6 +24,8 @@
 
 #define CALIBRATION_SIZE		24 /**< bytes necessary for the touch screen calibration data */
 
+
+#define  PARAM_CMP(X, Y)	strncmp(X, Y, sizeof(Y)
 /******************************************************************************
  * LOCAL VARIABLES for this module
  ******************************************************************************/
@@ -150,4 +153,23 @@ const char *ugfx_cmd_cfgload(uint16_t instance)
 	}
 
 	return buffer;
+}
+
+void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[])
+{
+	chprintf(chp, "GUI UTIL\r\n"
+			"Possible arguments are:\r\n"
+			"- calibrate\tCalibrate the touchscreen\r\n");
+
+	/* Handle warnings: */
+	if (argc >= 1)
+	{
+		/* stop the fullcirce stuff */
+		fcscheduler_stopThread();
+
+		if (PARAM_CMP(argv[0], "calibrate")) == 0)
+		{
+			ginputCalibrateMouse(0);
+		}
+	}
 }
