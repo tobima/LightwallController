@@ -74,12 +74,8 @@ void ugfx_cmd_manualtesting(uint8_t status)
 
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 {
-  unsigned int i=0;
-  unsigned int j=0;
   int status;
   (void)instance;
-#define SIZE_TEMP_BUFFER	32
-  char tempBuffer[SIZE_TEMP_BUFFER];
   const char* buffer = (const char*) calbuf;
 
   if (gSDU1)
@@ -87,62 +83,43 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
       chprintf((BaseSequentialStream *) gSDU1, "ugfx_cmd_cfgsave %s:%d\r\n", __FILE__, __LINE__);
 
         chprintf((BaseSequentialStream *) gSDU1, "Setting (%d bytes): ", size);
-        for(i=0; i < (unsigned int) size; i++)
+        for(status=0; status < (int) size; status++) /* reuse status as counter */
         {
-            chprintf((BaseSequentialStream *) gSDU1, "%02X", calbuf[i]);
+            chprintf((BaseSequentialStream *) gSDU1, "%02X", calbuf[status]);
         }
         chprintf((BaseSequentialStream *) gSDU1, "\r\n");
     }
 
-
-  	/* write the memory into the flash */
-    for (i=0; i < size / FLASH_BLOCKSIZE; i++)
-    {
-    	/* clean temporary buffer */
-    	hwal_memset(tempBuffer, 0, SIZE_TEMP_BUFFER);
-
-    	/* fill unique number to find out the storage logic */
-    	for(j=0; j < SIZE_TEMP_BUFFER; j++)
+  	/*status = flashErase(FLASH_CONFIG_BASEADDR, size);
+  	if (status != FLASH_RETURN_SUCCESS)
+	{
+		if (gSDU1)
 		{
-			tempBuffer[j] = j;
+			chprintf((BaseSequentialStream *) gSDU1, "Erasing returned %d \r\n", status);
 		}
+		return;
+	}*/
 
-    	for(j=0; j < 4; j++)
-    	{
-    		/* update each fourth byte */
-    		tempBuffer[j*4] = buffer[(i * 4)+j];
-    	}
-
-		status = flashWrite(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE), tempBuffer, FLASH_BLOCKSIZE);
-		if (status != FLASH_RETURN_SUCCESS)
+	status = flashWrite(FLASH_CONFIG_BASEADDR , buffer, size);
+	if (status != FLASH_RETURN_SUCCESS)
+	{
+		if (gSDU1)
 		{
-			if (gSDU1)
-			{
-				chprintf((BaseSequentialStream *) gSDU1, "%d. block: Writing returned %d \r\n", i + 1, status);
-			}
-			return;
+			chprintf((BaseSequentialStream *) gSDU1, "Writing returned %d \r\n", status);
 		}
-		else
+		return;
+	}
+	else
+	{
+		if (gSDU1)
 		{
-			if (gSDU1)
-			{
-				chprintf((BaseSequentialStream *) gSDU1, "%d. block in sector %u : stored at 0x%x ", i + 1,
-										flashSectorAt(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE)), FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE));
+			chprintf((BaseSequentialStream *) gSDU1, "Sector %u : stored at 0x%x ",
+									flashSectorAt(FLASH_CONFIG_BASEADDR), FLASH_CONFIG_BASEADDR);
 
-				for(j= (i * 4); j < ((i + 1) * 4); j++)
-				{
-					chprintf((BaseSequentialStream *) gSDU1, "%02X", buffer[j]);
-				}
-				chprintf((BaseSequentialStream *) gSDU1, " ---FLASH---> ");
-				for(j= 0; j < SIZE_TEMP_BUFFER; j++)
-				{
-					chprintf((BaseSequentialStream *) gSDU1, "%02X", tempBuffer[j]);
-				}
-
-				chprintf((BaseSequentialStream *) gSDU1, "\r\n");
-			}
+			chprintf((BaseSequentialStream *) gSDU1, "\r\n");
 		}
-    }
+	}
+
 
     if (gSDU1)
     {
@@ -155,7 +132,6 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
 
 const char *ugfx_cmd_cfgload(uint16_t instance)
 {
-    unsigned int i=0;
     int status;
 	char *buffer;
 
@@ -164,24 +140,21 @@ const char *ugfx_cmd_cfgload(uint16_t instance)
 
 	buffer = gfxAlloc(CALIBRATION_SIZE);
 
-	/* read configuration from the flash */
-	for (i=0; i < CALIBRATION_SIZE / FLASH_BLOCKSIZE; i++)
+	status = flashRead(FLASH_CONFIG_BASEADDR, buffer, CALIBRATION_SIZE);
+	if (status != FLASH_RETURN_SUCCESS)
 	{
-		status = flashRead(FLASH_CONFIG_BASEADDR + (i * FLASH_BLOCKSIZE), buffer + (i * 4), FLASH_BLOCKSIZE);
-		if (status != FLASH_RETURN_SUCCESS)
+		if (gSDU1)
 		{
-			if (gSDU1)
-			{
-				chprintf((BaseSequentialStream *) gSDU1, "%d. block: Reading returned %d \r\n", i + 1, status);
+			chprintf((BaseSequentialStream *) gSDU1, "Reading returned %d \r\n", status);
 
-				/* clean the buffer on a faulty configuration */
-				gfxFree(buffer);
-				buffer = NULL;
+			/* clean the buffer on a faulty configuration */
+			gfxFree(buffer);
+			buffer = NULL;
 
-				return buffer;
-			}
+			return buffer;
 		}
 	}
+
 
 	return buffer;
 }
