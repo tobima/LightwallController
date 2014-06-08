@@ -73,24 +73,27 @@ void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1)
 
 void ugfx_cmd_manualtesting(uint8_t status)
 {
-  if (status == UGFX_CMD_MANUAL_ENDED)
-  {
-      fcscheduler_startThread();
-  }
-  else if (status != UGFX_CMD_MANUAL_START)
-  {
-      return; /* Unkown command executed */
-  }
+	PRINT("%s Manual testing %d\r\n", __FILE__, status);
+	if (status == UGFX_CMD_MANUAL_ENDED)
+	{
+		fcscheduler_startThread();
+		ugfx_cmd_manualtesting_stop();
+	}
+	else if (status != UGFX_CMD_MANUAL_START)
+	{
+		return; /* Unkown command executed */
+	}
 
-  /********** stop normal mode and start the manual testing *********/
+	/********** stop normal mode and start the manual testing *********/
 
-  /* Stop all fullcircle threads first */
-  fcscheduler_stopThread();
+	/* Stop all fullcircle threads first */
+	fcscheduler_stopThread();
 
-  /*********************
-   * Update the UI:
-   * - Boxes are clickable to be changed
-   */
+	ugfx_cmd_manualtesting_init();
+	/*********************
+	 * Update the UI:
+	 * - FIXME Boxes are clickable to be changed
+	 */
 }
 
 void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)

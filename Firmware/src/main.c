@@ -54,6 +54,15 @@
 #include "ff.h"
 
 /*===========================================================================*/
+/* Command line related.                                                     */
+/*===========================================================================*/
+#ifdef UGFX_WALL
+#define SHELL_WA_SIZE   THD_WA_SIZE(8192)
+#else
+#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
+#endif
+
+/*===========================================================================*/
 /* Card insertion monitor.                                                   */
 /*===========================================================================*/
 
@@ -486,12 +495,6 @@ static const SerialUSBConfig serusbcfg = {
 #define USBD1_DATA_AVAILABLE_EP 1
 #define USBD1_INTERRUPT_REQUEST_EP 2
 
-
-/*===========================================================================*/
-/* Command line related.                                                     */
-/*===========================================================================*/
-
-#define SHELL_WA_SIZE   THD_WA_SIZE(2048)
 
 /* Generic large buffer.*/
 static uint8_t fbuff[1024];

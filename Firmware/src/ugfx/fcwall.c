@@ -293,4 +293,6 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
             break;
   }
 
+  /* Always update the LCD (internally blocked; if there are no manual tests is active) */
+  ugfx_cmd_manualtesting_process();
 }

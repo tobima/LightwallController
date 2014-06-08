@@ -14,6 +14,10 @@
 #define UGFX_CMD_MANUAL_START   1
 #define UGFX_CMD_MANUAL_ENDED   2
 
+
+#define PRINT( ... )	chprintf((BaseSequentialStream *) &SD6, __VA_ARGS__);
+
+
 /** @fn void ugfx_cmd_calibrate(void)
  *
  */
@@ -39,4 +43,22 @@ const char *ugfx_cmd_cfgload(uint16_t instance);
  */
 void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[]);
 
+
+/** @fn void ugfx_cmd_manualtesting_init(void)
+ * @brief start the manual tests
+ *
+ * The DMX buffer is displayed on the LCD and can be modified with the touchscreen.
+ */
+void ugfx_cmd_manualtesting_init(void);
+
+/** @fn void ugfx_cmd_manualtesting_stop(void)
+ *
+ */
+void ugfx_cmd_manualtesting_stop(void);
+
+/** @fn void ugfx_cmd_manualtesting_process(void)
+ * @brief Update the LCD screen
+ * The content of the DMX buffer is updated on the LCD
+ */
+void ugfx_cmd_manualtesting_process(void);
 #endif /* UGFX_CMD_H_ */

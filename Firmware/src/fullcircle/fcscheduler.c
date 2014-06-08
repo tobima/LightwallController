@@ -253,14 +253,17 @@ wall_handler(void* config, const char* section, const char* name,
   if (MATCH("global", "width"))
     {
       pconfig->width = strtol(value, NULL, 10);
+      FCSCHED_PRINT("Config: width: %3d\r\n", pconfig->width);
     }
   else if (MATCH("global", "height"))
     {
       pconfig->height = strtol(value, NULL, 10);
+      FCSCHED_PRINT("Config: height: %3d\r\n", pconfig->height);
     }
   else if (MATCH("global", "fps"))
     {
       pconfig->fps = strtol(value, NULL, 10);
+      FCSCHED_PRINT("Config: fps: %3d\r\n", pconfig->fps);
     }
   else if (MATCH("global", "dim"))
     {
@@ -273,12 +276,15 @@ wall_handler(void* config, const char* section, const char* name,
         {
           memoryLength = sizeof(uint32_t) * pconfig->width * pconfig->height;
           pconfig->pLookupTable = chHeapAlloc(0, memoryLength);
-
-	  /* Clean the whole memory: (dmxval is reused as index) */
-	  for(dmxval=0; dmxval < memoryLength; dmxval++)
-	  {
-	    pconfig->pLookupTable[dmxval] = 0;
-	  }
+          if (pconfig->pLookupTable == NULL)
+          {
+        	  FCSCHED_PRINT("%s Not enough memory to allocate %d bytes \r\n", __FILE__, memoryLength);
+          }
+		  /* Clean the whole memory: (dmxval is reused as index) */
+		  for(dmxval=0; dmxval < memoryLength; dmxval++)
+		  {
+			pconfig->pLookupTable[dmxval] = 0;
+		  }
         }
       col = strtol(name, NULL, 10);
       dmxval = (uint32_t) strtol(value, NULL, 10);
@@ -289,7 +295,7 @@ wall_handler(void* config, const char* section, const char* name,
       }
       else
       {
-	FCSCHED_PRINT("ERROR could not set dmxvalue %d\r\n", dmxval);
+    	  FCSCHED_PRINT("ERROR could not set dmxvalue %d\r\n", dmxval);
       }
     }
   else
@@ -561,6 +567,13 @@ dimmValue(uint8_t incoming, int factor)
 extern int
 readConfigurationFile(wallconf_t* pConfiguration)
 {
+	if (pConfiguration == NULL)
+	{
+		FCSCHED_PRINT("ERROR! No configuration memory given\r\n");
+		return 1;
+	}
+
+  FCSCHED_PRINT("Reading configuration file\r\n");
   hwal_memset(pConfiguration, 0, sizeof(wallconf_t));
   pConfiguration->dimmFactor = 100;
   pConfiguration->fps = -1;
