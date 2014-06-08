@@ -45,9 +45,30 @@ static SerialUSBDriver* gSDU1 = NULL;
 
 void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1)
 {
-  gSDU1 = pSDU1;
-  ginputCalibrateMouse(0);
-  return;
+	int status;
+	gSDU1 = pSDU1;
+
+	if (gSDU1)
+	{
+		chprintf((BaseSequentialStream *) gSDU1, "Erase FLASH... \r\n");
+	}
+
+	status = flashErase(FLASH_CONFIG_BASEADDR, CALIBRATION_SIZE);
+	if (status != FLASH_RETURN_SUCCESS)
+	{
+		if (gSDU1)
+		{
+			chprintf((BaseSequentialStream *) gSDU1, "Erasing returned %d \r\n", status);
+		}
+		return;
+	}
+	if (gSDU1)
+	{
+		chprintf((BaseSequentialStream *) gSDU1, "Erased at 0x%x %d bytes \r\n", FLASH_CONFIG_BASEADDR, CALIBRATION_SIZE);
+	}
+
+	ginputCalibrateMouse(0);
+	return;
 }
 
 void ugfx_cmd_manualtesting(uint8_t status)
@@ -89,16 +110,6 @@ void ugfx_cmd_cfgsave(uint16_t instance, const uint8_t *calbuf, size_t size)
         }
         chprintf((BaseSequentialStream *) gSDU1, "\r\n");
     }
-
-  	/*status = flashErase(FLASH_CONFIG_BASEADDR, size);
-  	if (status != FLASH_RETURN_SUCCESS)
-	{
-		if (gSDU1)
-		{
-			chprintf((BaseSequentialStream *) gSDU1, "Erasing returned %d \r\n", status);
-		}
-		return;
-	}*/
 
 	status = flashWrite(FLASH_CONFIG_BASEADDR , buffer, size);
 	if (status != FLASH_RETURN_SUCCESS)
@@ -161,6 +172,7 @@ const char *ugfx_cmd_cfgload(uint16_t instance)
 
 void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[])
 {
+	int status;
 	chprintf(chp, "GUI UTIL\r\n"
 			"Possible arguments are:\r\n"
 			"- calibrate\tCalibrate the touchscreen\r\n");
@@ -168,11 +180,20 @@ void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[])
 	/* Handle warnings: */
 	if (argc >= 1)
 	{
-		/* stop the fullcirce stuff */
+		/* stop the fullcircel stuff */
 		fcscheduler_stopThread();
 
 		if (PARAM_CMP(argv[0], "calibrate")) == 0)
 		{
+			chprintf(chp, "Erase FLASH... \r\n");
+			status = flashErase(FLASH_CONFIG_BASEADDR, CALIBRATION_SIZE);
+			if (status != FLASH_RETURN_SUCCESS)
+			{
+				chprintf(chp, "Erasing returned %d \r\n", status);
+				return;
+			}
+			chprintf(chp, "Erased at 0x%x %d bytes \r\n", FLASH_CONFIG_BASEADDR, CALIBRATION_SIZE);
+
 			ginputCalibrateMouse(0);
 		}
 	}
