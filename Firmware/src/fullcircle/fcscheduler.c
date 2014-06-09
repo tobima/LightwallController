@@ -543,6 +543,21 @@ msg_t fc_scheduler(void *p)
 
     }
 
+
+    /* when playing file close it */
+    if (gSourceState == FCSRC_STATE_FILE)
+    {
+    	/* Close the file */
+		if (rgb24)
+		  {
+			chHeapFree(rgb24);
+		  }
+		rgb24 = NULL;
+		fcseq_close(&seq);
+		sleeptime = FCSERVER_IMPL_SLEEPTIME;
+    	FCSCHED_PRINT("File closed\r\n");
+    }
+
   /* clean the memory of the configuration */
   if (wallcfg.pLookupTable)
     {
