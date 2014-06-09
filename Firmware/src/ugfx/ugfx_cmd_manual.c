@@ -23,7 +23,7 @@ void ugfx_cmd_manualtesting_init()
 
 	/* Load wall configuration */
 	retStatus = readConfigurationFile(pWallconfig);
-	COntroller freezes calling this method.
+
 	PRINT("%s Reading config returned %d\r\n", __FILE__, retStatus);
 
 	if (retStatus == 0)
