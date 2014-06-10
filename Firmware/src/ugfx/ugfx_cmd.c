@@ -73,6 +73,9 @@ void ugfx_cmd_calibrate(SerialUSBDriver* pSDU1)
 
 void ugfx_cmd_manualtesting(uint8_t status)
 {
+	/* Initiaize the font */
+	font_t font = gdispOpenFont("DejaVu*");
+
 	PRINT("%s Manual testing %d\r\n", __FILE__, status);
 	if (status == UGFX_CMD_MANUAL_ENDED)
 	{
@@ -89,7 +92,19 @@ void ugfx_cmd_manualtesting(uint8_t status)
 	/* Stop all fullcircle threads first */
 	fcscheduler_stopThread();
 
+	/* Wait until the thread is dead ... */
+	gdispPrintf(0, gdispGetHeight() - 15, font, Red, 256,
+				"Wait for deamon to stop.");
+	while ( fcscheduler_isRunning() )
+	{
+		chThdSleep(MS2ST(50));
+	}
+	gdispPrintf(0, gdispGetHeight() - 15, font, Green, 256,
+					"Stopped.");
+
+	/* now start the manual tests */
 	ugfx_cmd_manualtesting_init();
+
 	/*********************
 	 * Update the UI:
 	 * - FIXME Boxes are clickable to be changed

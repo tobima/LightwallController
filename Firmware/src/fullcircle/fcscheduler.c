@@ -145,7 +145,7 @@ static int fcsched_handleInputMailbox(void)
                 wallcfg.dimmFactor = (int) msg2;
                 break;
               case MSG_STOPP:
-                gSchedulerActive = 0;
+                gSchedulerActive = FALSE;
                 gFcServerActive = TRUE; /* The server has an GO */
                 retStatus = 1;
               default:
@@ -547,6 +547,7 @@ msg_t fc_scheduler(void *p)
   if (wallcfg.pLookupTable)
     {
       hwal_free(wallcfg.pLookupTable);
+      wallcfg.pLookupTable = NULL;
     }
 
   FCSCHED_PRINT("Scheduler stopped!\r\n");
@@ -708,7 +709,7 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 void
 fcscheduler_startThread(void)
 {
-  gSchedulerActive = 1;
+  gSchedulerActive = TRUE;
   chThdCreateStatic(wa_fc_scheduler, sizeof(wa_fc_scheduler), NORMALPRIO + 1,
       fc_scheduler, NULL);
 
@@ -721,4 +722,10 @@ fcscheduler_stopThread(void)
   chMBPostI(&mailboxIn, (uint32_t) MSG_STOPP);
   chMBPostI(&mailboxIn, (uint32_t) 1);
   chSysUnlock();
+}
+
+int fcscheduler_isRunning(void)
+{
+	/* check the last variable, that is cleared in the threads (@see fc_scheduler()) */
+	return (wallcfg.pLookupTable != NULL);
 }

@@ -113,4 +113,11 @@ void fcscheduler_startThread(void);
  */
 void fcscheduler_stopThread(void);
 
+/** @fn int fcscheduler_isRunning(void)
+ * @brief status information, if the scheduler is running
+ *@return TRUE: if the scheduler is runnning
+ *@return FALSE: no files will be automatically displayed
+ */
+int fcscheduler_isRunning(void);
+
 #endif /* End of _FCSCHEDULER_H */

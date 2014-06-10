@@ -17,6 +17,7 @@ static int activated = 0;
 void ugfx_cmd_manualtesting_init()
 {
 	int row, col, offset, retStatus;
+
 	PRINT("\r\n");
 
 	pWallconfig = chHeapAlloc(0, sizeof(wallconf_t));
