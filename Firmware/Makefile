@@ -97,6 +97,7 @@ include $(APP_LIBS)/fc/chibios.mk
 APP = src
 include $(APP)/src.mk
 include $(APP)/flash.mk
+include $(APP)/fatfswrapper.mk
 
 # Define linker script file here
 LDSCRIPT= $(PORTLD)/STM32F407xG.ld
