@@ -24,7 +24,7 @@ cmd_cat(BaseSequentialStream *chp, int argc, char *argv[])
     }
   while (!wf_eof(&fp));
 
-  f_close(&fp);
+  wf_close(&fp);
 
   chprintf(chp, "\r\n");
 }

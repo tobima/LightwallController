@@ -39,7 +39,7 @@ fcstatic_open_sdcard(void)
   err = wf_getfree("/", &clusters, &fsp);
   if (err != FR_OK)
     {
-      /* FS: f_getfree() failed. */
+      /* FS: wf_getfree() failed. */
       return -1;
     }
   return 1;

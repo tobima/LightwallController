@@ -184,11 +184,11 @@ ini_parse(const char* filename, int
 
   if (wf_open(&file, (TCHAR*) filename, FA_READ) != FR_OK)
     {
-      strncpy0(ini_error, "f_open", 7);
+      strncpy0(ini_error, "wf_open", 7);
       return -1;
     }
   error = ini_parse_file(&file, handler, user);
-  f_close(&file);
+  wf_close(&file);
   return error;
 }
 

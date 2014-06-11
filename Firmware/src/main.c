@@ -562,7 +562,7 @@ cmd_tree(BaseSequentialStream *chp, int argc, char *argv[])
   err = wf_getfree("/", &clusters, &fsp);
   if (err != FR_OK)
     {
-      chprintf(chp, "FS: f_getfree() failed. %lu\r\n", err);
+      chprintf(chp, "FS: wf_getfree() failed. %lu\r\n", err);
       return;
     }
 
@@ -747,6 +747,9 @@ main(void)
    * SDCard
    */
   chprintf((BaseSequentialStream *) &SD6, "Initialazing SDCARD driver ...");
+
+  /* start the thread for the wrapping module */
+  wf_init(NORMALPRIO - 2);
 
   /*
    * Activates the SDC driver 1 using default configuration.
