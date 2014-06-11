@@ -888,6 +888,9 @@ main(void)
 
 #ifdef UGFX_WALL
       fcwall_processEvents(&SDU1);
+
+      /* Always update the LCD (internally blocked; if there are no manual tests is active) */
+      ugfx_cmd_manualtesting_process(); /*FIXME move this visualization into a separate thread, so the GUI is not necessary in the scheduler either */
 #endif
     }
 }
