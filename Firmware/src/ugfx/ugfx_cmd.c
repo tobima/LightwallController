@@ -191,10 +191,6 @@ const char *ugfx_cmd_cfgload(uint16_t instance)
 void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[])
 {
 	int status;
-	chprintf(chp, "GUI UTIL\r\n"
-			"Possible arguments are:\r\n"
-			"- calibrate\tCalibrate the touchscreen\r\n"
-			"- erase\tErase the necessary flash for the calibration data\r\n");
 
 	/* Handle warnings: */
 	if (argc >= 1)
@@ -217,5 +213,12 @@ void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[])
 			}
 			chprintf(chp, "Erased at 0x%x %d bytes \r\n", FLASH_CONFIG_BASEADDR, CALIBRATION_SIZE);
 		}
+	}
+	else
+	{
+		chprintf(chp, "GUI UTIL\r\n"
+				"Possible arguments are:\r\n"
+				"- calibrate\tCalibrate the touchscreen\r\n"
+				"- erase\tErase the necessary flash for the calibration data\r\n");
 	}
 }
