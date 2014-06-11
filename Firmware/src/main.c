@@ -51,7 +51,7 @@
 
 #include "cmd/cmd.h"
 
-#include "ff.h"
+#include "fatfsWrapper.h"
 
 /*===========================================================================*/
 /* Command line related.                                                     */
@@ -167,14 +167,14 @@ print_fsusage(BaseSequentialStream *chp, int argc, char *argv[])
   (void) argc;
   (void) argv;
 
-  if (f_getfree("/", &clusters, &fsp) == FR_OK)
+  if (wf_getfree("/", &clusters, &fsp) == FR_OK)
     {
       chprintf(chp,
           "FS: %lu free clusters, %lu sectors per cluster, %lu bytes free\r\n",
           clusters, (uint32_t) SDC_FS.csize,
           clusters * (uint32_t) SDC_FS.csize * (uint32_t) MMCSD_BLOCK_SIZE);
 
-      f_opendir(&dir, "fc/conf");
+      wf_opendir(&dir, "fc/conf");
     }
 }
 
@@ -512,13 +512,13 @@ scan_files(BaseSequentialStream *chp, char *path)
   fno.lfname = 0;
   fno.lfsize = 0;
 #endif
-  res = f_opendir(&dir, path);
+  res = wf_opendir(&dir, path);
   if (res == FR_OK)
     {
       i = strlen(path);
       for (;;)
         {
-          res = f_readdir(&dir, &fno);
+          res = wf_readdir(&dir, &fno);
           if (res != FR_OK || fno.fname[0] == 0)
             break;
           if (fno.fname[0] == '.')
@@ -559,7 +559,7 @@ cmd_tree(BaseSequentialStream *chp, int argc, char *argv[])
       chprintf(chp, "File System not mounted\r\n");
       return;
     }
-  err = f_getfree("/", &clusters, &fsp);
+  err = wf_getfree("/", &clusters, &fsp);
   if (err != FR_OK)
     {
       chprintf(chp, "FS: f_getfree() failed. %lu\r\n", err);
@@ -635,8 +635,8 @@ InsertHandler(eventid_t id)
         return;
     }
 
-  err = f_mount(0, &SDC_FS);
-  f_getfree("/", &clusters, &fsp);
+  err = wf_mount(0, &SDC_FS);
+  wf_getfree("/", &clusters, &fsp);
   if (err != FR_OK)
     {
       sdcDisconnect(&SDCD1);

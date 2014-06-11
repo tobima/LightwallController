@@ -90,7 +90,7 @@ ini_parse_file(FIL* file, int
 #endif
 
   /* Scan through file line by line */
-  while (f_gets(line, INI_MAX_LINE, file) != NULL)
+  while (wf_gets(line, INI_MAX_LINE, file) != NULL)
     {
       lineno++;
 
@@ -182,7 +182,7 @@ ini_parse(const char* filename, int
   FIL file;
   int error;
 
-  if (f_open(&file, (TCHAR*) filename, FA_READ) != FR_OK)
+  if (wf_open(&file, (TCHAR*) filename, FA_READ) != FR_OK)
     {
       strncpy0(ini_error, "f_open", 7);
       return -1;

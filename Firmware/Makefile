@@ -118,6 +118,7 @@ CSRC = $(PORTSRC) \
        $(CHIBIOS)/os/various/shell.c \
        $(LIBSRC) \
        $(FLASHSRC) \
+       $(FATFSWRAPPERSRC) \
        $(APPSRC)
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -154,6 +155,7 @@ INCDIR = $(PORTINC) $(KERNINC) $(LIBINC) \
          $(GFXINC) \
          $(CHIBIOS)/os/various \
          $(FLASHINC) \
+         $(FATFSWRAPPERINC) \
          $(APPINC)
 
 #

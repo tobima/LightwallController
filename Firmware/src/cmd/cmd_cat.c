@@ -1,6 +1,6 @@
 #include "ch.h"
 #include "chprintf.h"
-#include "ff.h"
+#include "fatfsWrapper.h"
 
 void
 cmd_cat(BaseSequentialStream *chp, int argc, char *argv[])
@@ -12,17 +12,17 @@ cmd_cat(BaseSequentialStream *chp, int argc, char *argv[])
   if (argc < 1)
     return;
 
-  if (f_open(&fp, (TCHAR*) *argv, FA_READ) != FR_OK)
+  if (wf_open(&fp, (TCHAR*) *argv, FA_READ) != FR_OK)
     return;
 
   do
     {
-      if (f_read(&fp, (TCHAR*) buffer, 32, (UINT*) &br) != FR_OK)
+      if (wf_read(&fp, (TCHAR*) buffer, 32, (UINT*) &br) != FR_OK)
         return;
 
       chSequentialStreamWrite(chp, buffer, br);
     }
-  while (!f_eof(&fp));
+  while (!wf_eof(&fp));
 
   f_close(&fp);
 

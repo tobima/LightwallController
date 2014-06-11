@@ -36,7 +36,7 @@ fcstatic_open_sdcard(void)
   uint32_t clusters;
   FATFS *fsp;
 
-  err = f_getfree("/", &clusters, &fsp);
+  err = wf_getfree("/", &clusters, &fsp);
   if (err != FR_OK)
     {
       /* FS: f_getfree() failed. */
@@ -60,13 +60,13 @@ fcstatic_getnext_file(char* path, uint32_t length, uint32_t *pFilelength,
   fno.lfname = 0;
   fno.lfsize = 0;
 #endif
-  res = f_opendir(&dir, path);
+  res = wf_opendir(&dir, path);
   if (res == FR_OK)
     {
       i = strlen(path);
       for (;;)
         {
-          res = f_readdir(&dir, &fno);
+          res = wf_readdir(&dir, &fno);
           if (res != FR_OK || fno.fname[0] == 0)
             break;
           if (fno.fname[0] == '.')
