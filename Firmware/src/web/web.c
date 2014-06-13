@@ -89,12 +89,12 @@ static void http_server_serve(struct netconn *conn)
             /* Send our HTML page */
             netconn_write(conn, http_index_html, sizeof(http_index_html)-1, NETCONN_NOCOPY);
 
-            res = f_opendir(&dir, "/");
+            res = wf_opendir(&dir, "/");
             if (res == FR_OK)
               {
                 for (;;)
                   {
-                    res = f_readdir(&dir, &fno);
+                    res = wf_readdir(&dir, &fno);
                     if (res != FR_OK || fno.fname[0] == 0)
                     break;
                     if (fno.fname[0] == '.')

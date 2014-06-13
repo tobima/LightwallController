@@ -18,14 +18,10 @@ void ugfx_cmd_manualtesting_init()
 {
 	int row, col, offset, retStatus;
 
-	PRINT("\r\n");
-
 	pWallconfig = chHeapAlloc(0, sizeof(wallconf_t));
 
 	/* Load wall configuration */
 	retStatus = readConfigurationFile(pWallconfig);
-
-	PRINT("%s Reading config returned %d\r\n", __FILE__, retStatus);
 
 	if (retStatus == 0)
 	{
@@ -40,7 +36,7 @@ void ugfx_cmd_manualtesting_init()
 				dmx_buffer.buffer[pWallconfig->pLookupTable[offset] + 2] = 0;
 			}
 		}
-		PRINT("%s DMX buffer cleaned\r\n", __FILE__);
+		PRINT("%s DMX buffer cleaned, wall resolution is %dx%d\r\n", __FILE__, pWallconfig->width, pWallconfig->height);
 	}
 	activated = TRUE;
 }

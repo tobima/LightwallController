@@ -9,6 +9,10 @@
 #define UGFX_CMD_H_
 
 #include "gfx.h"
+
+#include "ch.h"
+#include "hal.h"
+
 #include "chprintf.h"
 
 #define UGFX_CMD_MANUAL_START   1
