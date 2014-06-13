@@ -34,6 +34,7 @@ APPDEFS =
 
 # Append the WALL
 APPSRC += src/ugfx/fcwall.c \
+	src/ugfx/wall_simu.c \
 	src/ugfx/ugfx_cmd.c \
 	src/ugfx/ugfx_cmd_manual.c \
 	src/ugfx/ugfx_util.c
