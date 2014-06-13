@@ -862,7 +862,7 @@ main(void)
   /**************************************
      * Creates the DMX buffer visualization thread.
      */
-  chThdSleep(MS2ST(50));
+  chThdSleep(MS2ST(100));
   ugfx_wall_simu_startThread();
 #endif
 
