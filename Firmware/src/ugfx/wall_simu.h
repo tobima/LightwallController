@@ -22,17 +22,6 @@
  */
 extern WORKING_AREA(wa_fc_wallsimu, UGFX_WALL_SIMU_THREAD_STACK_SIZE);
 
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-  msg_t
-  fc_wallsimu(void *p);
-#ifdef __cplusplus
-}
-#endif
-
 /** @fn void WALL_SIMU_startThread(void)
  * @brief function to start a thread
  * This function is asynchron and will return immediately.

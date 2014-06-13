@@ -22,9 +22,9 @@ msg_t
 {
 	int row, col, offset;
 
-	chRegSetThreadName("DMX 2 UGFX visualization");
+	chRegSetThreadName("dmx2ugfx");
 	    (void) p;
-
+#if 0
 	/* Load wall configuration */
     readConfigurationFile(&wallcfg);
 
@@ -49,7 +49,13 @@ msg_t
     {
     	chHeapFree(wallcfg.pLookupTable);
     }
-
+#else
+    /* Some dummy debug code */
+    while (gWallSimuRunning)
+    {
+    	chThdSleep(MS2ST(200));
+    }
+#endif
 	return RDY_OK;
 }
 
