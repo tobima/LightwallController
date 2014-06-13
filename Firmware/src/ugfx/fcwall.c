@@ -184,25 +184,11 @@ void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 
 void fcwall_init(int w, int h)
 {
-	coord_t width, height;
-	int x = 0;
-	int y = 0;
 	wallWidth = w;
 	wallHeight = h;
 
-	width = gdispGetWidth();
-	height = gdispGetHeight();
-
-	boxWidth = ((int) (width / w))-1;
-	boxHeight = ((int) ((height-INFO_TEXT_HEIGHT) / h))-1;
-
-	for(x=0; x < w; x++)
-	{
-		for(y=0; y < h; y++)
-		{
-			setBox(x,y, 0,0,0);
-		}
-	}
+	boxWidth = ((int) (gdispGetWidth() / w))-1;
+	boxHeight = ((int) ((gdispGetHeight() - INFO_TEXT_HEIGHT) / h))-1;
 }
 
 
@@ -234,6 +220,8 @@ void fcwall_initWindow(void)
   geventListenerInit(&gl);
   gwinAttachListener(&gl);
 }
+
+
 
 void fcwall_processEvents(SerialUSBDriver* pSDU1)
 {

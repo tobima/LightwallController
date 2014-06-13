@@ -773,7 +773,7 @@ main(void)
   gfxInit();
 
   fcwall_initWindow();
-  ugfx_wall_simu_startThread();
+  //FIXME: ugfx_wall_simu_startThread();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 

@@ -28,6 +28,8 @@ msg_t
 	/* Load wall configuration */
     readConfigurationFile(&wallcfg);
 
+    fcwall_init(wallcfg.width, wallcfg.height);
+
     while (gWallSimuRunning)
     {
 		for (row = 0; row < wallcfg.height; row++)

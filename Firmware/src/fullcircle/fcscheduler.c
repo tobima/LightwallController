@@ -378,13 +378,11 @@ msg_t fc_scheduler(void *p)
     /* Load wall configuration */
     readConfigurationFile(&wallcfg);
 
-      /* Load the configuration */
-      hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
+    /* Load the configuration */
+    hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
 
-      ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
-  #ifdef UGFX_WALL
-      fcwall_init(wallcfg.width, wallcfg.height);
-  #endif
+    ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
+
     /* Prepare Mailbox to communicate with the others */
     chMBInit(&mailboxIn, (msg_t *) buffer4mailbox2, INPUT_MAILBOX_SIZE);
     path[0] = 0;
