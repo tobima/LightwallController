@@ -292,7 +292,4 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
             FCWALL_USBPRINT("Input Event %d\r\n", pe->type);
             break;
   }
-
-  /* Always update the LCD (internally blocked; if there are no manual tests is active) */
-  ugfx_cmd_manualtesting_process();
 }

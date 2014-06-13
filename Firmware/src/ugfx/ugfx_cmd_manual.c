@@ -52,24 +52,3 @@ void ugfx_cmd_manualtesting_stop()
 	chHeapFree(pWallconfig);
 }
 
-void ugfx_cmd_manualtesting_process()
-{
-	int row, col, offset;
-
-	/* Nothing will be done if deactivated */
-	if (!activated)
-		return;
-
-	/* Display the current DMX buffer on the screen */
-	for (row = 0; row < pWallconfig->height; row++)
-	{
-		for (col = 0; col < pWallconfig->width; col++)
-		{
-			offset = (row * pWallconfig->width + col);
-			setBox(col, row,
-					dmx_buffer.buffer[pWallconfig->pLookupTable[offset] + 0],
-					dmx_buffer.buffer[pWallconfig->pLookupTable[offset] + 1],
-					dmx_buffer.buffer[pWallconfig->pLookupTable[offset] + 2]);
-		}
-	}
-}

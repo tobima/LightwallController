@@ -135,7 +135,7 @@ static int fcsched_handleInputMailbox(void)
                 {
               case MSG_ACTIVATE_SHELL:
                 gDebugShellSched = (BaseSequentialStream *) msg2;
-		FCSCHED_PRINT("Activated debugging\r\n");
+                FCSCHED_PRINT("Activated debugging\r\n");
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
               case MSG_SETFPS:
@@ -619,9 +619,6 @@ fcsched_printFrame(uint8_t* pBuffer, int width, int height,
                   pBuffer[offset * 3 + 1], pWallcfg->dimmFactor);
               dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 2] = dimmValue(
                   pBuffer[offset * 3 + 2], pWallcfg->dimmFactor);
-#ifdef UGFX_WALL
-              setBox(col,row, pBuffer[offset * 3 + 0], pBuffer[offset * 3 + 1], pBuffer[offset * 3 + 2]);
-#endif
             }
         }
     }

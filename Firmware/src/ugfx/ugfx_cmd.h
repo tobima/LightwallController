@@ -56,9 +56,4 @@ void ugfx_cmd_manualtesting_init(void);
  */
 void ugfx_cmd_manualtesting_stop(void);
 
-/** @fn void ugfx_cmd_manualtesting_process(void)
- * @brief Update the LCD screen
- * The content of the DMX buffer is updated on the LCD
- */
-void ugfx_cmd_manualtesting_process(void);
 #endif /* UGFX_CMD_H_ */

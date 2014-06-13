@@ -26,6 +26,7 @@
 #include "fcwall.h"
 #include "ugfx_util.h"
 #include "ugfx_cmd.h"
+#include "wall_simu.h"
 #endif
 
 #include "ini/ini.h"
@@ -772,6 +773,7 @@ main(void)
   gfxInit();
 
   fcwall_initWindow();
+  ugfx_wall_simu_startThread();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 
