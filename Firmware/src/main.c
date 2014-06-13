@@ -776,7 +776,6 @@ main(void)
   gfxInit();
 
   fcwall_initWindow();
-  ugfx_wall_simu_startThread();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 
@@ -849,7 +848,7 @@ main(void)
   /**************************************
    * Creates the scheduler thread.
    */
-  chThdSleep(MS2ST(100));
+  chThdSleep(MS2ST(50));
   fcscheduler_startThread();
 
   /**************************************
@@ -857,6 +856,16 @@ main(void)
    */
   //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
   //                server_thread, NULL);
+
+#ifdef UGFX_WALL
+
+  /**************************************
+     * Creates the DMX buffer visualization thread.
+     */
+  chThdSleep(MS2ST(50));
+  ugfx_wall_simu_startThread();
+#endif
+
 #endif
 
   chprintf((BaseSequentialStream *) &SD6, "Initializing Shell...");

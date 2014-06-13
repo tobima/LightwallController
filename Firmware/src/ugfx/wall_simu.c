@@ -11,6 +11,7 @@
 #include "fcscheduler.h"
 #include "fcwall.h"
 #include "dmx/dmx.h"
+#include "ugfx_cmd.h"
 
 static wallconf_t	wallcfg;
 static uint8_t		gWallSimuRunning = TRUE;
@@ -24,12 +25,12 @@ msg_t
 
 	chRegSetThreadName("dmx2ugfx");
 	    (void) p;
-#if 0
+#if 1
 	/* Load wall configuration */
     readConfigurationFile(&wallcfg);
 
     fcwall_init(wallcfg.width, wallcfg.height);
-
+    PRINT("%s wall %dx%d\n", __FILE__, wallcfg.width, wallcfg.height);
     while (gWallSimuRunning)
     {
 		for (row = 0; row < wallcfg.height; row++)
@@ -43,6 +44,9 @@ msg_t
 								dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 2]);
 			}
 		}
+
+		chThdSleep(MS2ST(1000 / wallcfg.fps));
+		PRINT("Sleep %d Hz (%d ms)\n", wallcfg.fps, (1000 / wallcfg.fps));
     }
 
     if (wallcfg.pLookupTable)
@@ -61,6 +65,7 @@ msg_t
 
 void ugfx_wall_simu_startThread(void)
 {
+	PRINT("%s starting thread\n", __FILE__);
 	chThdCreateStatic(wa_fc_wallsimu, sizeof(wa_fc_wallsimu), NORMALPRIO + 1,
 			fc_wallsimu, NULL);
 }
