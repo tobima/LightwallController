@@ -63,7 +63,7 @@ static msg_t fc_wallsimu(void *p)
 
 void ugfx_wall_simu_startThread(void)
 {
-	PRINT("%s wall %dx%d\r\n", __FILE__, wallcfg.width, wallcfg.height);
+	PRINT("%s starting...\r\n", __FILE__);
 	chSysLock();
 	gWallSimuRunning = TRUE;
 	chSysUnlock();
