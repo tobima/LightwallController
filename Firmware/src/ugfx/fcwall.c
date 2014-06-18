@@ -283,20 +283,20 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                       FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
                   }
                   break;
-          case GEVENT_MOUSE:
+          case GEVENT_TOUCH:
         	  FCWALL_USBPRINT("GEVENT_MOUSE Event\r\n", pe->type);
+
+        	  /* convert event into a MouseEvent */
+			  pem = (GEventMouse *) pe;
+			  if ((pem->current_buttons & GINPUT_MOUSE_BTN_LEFT))
+			  {
+				gdispDrawPixel(pem->x, pem->y, Green);
+				FCWALL_USBPRINT("Touched: %dx%d\r\n", pem->x, pem->y);
+			  }
         	  break;
           default:
-            FCWALL_UARTPRINT("Input Event %d\r\n", pe->type);
-            FCWALL_USBPRINT("Input Event %d\r\n", pe->type);
-
-            /* convert event into a MouseEvent */
-            pem = (GEventMouse *) pe;
-            if ((pem->current_buttons & GINPUT_MOUSE_BTN_LEFT))
-            {
-            	gdispDrawPixel(pem->x, pem->y, Green);
-            	FCWALL_USBPRINT("Touched: %dx%d\r\n", pem->x, pem->y);
-            }
+            FCWALL_UARTPRINT("Input Event %X\r\n", pe->type);
+            FCWALL_USBPRINT("Input Event %X\r\n", pe->type);
             break;
   }
 }
