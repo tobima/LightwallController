@@ -18,6 +18,8 @@
 #define MANUALTEST_TXT_START    "Start manual tests"
 #define MANUALTEST_TXT_ENDED    "Stop manual testing"
 
+#define UNSELECTED				-1	/**< Value, describing the selected box value as invalid */
+
 #define IF_MENU_VISIBLE         if (GWmenu != NULL && gwinGetVisible(GWmenu))
 
 #define FCWALL_USBPRINT( ... )    if (pSDU1) { chprintf((BaseSequentialStream *) pSDU1,  __VA_ARGS__); }
@@ -50,6 +52,9 @@ static GHandle GWmenu = NULL;
 static uint8_t stopUIUpdate = FALSE;
 
 static uint8_t gManualStatus = 0;
+
+static int gSelectedX = UNSELECTED;
+static int gSelectedY = UNSELECTED;
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -143,6 +148,12 @@ static void deleteMenuWindow(void)
   GWmenu = NULL;
 }
 
+static void selectBox(int mouseX, int mouseY)
+{
+	gSelectedX = (int) (mouseX / boxWidth);
+	gSelectedY = wallHeight - ((int) (mouseY / boxHeight));
+}
+
 /******************************************************************************
  * EXTERN FUNCTIONS
  ******************************************************************************/
@@ -177,9 +188,16 @@ void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 
 	color_t col = HTML2COLOR(hexCol);
 	gwinSetColor(gGWdefault, col);
-        gwinFillArea(gGWdefault, xBox, yBox, boxWidth, boxHeight);
-        gwinSetColor(gGWdefault, Yellow);
-        gwinDrawBox (gGWdefault, xBox, yBox, boxWidth, boxHeight);
+	gwinFillArea(gGWdefault, xBox, yBox, boxWidth, boxHeight);
+	if (gSelectedX == x && gSelectedY == y)
+	{
+		gwinSetColor(gGWdefault, Red); /* draw a red box around the selected one */
+	}
+	else
+	{
+		gwinSetColor(gGWdefault, Yellow); /* normally the box has a yellow border */
+	}
+	gwinDrawBox (gGWdefault, xBox, yBox, boxWidth, boxHeight);
 }
 
 void fcwall_init(int w, int h)
@@ -284,14 +302,13 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   }
                   break;
           case GEVENT_TOUCH:
-        	  FCWALL_USBPRINT("GEVENT_MOUSE Event\r\n", pe->type);
 
         	  /* convert event into a MouseEvent */
 			  pem = (GEventMouse *) pe;
 			  if ((pem->current_buttons & GINPUT_MOUSE_BTN_LEFT))
 			  {
 				gdispDrawPixel(pem->x, pem->y, Green);
-				FCWALL_USBPRINT("Touched: %dx%d\r\n", pem->x, pem->y);
+				selectBox(pem->x, pem->y);
 			  }
         	  break;
           default:
