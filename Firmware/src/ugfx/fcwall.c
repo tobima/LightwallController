@@ -11,6 +11,7 @@
 #include "gfx.h"
 #include "ff.h"
 #include "ugfx_cmd.h"
+#include "ugfx_util.h"
 
 #define INFO_TEXT_HEIGHT        25
 #define WIN_MENU_TOPMARGIN      10
@@ -246,7 +247,8 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
   GEvent* 		pe;
   GSourceHandle	mouse;
   GEventMouse	*pem;
-  // Get an Event
+
+  /* Get an Event */
   pe = geventEventWait(&gl, TIME_INFINITE);
 
   switch(pe->type)
@@ -302,13 +304,18 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   }
                   break;
           case GEVENT_TOUCH:
-
         	  /* convert event into a MouseEvent */
 			  pem = (GEventMouse *) pe;
 			  if ((pem->current_buttons & GINPUT_MOUSE_BTN_LEFT))
 			  {
 				gdispDrawPixel(pem->x, pem->y, Green);
 				selectBox(pem->x, pem->y);
+
+				if (gSelectedX != UNSELECTED && gSelectedY != UNSELECTED)
+				{
+					gdispPrintf(5, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256,
+									"%d x %d", gSelectedX, gSelectedY);
+				}
 			  }
         	  break;
           default:
