@@ -37,7 +37,7 @@ void fcwall_initWindow(void);
 
 /**
  * @fn void fcwall_processEvents(SerialUSBDriver* pSDU1)
- * @param[in] pSDU1     (optinal) parameter necessary to print debug messages on the serial console
+ * @param[in] pSDU1     (optional) parameter necessary to print debug messages on the serial console
  */
 void fcwall_processEvents(SerialUSBDriver* pSDU1);
 

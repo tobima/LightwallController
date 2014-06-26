@@ -8,11 +8,11 @@
  */
 
 #include "ch.h"
-#include <ff.h>
 #include <ctype.h>
 #include <string.h>
 
 #include "ini.h"
+#include "fatfsWrapper.h"
 
 #define MAX_SECTION 50
 #define MAX_NAME 50

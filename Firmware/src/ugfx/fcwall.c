@@ -240,8 +240,6 @@ void fcwall_initWindow(void)
   gwinAttachListener(&gl);
 }
 
-
-
 void fcwall_processEvents(SerialUSBDriver* pSDU1)
 {
   GEvent* 		pe;
@@ -315,6 +313,11 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
 				{
 					gdispPrintf(5, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256,
 									"%d x %d", gSelectedX, gSelectedY);
+
+					/**** Activate Buttons again, by removing the mouse listener ***/
+					/* Initialize the first mouse/touch and get its handle */
+					mouse = ginputGetMouse(0);
+					geventDetachSourceListeners(mouse);
 				}
 			  }
         	  break;
