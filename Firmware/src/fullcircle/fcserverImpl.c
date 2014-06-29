@@ -108,7 +108,8 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
   {
       /* Write the DMX buffer */
 	  hwal_memcpy(dmx_fb, rgb24Buffer, width * height * DMX_RGB_COLOR_WIDTH);
-      
+      dmx_update(width, height);
+
       chSysLock();
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
       chSysUnlock();

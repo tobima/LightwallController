@@ -71,7 +71,8 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
           dmx_fb[(offset * DMX_RGB_COLOR_WIDTH) + 0] = red;
           dmx_fb[(offset * DMX_RGB_COLOR_WIDTH) + 1] = green;
           dmx_fb[(offset * DMX_RGB_COLOR_WIDTH) + 2] = blue;
-          chprintf(chp, "Set DMX at %d with 0x%2X%2X%2X\r\n", (offset * 3),           			red, green, blue);
+          chprintf(chp, "Set DMX at %d with 0x%2X%2X%2X\r\n", (offset * 3), red, green, blue);
+          dmx_update(1, offset);
         }
     }
 	else if (strcmp(argv[0], "fade") == 0)

@@ -277,6 +277,20 @@ void dmx_dim(int value)
 	}
 }
 
+int dmx_update(int width, int height)
+{
+	int memorylength = width * height * DMX_RGB_COLOR_WIDTH;
+
+	/* Catch buffer overflows */
+	if (memorylength > DMX_BUFFER_MAX)
+	{
+	  return FALSE;
+	}
+
+	dmx_buffer.length = memorylength;
+	return TRUE;
+}
+
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/

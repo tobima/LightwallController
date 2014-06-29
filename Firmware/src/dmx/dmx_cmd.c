@@ -160,13 +160,10 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
             {
               int size = atoi(argv[1]);
 
-              chprintf(chp, "LACY DEVELOPER FOUND!\r\n");
-              /**FIXME
+              dmx_update(1, size / DMX_RGB_COLOR_WIDTH);
               chprintf(chp,
-                  "Update size of the universe from %d to %d bytes.\r\n",
-                  dmx_buffer.length, size);
-              dmx_buffer.length = size;
-              */
+                  "Update size of the universe %d bytes (%d x %d ).\r\n",
+                  size, 1, (size / DMX_RGB_COLOR_WIDTH) );
             }
         }
       else if (strcmp(argv[0], "help") == 0)

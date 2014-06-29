@@ -444,6 +444,7 @@ msg_t fc_scheduler(void *p)
           {
             /* Write the DMX buffer */
         	hwal_memcpy(dmx_fb, rgb24, seq.width * seq.height * DMX_RGB_COLOR_WIDTH);
+        	dmx_update(seq.width , seq.height);
           }
         break;
       case FCSRC_STATE_NETWORK:

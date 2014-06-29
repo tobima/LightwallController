@@ -15,6 +15,14 @@
 #ifndef _DMX_H_
 #define _DMX_H_ 
 
+#ifndef TRUE
+#define TRUE	1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 /** @addtogroup DMX */
 /*@{*/
 
@@ -30,7 +38,7 @@
 
 #define DMX_RGB_COLOR_WIDTH			3				/**< Amount of bytes for the 3 colors in each box */
 
-extern uint8_t dmx_fb[DMX_BUFFER_MAX]; /**< Framebuffer that is converted and sent via DMX */
+extern uint8_t dmx_fb[DMX_BUFFER_MAX];		/**< Framebuffer that is converted and sent via DMX */
 
 extern WORKING_AREA(wa_dmx, DMX_THREAD_STACK_SIZE);
 
@@ -59,7 +67,22 @@ extern "C"
    */
   void dmx_getDefaultConfiguration(int *pFPS, int *pDim);
 
+  /** @fn void dmx_dim(int value)
+   * @param[in] value	brightness: 0 (dark) - 100 (normal/ maximum)
+   * @brief reduce the value by the given percentage before sending them via DMX
+   */
   void dmx_dim(int value);
+
+  /** @fn void dmx_update(int width, int height)
+   * @brief Update the resolution of the frame to display.
+   *
+   * @param[in] width	of the current frame
+   * @param[in] height	of the current frame
+   *
+   * @return 	TRUE: if the resolution could be updated successfully.
+   * 			FALSE: when this resolution is too big and not supported.
+   */
+  int dmx_update(int width, int height);
 
 #ifdef __cplusplus
 }
