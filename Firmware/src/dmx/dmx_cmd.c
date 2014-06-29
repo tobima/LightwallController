@@ -48,14 +48,7 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 	      /*Offset adaption: */
 	      offset--;
 
-              if (dmx_buffer.length < offset)
-                {
-                  chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
-                      dmx_buffer.length, offset + 1);
-                  dmx_buffer.length = offset + 1;
-                }
-
-              dmx_buffer.buffer[offset] = value;
+              dmx_fb[offset] = value;
               chprintf(chp, "Set DMX at %d with 0x%2X (%d)\r\n", offset, value,
                   value);
             }
@@ -111,14 +104,8 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 		}
 
 		/* Update the DMX buffer */
-		memcpy( &(dmx_buffer.buffer[offset]), tmpDMX, length);
-		if (dmx_buffer.length < (offset + length) )
-                {
-                  chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
-                      dmx_buffer.length, (offset + length));
-                  dmx_buffer.length = (offset + length);
-                }
-		
+		memcpy( &(dmx_fb[offset]), tmpDMX, length);
+
 		/* clean the memory again */
 		chHeapFree(tmpDMX);
             }
@@ -137,17 +124,10 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
                   end = tmp;
                 }
 
-              if (dmx_buffer.length < end)
-                {
-                  chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
-                      dmx_buffer.length, end + 1);
-                  dmx_buffer.length = end + 1;
-                }
-
               length = end - offset;
               for (; offset < end; offset++)
                 {
-                  dmx_buffer.buffer[offset] = value;
+                  dmx_fb[offset] = value;
                 }
               chprintf(chp, "Filled DMX with %2X (%d times)\r\n", value,
                   length);
@@ -155,12 +135,19 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
         }
       else if (strcmp(argv[0], "show") == 0)
         {
-          int i;
-          chprintf(chp, "DMX is filled with %d byte\r\n", dmx_buffer.length);
-          for (i = 0; i < dmx_buffer.length; i++)
-            {
-              chprintf(chp, "%.2X", dmx_buffer.buffer[i]);
-            }
+          int i, width, height = 0;
+          dmx_getScreenresolution(&width, &height);
+          chprintf(chp, "DMX is filled with %d x %d pixel\r\n", width, height);
+          for (i = 0; i < width * height; i++)
+          {
+              chprintf(chp, "%.2X|", dmx_fb[i + 0], dmx_fb[i + 1], dmx_fb[i + 2]);
+
+              /* generate a new line after each row */
+              if (i % width == 0)
+              {
+            	  chprintf(chp, "\r\n");
+              }
+          }
           chprintf(chp, "\r\n");
         }
       else if (strcmp(argv[0], "shrink") == 0)
@@ -172,10 +159,14 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
           else
             {
               int size = atoi(argv[1]);
+
+              chprintf(chp, "LACY DEVELOPER FOUND!\r\n");
+              /**FIXME
               chprintf(chp,
                   "Update size of the universe from %d to %d bytes.\r\n",
                   dmx_buffer.length, size);
               dmx_buffer.length = size;
+              */
             }
         }
       else if (strcmp(argv[0], "help") == 0)

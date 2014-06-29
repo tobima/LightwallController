@@ -2,12 +2,28 @@
 #include "hal.h"
 #include "dmx.h"
 
+#include <string.h> /* needed for memcpy */
+
+#ifndef DISABLE_FILESYSTEM
+#include "ini/ini.h"
+#include <string.h>
+#include <stdlib.h>
+#define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+#endif
+
 /**
  * Stack area for the dmx thread.
  */
 WORKING_AREA(wa_dmx, DMX_THREAD_STACK_SIZE);
 
 #define FCSCHED_WALLCFG_FILE	"fc/conf/wall"
+
+typedef struct
+{
+  uint8_t startbyte;
+  uint8_t buffer[DMX_BUFFER_MAX];
+  uint16_t length;
+} DMXBuffer;
 
 
 /** @var wallconf_t
@@ -34,7 +50,13 @@ typedef struct
  * @param[out]	pConfiguration	Read configuration
  * @return 0 on success,
  */
-int readConfigurationFile(wallconf_t* pConfiguration);
+static int readConfigurationFile(wallconf_t* pConfiguration);
+
+/******************************************************************************
+ * GLOBAL VARIABLES
+ ******************************************************************************/
+
+uint8_t dmx_fb[DMX_BUFFER_MAX];
 
 /******************************************************************************
  * LOCAL VARIABLES
@@ -48,7 +70,7 @@ static DMXBuffer dmx_buffer;
 
 static Semaphore sem;
 
-
+static wallconf_t wallcfg;
 
 /*
  * GPT5 callback.
@@ -144,7 +166,10 @@ DMXInit(void)
   dmx_buffer.length = 1;
 
   /* Load wall configuration */
+  memset(&wallcfg, 0, sizeof(wallconf_t));
   readConfigurationFile(&wallcfg);
+
+  dmx_buffer.length = wallcfg.width * wallcfg.height * DMX_RGB_COLOR_WIDTH;
 }
 
 /**
@@ -199,7 +224,45 @@ dmxthread(void *arg)
 
 void dmx_getScreenresolution(int *pWidth, int *pHeight)
 {
+	/* Handle fault parameter */
+	if (pWidth == NULL || pHeight == NULL)
+	{
+		return;
+	}
 
+	/* Check for an valid configuration */
+	if (wallcfg.pLookupTable)
+	{
+		(*pWidth) = wallcfg.width;
+		(*pHeight) = wallcfg.height;
+	}
+	else
+	{
+		(*pHeight) = 1;
+		(*pWidth) = dmx_buffer.length * DMX_RGB_COLOR_WIDTH;
+	}
+}
+
+void dmx_getDefaultConfiguration(int *pFPS, int *pDim)
+{
+	/* Handle fault parameter */
+	if (pFPS == NULL || pDim == NULL)
+	{
+		return;
+	}
+
+	/* Check for an valid configuration */
+	if (wallcfg.pLookupTable)
+	{
+		(*pFPS) = wallcfg.fps;
+		(*pDim) = wallcfg.dimmFactor;
+	}
+	else
+	{
+		/* Insert fault values (as they are out of range) to indicate that no configuration is available */
+		(*pFPS) = -1;
+		(*pDim) = -1;
+	}
 }
 
 /******************************************************************************
@@ -231,17 +294,14 @@ wall_handler(void* config, const char* section, const char* name,
   if (MATCH("global", "width"))
     {
       pconfig->width = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: width: %3d\r\n", pconfig->width);
     }
   else if (MATCH("global", "height"))
     {
       pconfig->height = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: height: %3d\r\n", pconfig->height);
     }
   else if (MATCH("global", "fps"))
     {
       pconfig->fps = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: fps: %3d\r\n", pconfig->fps);
     }
   else if (MATCH("global", "dim"))
     {
@@ -256,7 +316,7 @@ wall_handler(void* config, const char* section, const char* name,
           pconfig->pLookupTable = chHeapAlloc(0, memoryLength);
           if (pconfig->pLookupTable == NULL)
           {
-        	  FCSCHED_PRINT("%s Not enough memory to allocate %d bytes \r\n", __FILE__, memoryLength);
+        	  /*FCSCHED_PRINT("%s Not enough memory to allocate %d bytes \r\n", __FILE__, memoryLength); */
           }
 		  /* Clean the whole memory: (dmxval is reused as index) */
 		  for(dmxval=0; dmxval < memoryLength; dmxval++)
@@ -266,15 +326,12 @@ wall_handler(void* config, const char* section, const char* name,
         }
       col = strtol(name, NULL, 10);
       dmxval = (uint32_t) strtol(value, NULL, 10);
-      FCSCHED_PRINT("Updated row: %3d\tcol: %3d\tdmx: %3d\r\n", row, col, dmxval);
+
       if ((row * pconfig->width + col) < (pconfig->width * pconfig->height) )
       {
         pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
       }
-      else
-      {
-    	  FCSCHED_PRINT("ERROR could not set dmxvalue %d\r\n", dmxval);
-      }
+
     }
   else
     {
@@ -292,13 +349,23 @@ static int readConfigurationFile(wallconf_t* pConfiguration)
 		return 1;
 	}
 
-  FCSCHED_PRINT("Reading configuration file\r\n");
-  hwal_memset(pConfiguration, 0, sizeof(wallconf_t));
+  memset(pConfiguration, 0, sizeof(wallconf_t));
   pConfiguration->dimmFactor = 100;
   pConfiguration->fps = -1;
 
   /* Load the configuration */
   return ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
+}
+
+
+static uint8_t
+dimmValue(uint8_t incoming, int factor)
+{
+  uint32_t tmp = incoming;
+  tmp = tmp * factor / 100;
+  if (tmp > 255)
+    tmp = 255;
+  return (uint8_t) tmp;
 }
 
 /**
@@ -307,22 +374,21 @@ static int readConfigurationFile(wallconf_t* pConfiguration)
 static void updateDMXbuffer()
 {
 	int row, col, offset;
-	  dmx_buffer.length = width * height * 3;
 
 
-	  if (pWallcfg && pWallcfg->height == height && pWallcfg->width == width)
+	  if (wallcfg.pLookupTable)
 	    {
-	      for (row = 0; row < pWallcfg->height; row++)
+	      for (row = 0; row < wallcfg.height; row++)
 	        {
-	          for (col = 0; col < pWallcfg->width; col++)
+	          for (col = 0; col < wallcfg.width; col++)
 	            {
-	              offset = (row * pWallcfg->width + col);
-	              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 0] = dimmValue(
-	                  pBuffer[offset * 3 + 0], pWallcfg->dimmFactor);
-	              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 1] = dimmValue(
-	                  pBuffer[offset * 3 + 1], pWallcfg->dimmFactor);
-	              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 2] = dimmValue(
-	                  pBuffer[offset * 3 + 2], pWallcfg->dimmFactor);
+	              offset = (row * wallcfg.width + col);
+	              dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 0] = dimmValue(
+	                  dmx_fb[offset * 3 + 0], wallcfg.dimmFactor);
+	              dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 1] = dimmValue(
+	            		  dmx_fb[offset * 3 + 1], wallcfg.dimmFactor);
+	              dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 2] = dimmValue(
+	            		  dmx_fb[offset * 3 + 2], wallcfg.dimmFactor);
 	            }
 	        }
 	    }

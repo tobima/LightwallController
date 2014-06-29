@@ -28,12 +28,9 @@
 
 #define DMX_BUFFER_MAX	513
 
-typedef struct
-{
-  uint8_t startbyte;
-  uint8_t buffer[DMX_BUFFER_MAX];
-  uint16_t length;
-} DMXBuffer;
+#define DMX_RGB_COLOR_WIDTH			3				/**< Amount of bytes for the 3 colors in each box */
+
+extern uint8_t dmx_fb[DMX_BUFFER_MAX]; /**< Framebuffer that is converted and sent via DMX */
 
 extern WORKING_AREA(wa_dmx, DMX_THREAD_STACK_SIZE);
 

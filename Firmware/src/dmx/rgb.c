@@ -67,17 +67,10 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
           int green = atoi(argv[3]);
           int blue = atoi(argv[4]);
 
-          if (dmx_buffer.length < ((offset * 3) + 3) )
-          {
-            chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
-              dmx_buffer.length, ((offset * 3) + 3) );
-            dmx_buffer.length = ((offset * 3) + 3);
-          }
-
 	      /* Works perfect with an offset starting at zero */
-          dmx_buffer.buffer[(offset * 3) + 0] = red;
-	      dmx_buffer.buffer[(offset * 3) + 1] = green;
-	      dmx_buffer.buffer[(offset * 3) + 2] = blue;
+          dmx_fb[(offset * DMX_RGB_COLOR_WIDTH) + 0] = red;
+          dmx_fb[(offset * DMX_RGB_COLOR_WIDTH) + 1] = green;
+          dmx_fb[(offset * DMX_RGB_COLOR_WIDTH) + 2] = blue;
           chprintf(chp, "Set DMX at %d with 0x%2X%2X%2X\r\n", (offset * 3),           			red, green, blue);
         }
     }
@@ -104,17 +97,12 @@ void dmx_rgb_modify(BaseSequentialStream *chp, int argc, char *argv[])
 void dmx_rgb_fill(uint8_t red, uint8_t green, uint8_t blue)
 {
   int i;
-  if (dmx_buffer.length < 3)
-  {
-	/* nothing to do :-) */
-	return;
-  }
 
-  for (i=0; i <= (dmx_buffer.length - 3); i +=3)
+  for (i=0; i <= DMX_BUFFER_MAX; i +=3)
   {
-    dmx_buffer.buffer[i + 0] = red;
-    dmx_buffer.buffer[i + 1] = green;
-    dmx_buffer.buffer[i + 2] = blue;
+	  dmx_fb[i + 0] = red;
+	  dmx_fb[i + 1] = green;
+	  dmx_fb[i + 2] = blue;
   }
 }
 
@@ -176,9 +164,9 @@ void updateBuffer(uint8_t red, uint8_t green, uint8_t blue, void* pParam)
 			 red, green, blue); /*TODO remove debug code */
 	
 	/* Update the dmx buffer */
-	dmx_buffer.buffer[(p->dmxOffset) + 0] = red;
-	dmx_buffer.buffer[(p->dmxOffset) + 1] = green;
-	dmx_buffer.buffer[(p->dmxOffset) + 2] = blue;
+	dmx_fb[(p->dmxOffset) + 0] = red;
+	dmx_fb[(p->dmxOffset) + 1] = green;
+	dmx_fb[(p->dmxOffset) + 2] = blue;
 }
 
 uint8_t dmx_rgb_fade_cmd(uint8_t offset, uint8_t red, uint8_t green, uint8_t blue, uint32_t duration, 
@@ -197,18 +185,12 @@ uint8_t dmx_rgb_fade_cmd(uint8_t offset, uint8_t red, uint8_t green, uint8_t blu
 	}
 	
 	param.dmxOffset = (offset * 3);
-	if (dmx_buffer.length < (param.dmxOffset + 3) )
-	{
-		chprintf(chp, "Increased Universe from %d to %d bytes.\r\n",
-				 dmx_buffer.length, (param.dmxOffset + 3) );
-		dmx_buffer.length = (param.dmxOffset + 3);
-		returnValue = DMX_RGB_RET_INCREASE;
-	}
 	
+
 	/* Initialize the algorithm with the actual color */
-	start.red   = dmx_buffer.buffer[(offset * 3) + 0];
-	start.green = dmx_buffer.buffer[(offset * 3) + 1];
-	start.blue  = dmx_buffer.buffer[(offset * 3) + 2];
+	start.red   = dmx_fb[(offset * 3) + 0];
+	start.green = dmx_fb[(offset * 3) + 1];
+	start.blue  = dmx_fb[(offset * 3) + 2];
 	
 	
 	/* prepare the struct for target color */

@@ -92,8 +92,6 @@ static BaseSequentialStream * gDebugShellSched = NULL;
 static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
 
-static wallconf_t wallcfg;
-
 static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
 
 uint32_t gFcConnectedClients = 0;
@@ -486,16 +484,6 @@ msg_t fc_scheduler(void *p)
   FCSCHED_PRINT("Scheduler stopped!\r\n");
 
   return RDY_OK;
-}
-
-static uint8_t
-dimmValue(uint8_t incoming, int factor)
-{
-  uint32_t tmp = incoming;
-  tmp = tmp * factor / 100;
-  if (tmp > 255)
-    tmp = 255;
-  return (uint8_t) tmp;
 }
 
 
