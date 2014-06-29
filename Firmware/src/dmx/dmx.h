@@ -59,6 +59,8 @@ extern "C"
    */
   void dmx_getDefaultConfiguration(int *pFPS, int *pDim);
 
+  void dmx_dim(int value);
+
 #ifdef __cplusplus
 }
 #endif

@@ -55,23 +55,6 @@ typedef struct
   int netOnly; /**< Use only the network device */
 } schedulerconf_t;
 
-
-/** @fn void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
- * @brief Print a frame to the DMX memory, that will be send to the wall.
- *
- * THIS function MUST only be used by one source.
- * Multiple sources will be disturb each other ;-)
- *
- * @param[in]	pBuffer		RGB24 memory with the actual frame
- * @param[in]	width		of the actual frame
- * @param[in]	height		of the actual frame
- * @param[in]	pWallcfg	Configuration
- *
- */
-extern void
-fcsched_printFrame(uint8_t* pBuffer, int width, int height,
-    wallconf_t* pWallcfg);
-
 /**
  * Debug interface for the commandline
  */

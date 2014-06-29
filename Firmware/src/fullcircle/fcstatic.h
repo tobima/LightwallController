@@ -53,15 +53,5 @@ void
 fcstatic_remove_filename(char *path, char **ppFilename,
     uint32_t filenameLength);
 
-/** @fn void fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration , BaseSequentialStream *chp)
- * @brief Plays a given sequence to the wall.
- *
- * @param[in]	pFilename		the sequence file to play
- * @param[in]	pConfiguration	configuration of the wall, mappingtable, fps & dimmfactor are needed (optiinal)
- * @param[in]	chp				Stream for debug outputs (optional)
- */
-int
-fcstatic_playfile(char *pFilename, wallconf_t *pConfiguration,
-    BaseSequentialStream *chp);
 
 #endif /* End of FCSTATIC_H */

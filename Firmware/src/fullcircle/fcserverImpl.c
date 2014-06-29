@@ -49,8 +49,6 @@ Mailbox * gFcServerMailbox = NULL;
 
 static BaseSequentialStream * gDebugShell = NULL;
 
-static wallconf_t wallcfg;
-
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -109,7 +107,7 @@ onNewImage(uint8_t* rgb24Buffer, int width, int height)
   if (gFcServerActive)
   {
       /* Write the DMX buffer */
-      fcsched_printFrame(rgb24Buffer, width, height, &wallcfg);
+	  hwal_memcpy(dmx_fb, rgb24Buffer, width * height * DMX_RGB_COLOR_WIDTH);
       
       chSysLock();
       chMBPostI(gFcMailboxDyn, (uint32_t) 1);
@@ -214,6 +212,8 @@ fc_server(void *p)
 {
   fcserver_ret_t ret;
   fcserver_t server;
+  int width, height;
+
   chRegSetThreadName("fcdynserver");
   (void) p;
 
@@ -227,15 +227,15 @@ fc_server(void *p)
   chMBInit(gFcServerMailbox, (msg_t *) gFcServerMailboxBuffer,
   FCSERVER_MAILBOX_SIZE);
 
-  /* read the dimension from the configuration file */
-  if (readConfigurationFile(&wallcfg) != 0)
-    {
-        /* There was a problem, on reading the configuration from the SD card, stop the thread */
-        return RDY_OK;
-    }
+  dmx_getScreenresolution(&width, &height);
 
-  ret = fcserver_init(&server, &onNewImage, &onClientChange, wallcfg.width,
-      wallcfg.height);
+  if (width <= 0 || height <= 0)
+  {
+	  /* Configuration problem */
+	  return FR_INVALID_PARAMETER;
+  }
+
+  ret = fcserver_init(&server, &onNewImage, &onClientChange, width, height);
 
   if (ret != FCSERVER_RET_OK)
     {
@@ -258,12 +258,6 @@ fc_server(void *p)
   while (ret == FCSERVER_RET_OK);
 
   FCS_PRINT("FATAL error, closing fullcircle server thread\r\n");
-
-  /* clean the memory of the configuration */
-  if (wallcfg.pLookupTable)
-    {
-      hwal_free(wallcfg.pLookupTable);
-    }
 
   /* clean everything */
   fcserver_close(&server);

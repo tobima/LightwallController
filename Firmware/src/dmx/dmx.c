@@ -52,6 +52,8 @@ typedef struct
  */
 static int readConfigurationFile(wallconf_t* pConfiguration);
 
+static void updateDMXbuffer(void);
+
 /******************************************************************************
  * GLOBAL VARIABLES
  ******************************************************************************/
@@ -199,6 +201,8 @@ dmxthread(void *arg)
 
   while (1)
     {
+	  updateDMXbuffer();
+
       /* Send Reset. */
       palSetPadMode(GPIOD, GPIOD_DMX_BREAK, PAL_STM32_MODE_OUTPUT | PAL_STM32_OTYPE_PUSHPULL |PAL_STM32_PUDR_PULLDOWN);
       palClearPad(GPIOD, GPIOD_DMX_BREAK);
@@ -245,23 +249,31 @@ void dmx_getScreenresolution(int *pWidth, int *pHeight)
 
 void dmx_getDefaultConfiguration(int *pFPS, int *pDim)
 {
-	/* Handle fault parameter */
-	if (pFPS == NULL || pDim == NULL)
-	{
-		return;
-	}
-
 	/* Check for an valid configuration */
-	if (wallcfg.pLookupTable)
-	{
-		(*pFPS) = wallcfg.fps;
-		(*pDim) = wallcfg.dimmFactor;
-	}
-	else
+	if (!wallcfg.pLookupTable)
 	{
 		/* Insert fault values (as they are out of range) to indicate that no configuration is available */
 		(*pFPS) = -1;
 		(*pDim) = -1;
+	}
+
+	/* Handle fault parameter */
+	if (pFPS != NULL)
+	{
+		(*pFPS) = wallcfg.fps;
+	}
+
+	if (pDim != NULL)
+	{
+		(*pDim) = wallcfg.dimmFactor;
+	}
+}
+
+void dmx_dim(int value)
+{
+	if (value >= 0 && value <= 100)
+	{
+		wallcfg.dimmFactor = value;
 	}
 }
 
@@ -359,10 +371,10 @@ static int readConfigurationFile(wallconf_t* pConfiguration)
 
 
 static uint8_t
-dimmValue(uint8_t incoming, int factor)
+dimmValue(uint8_t incoming)
 {
   uint32_t tmp = incoming;
-  tmp = tmp * factor / 100;
+  tmp = tmp * wallcfg.dimmFactor / 100;
   if (tmp > 255)
     tmp = 255;
   return (uint8_t) tmp;
@@ -384,11 +396,11 @@ static void updateDMXbuffer()
 	            {
 	              offset = (row * wallcfg.width + col);
 	              dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 0] = dimmValue(
-	                  dmx_fb[offset * 3 + 0], wallcfg.dimmFactor);
+	                  dmx_fb[offset * 3 + 0]);
 	              dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 1] = dimmValue(
-	            		  dmx_fb[offset * 3 + 1], wallcfg.dimmFactor);
+	            		  dmx_fb[offset * 3 + 1]);
 	              dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 2] = dimmValue(
-	            		  dmx_fb[offset * 3 + 2], wallcfg.dimmFactor);
+	            		  dmx_fb[offset * 3 + 2]);
 	            }
 	        }
 	    }
@@ -401,9 +413,8 @@ static void updateDMXbuffer()
 		   */
 
 	      /* Set the DMX buffer directly */
-	      memcpy(dmx_buffer.buffer, pBuffer, dmx_buffer.length);
+	      memcpy(dmx_buffer.buffer, dmx_fb, dmx_buffer.length);
 	    }
-	}
 
 }
 

@@ -72,7 +72,8 @@ typedef enum
   FCSRC_STATE_NOBODY = 0, /**< Nobody is writing into the DMX buffer  */
   FCSRC_STATE_FILE, /**< Actual sending frames from a file  */
   FCSRC_STATE_FILEENDED, /**< Need to find the next file to play */
-  FCSRC_STATE_NETWORK /**< Someone is streaming dynamic content to us */
+  FCSRC_STATE_NETWORK, /**< Someone is streaming dynamic content to us */
+  FCSRC_STATE_PROCESSENDED /**< State, that is set, only if the thread was stopped */
 } fcsource_state_t;
 
 /******************************************************************************
@@ -85,6 +86,9 @@ Mailbox * gFcMailboxDyn;
 /******************************************************************************
  * LOCAL VARIABLES for this module
  ******************************************************************************/
+
+static int configuredFps;
+static int configuredDimmFactor;
 
 static BaseSequentialStream * gDebugShellSched = NULL;
 
@@ -136,10 +140,10 @@ static int fcsched_handleInputMailbox(void)
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
               case MSG_SETFPS:
-                wallcfg.fps = (int) msg2;
+                configuredFps = (int) msg2;
                 break;
               case MSG_DIMM:
-                wallcfg.dimmFactor = (int) msg2;
+            	  configuredDimmFactor = (int) msg2;
                 break;
               case MSG_STOPP:
                 gSchedulerActive = FALSE;
@@ -274,6 +278,7 @@ msg_t fc_scheduler(void *p)
     uint32_t filenameLength = 0;
     char* root = FCSCHED_FILE_ROOT;
     schedulerconf_t schedConfiguration;
+    int width, height = -1;
 
   #ifdef UGFX_WALL
     /* Initiaize the font */
@@ -293,11 +298,14 @@ msg_t fc_scheduler(void *p)
 
     hwal_memset(&seq, 0, sizeof(fcsequence_t));
 
+    dmx_getScreenresolution(&width, &height);
+    dmx_getDefaultConfiguration(&configuredFps, &configuredDimmFactor);
+
     chRegSetThreadName("fcscheduler");
     (void) p;
 
     /* Load the configuration */
-    hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
+    hwal_memset(&schedConfiguration, 0, sizeof(schedulerconf_t));
 
     ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
 
@@ -348,7 +356,7 @@ msg_t fc_scheduler(void *p)
 #ifdef UGFX_WALL
 		gdispPrintf(0, gdispGetHeight() - 30, font, White, 256, 
 			"%d x %d , %d fps [dimmed to %d%%]", 
-			wallcfg.width, wallcfg.height, wallcfg.fps, wallcfg.dimmFactor);
+			width, height, configuredFps, configuredDimmFactor);
 		gdispPrintf(0, gdispGetHeight() - 15, font, White, 256, 
 			"File %s playing.", path);
 #endif
@@ -362,9 +370,10 @@ msg_t fc_scheduler(void *p)
                     /* Allocation some space for the RGB buffer */
                     rgb24 = (uint8_t*) chHeapAlloc(NULL,
                         (seq.width * seq.height * 3));
-                    seq.fps = wallcfg.fps;
+                    seq.fps = configuredFps;
+                    dmx_dim(configuredDimmFactor);
                     FCSCHED_PRINT("Using %d fps and dimmed to %d %.\r\n",
-                        seq.fps, wallcfg.dimmFactor);
+                        seq.fps, configuredDimmFactor);
                     sleeptime = (1000 / seq.fps);
                   }
                 else
@@ -434,7 +443,7 @@ msg_t fc_scheduler(void *p)
         else
           {
             /* Write the DMX buffer */
-            fcsched_printFrame(rgb24, seq.width, seq.height, &wallcfg);
+        	hwal_memcpy(dmx_fb, rgb24, seq.width * seq.height * DMX_RGB_COLOR_WIDTH);
           }
         break;
       case FCSRC_STATE_NETWORK:
@@ -474,56 +483,10 @@ msg_t fc_scheduler(void *p)
     	FCSCHED_PRINT("File closed\r\n");
     }
 
-  /* clean the memory of the configuration */
-  if (wallcfg.pLookupTable)
-    {
-      hwal_free(wallcfg.pLookupTable);
-      wallcfg.pLookupTable = NULL;
-    }
-
+  gSchedulerActive = FCSRC_STATE_PROCESSENDED;
   FCSCHED_PRINT("Scheduler stopped!\r\n");
 
   return RDY_OK;
-}
-
-
-extern void
-fcsched_printFrame(uint8_t* pBuffer, int width, int height,
-    wallconf_t* pWallcfg)
-{
-  int row, col, offset;
-  dmx_buffer.length = width * height * 3;
-
-  
-  if (pWallcfg && pWallcfg->height == height && pWallcfg->width == width)
-    {
-      for (row = 0; row < pWallcfg->height; row++)
-        {
-          for (col = 0; col < pWallcfg->width; col++)
-            {
-              offset = (row * pWallcfg->width + col);
-              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 0] = dimmValue(
-                  pBuffer[offset * 3 + 0], pWallcfg->dimmFactor);
-              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 1] = dimmValue(
-                  pBuffer[offset * 3 + 1], pWallcfg->dimmFactor);
-              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 2] = dimmValue(
-                  pBuffer[offset * 3 + 2], pWallcfg->dimmFactor);
-            }
-        }
-    }
-  else
-    {
-	
-#ifdef UGFX_WALL
-	font_t font = gdispOpenFont("DejaVu*");
-	gdispPrintf(0, gdispGetHeight() - 15, font, Red, 512, 
-			"WRONG Resolution: Wall has %d x %d, but file is %d x %d", 
-			wallcfg.width, wallcfg.height, width, height);
-                
-#endif
-      /* Set the DMX buffer directly */
-      memcpy(dmx_buffer.buffer, pBuffer, dmx_buffer.length);
-    }
 }
 
 void
@@ -612,5 +575,5 @@ fcscheduler_stopThread(void)
 int fcscheduler_isRunning(void)
 {
 	/* check the last variable, that is cleared in the threads (@see fc_scheduler()) */
-	return (wallcfg.pLookupTable != NULL);
+	return (gSchedulerActive == FCSRC_STATE_PROCESSENDED);
 }
