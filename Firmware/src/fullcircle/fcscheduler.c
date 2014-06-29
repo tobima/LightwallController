@@ -32,7 +32,6 @@
 #include "ugfx_util.h"
 #endif
 
-#define FCSCHED_WALLCFG_FILE	"fc/conf/wall"
 #define FCSCHED_CONFIG_FILE     "fc/conf/controller"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
@@ -228,82 +227,6 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
     }
 }
 
-/** @fn static int wall_handler(void* config, const char* section, const char* name, const char* value)
- * @brief Extract the configuration for the wall
- *
- * After using, the memory of this structure must be freed!
- *
- * @param[in]	config	structure, all found values are stored
- * @param[in]	section	section, actual found
- * @param[in]	name	key
- * @param[in]	value	value
- *
- * @return < 0 on errors
- */
-static int
-wall_handler(void* config, const char* section, const char* name,
-    const char* value)
-{
-  wallconf_t* pconfig = (wallconf_t*) config;
-  int row = strtol(section, NULL, 10);
-  int col;
-  int memoryLength = 0;
-  int dmxval;
-
-  if (MATCH("global", "width"))
-    {
-      pconfig->width = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: width: %3d\r\n", pconfig->width);
-    }
-  else if (MATCH("global", "height"))
-    {
-      pconfig->height = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: height: %3d\r\n", pconfig->height);
-    }
-  else if (MATCH("global", "fps"))
-    {
-      pconfig->fps = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: fps: %3d\r\n", pconfig->fps);
-    }
-  else if (MATCH("global", "dim"))
-    {
-      pconfig->dimmFactor = strtol(value, NULL, 10);
-    }
-   else if ((row >= 0) && (row < pconfig->height))
-    {
-      /* when the function was called the first time, take some memory */
-      if (pconfig->pLookupTable == NULL)
-        {
-          memoryLength = sizeof(uint32_t) * pconfig->width * pconfig->height;
-          pconfig->pLookupTable = chHeapAlloc(0, memoryLength);
-          if (pconfig->pLookupTable == NULL)
-          {
-        	  FCSCHED_PRINT("%s Not enough memory to allocate %d bytes \r\n", __FILE__, memoryLength);
-          }
-		  /* Clean the whole memory: (dmxval is reused as index) */
-		  for(dmxval=0; dmxval < memoryLength; dmxval++)
-		  {
-			pconfig->pLookupTable[dmxval] = 0;
-		  }
-        }
-      col = strtol(name, NULL, 10);
-      dmxval = (uint32_t) strtol(value, NULL, 10);
-      FCSCHED_PRINT("Updated row: %3d\tcol: %3d\tdmx: %3d\r\n", row, col, dmxval);
-      if ((row * pconfig->width + col) < (pconfig->width * pconfig->height) )
-      {
-        pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
-      }
-      else
-      {
-    	  FCSCHED_PRINT("ERROR could not set dmxvalue %d\r\n", dmxval);
-      }
-    }
-  else
-    {
-      return 0; /* unknown section/name, error */
-    }
-  return 1;
-}
 
 /** @fn static int configuration_handler(void* config, const char* section, const char* name, const char* value)
  * @brief Extract the configuration for the scheduler
@@ -374,9 +297,6 @@ msg_t fc_scheduler(void *p)
 
     chRegSetThreadName("fcscheduler");
     (void) p;
-
-    /* Load wall configuration */
-    readConfigurationFile(&wallcfg);
 
     /* Load the configuration */
     hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
@@ -578,23 +498,6 @@ dimmValue(uint8_t incoming, int factor)
   return (uint8_t) tmp;
 }
 
-extern int
-readConfigurationFile(wallconf_t* pConfiguration)
-{
-	if (pConfiguration == NULL)
-	{
-		FCSCHED_PRINT("ERROR! No configuration memory given\r\n");
-		return 1;
-	}
-
-  FCSCHED_PRINT("Reading configuration file\r\n");
-  hwal_memset(pConfiguration, 0, sizeof(wallconf_t));
-  pConfiguration->dimmFactor = 100;
-  pConfiguration->fps = -1;
-
-  /* Load the configuration */
-  return ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
-}
 
 extern void
 fcsched_printFrame(uint8_t* pBuffer, int width, int height,
@@ -695,22 +598,6 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 	{
 		chprintf(chp, "Start server again\r\n");
 		fcscheduler_startThread();
-	}
-	else if (strcmp(argv[0], "config") == 0)
-	{
-	  wallconf_t demo;
-	  int retConfig;
-
-	  if ( !gSchedulerActive )
-	  {
-		  chprintf(chp, "Scheduler is stopped, you need to start:\r\nfcsched start\r\n" );
-		return;
-	  }
-
-	  /* Load wall configuration */
-	  retConfig = readConfigurationFile(&demo);
-          
-          chprintf(chp, "Width and height are %dx%d (parsing returned %d, 0: success, all other values indicate problems)\r\n", demo.width, demo.height, retConfig);
 	}
     }
 

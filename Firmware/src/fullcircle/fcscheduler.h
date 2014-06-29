@@ -50,34 +50,11 @@ extern "C"
 }
 #endif
 
-/** @var wallconf_t
- *  @brief This structure contains information about the physical wall
- */
-typedef struct
-{
-  int width; /**< Horizontal count of boxes the physical installation */
-  int height; /**< Vertical count of boxes the physical installation */
-  int fps; /**< Framerate, the wall uses */
-  int dimmFactor; /**< In percent -> 100 no change, 50 half the brightness */
-  uint32_t *pLookupTable; /**< Memory to the Lookup table, must be freed after usage */
-} wallconf_t;
-
-
 typedef struct
 {
   int netOnly; /**< Use only the network device */
 } schedulerconf_t;
 
-/** @fn void readConfigurationFile( extern wallconf_t )
- * @brief Read configuration file
- *
- * The static configuration with the wall.
- 
- * @param[out]	pConfiguration	Read configuration
- * @return 0 on success,
- */
-extern int
-readConfigurationFile(wallconf_t* pConfiguration);
 
 /** @fn void fcsched_printFrame(uint8_t* pBuffer, int width, int height, wallconf_t* pWallcfg)
  * @brief Print a frame to the DMX memory, that will be send to the wall.
