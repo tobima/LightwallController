@@ -591,15 +591,15 @@ static const ShellCommand commands[] =
     { "threads", cmd_threads },
     { "dmx", cmd_dmx_modify },
     { "rgb" , dmx_rgb_modify },
-#ifndef FILESYSTEM_ONLY
+#ifndef DISABLE_FILESYSTEM
     { "tree", cmd_tree },
     { "cat", cmd_cat },
     { "ifconfig", cmd_ifconfig },
     { "fcdyn", fcserverImpl_cmdline },
     { "fcsched", fcscheduler_cmdline },
-#endif
 #ifdef UGFX_WALL
     { "ugfx", ugfx_cmd_shell },
+#endif
 #endif
     { "flash", cmd_flash },
     { NULL, NULL } };
