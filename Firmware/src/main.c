@@ -737,13 +737,13 @@ main(void)
    */
   chprintf((BaseSequentialStream *) &SD6, "Initialazing SDCARD driver ...");
 
-  /* start the thread for the wrapping module */
-  wf_init(NORMALPRIO - 2);
-
   /*
    * Activates the SDC driver 1 using default configuration.
    */
   sdcStart(&SDCD1, NULL);
+
+  /* start the thread for the wrapping module */
+  wf_init(NORMALPRIO - 2);
 
   /*
    * Activates the card insertion monitor.
@@ -822,38 +822,10 @@ main(void)
       lwip_thread, (use_config) ? &(config.network) : NULL);
 
   /**************************************
-   * Creates the Fullcircle server thread.
-   */
-  chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
-      fc_server, NULL);
-
-  /**************************************
    * Creates the HTTP thread.
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
-
-  /**************************************
-   * Creates the scheduler thread.
-   */
-  chThdSleep(MS2ST(50));
-  fcscheduler_startThread();
-
-  /**************************************
-   * Creates the Net Shell thread.
-   */
-  //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
-  //                server_thread, NULL);
-
-#ifdef UGFX_WALL
-
-  /**************************************
-     * Creates the DMX buffer visualization thread.
-     */
-  chThdSleep(MS2ST(100));
-  ugfx_wall_simu_startThread();
-#endif
-
 #endif
 
   chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
@@ -866,6 +838,35 @@ main(void)
    */
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+
+#ifndef DISABLE_FILESYSTEM
+  /**************************************
+   * Creates the Fullcircle server thread.
+   */
+  chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
+      fc_server, NULL);
+  /**************************************
+   * Creates the scheduler thread.
+   */
+  chThdSleep(MS2ST(50));
+  fcscheduler_startThread();
+
+  /**************************************
+   * Creates the Net Shell thread.
+   */
+  //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
+  //                server_thread, NULL);
+
+#endif
+
+#ifdef UGFX_WALL
+
+  /**************************************
+     * Creates the DMX buffer visualization thread.
+     */
+  chThdSleep(MS2ST(100));
+  ugfx_wall_simu_startThread();
+#endif
 
   chprintf((BaseSequentialStream *) &SD6, "Initializing Shell...");
 

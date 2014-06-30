@@ -445,6 +445,7 @@ msg_t fc_scheduler(void *p)
             /* Write the DMX buffer */
         	hwal_memcpy(dmx_fb, rgb24, seq.width * seq.height * DMX_RGB_COLOR_WIDTH);
         	dmx_update(seq.width , seq.height);
+        	FCSCHED_PRINT("%X\r\n", rgb24[0]);
           }
         break;
       case FCSRC_STATE_NETWORK:
@@ -460,8 +461,7 @@ msg_t fc_scheduler(void *p)
         break;
       default:
         /*FIXME check dynamic fullcircle for a new client */
-        FCSCHED_PRINT("Unkown status: %d\r\n", gSourceState)
-        ;
+        FCSCHED_PRINT("Unkown status: %d\r\n", gSourceState);
         break;
         }
 
@@ -551,6 +551,11 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 		chprintf(chp, "Start server again\r\n");
 		fcscheduler_startThread();
 	}
+	else if (strcmp(argv[0], "status") == 0 )
+	{
+		chprintf(chp, "Server status is %d\r\n", gSchedulerActive);
+	}
+
     }
 
 }
