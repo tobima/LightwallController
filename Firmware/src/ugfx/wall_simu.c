@@ -28,7 +28,7 @@ static msg_t fc_wallsimu(void *p)
 	dmx_getScreenresolution(&width, &height);
 	dmx_getDefaultConfiguration(&fps, &dim);
 
-    if (width <= 0 || height <= 0)
+    if (width <= 0 || height <= 0 || fps <= 0)
     {
     	PRINT("%s: Could not parse WALL configuration file \r\n", __FILE__);
     	gWallSimuRunning = FALSE;
