@@ -732,18 +732,6 @@ main(void)
   chprintf((BaseSequentialStream *) &SD6,
       "\x1b[1J\x1b[0;0HStarting ChibiOS\r\n");
 
-
-  chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
-
-  /* test only the initialization */
-  DMXInit();
-
-  /*************************************
-   * Creates the DMX thread.
-   */
-  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-
   /*************************************
    * SDCard
    */
@@ -816,14 +804,14 @@ main(void)
 
       if (use_config)
         {
-          chprintf((BaseSequentialStream *) &SD6, "\x1b[32m OK\r\n\x1b[0m");
+          chprintf((BaseSequentialStream *) &SD6, "\x1b[32m OK\r\n\x1b[0m ");
         }
       else
         {
           chprintf((BaseSequentialStream *) &SD6,
               "\x1b[31m Failed!\r\n\x1b[0m");
         }
-
+      chprintf((BaseSequentialStream *) &SD6, "\r\n");
     }
 
 
@@ -868,6 +856,17 @@ main(void)
 
 #endif
 
+  chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
+
+  /* test only the initialization */
+  DMXInit();
+
+  /*************************************
+   * Creates the DMX thread.
+   */
+  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+
   chprintf((BaseSequentialStream *) &SD6, "Initializing Shell...");
 
   /**************************************
@@ -875,11 +874,7 @@ main(void)
    */
   shellInit();
 
-
-  chprintf((BaseSequentialStream *) &SD6, "Create new Shell\r\n");
-
   shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
-  chprintf((BaseSequentialStream *) &SD6, "Done\r\n");
 
   /*
    * Normal main() thread activity, in this demo it does nothing except
