@@ -140,10 +140,10 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
           chprintf(chp, "DMX is filled with %d x %d pixel\r\n", width, height);
           for (i = 0; i < width * height; i++)
           {
-              chprintf(chp, "%.2X|", dmx_fb[i + 0], dmx_fb[i + 1], dmx_fb[i + 2]);
+              chprintf(chp, "%.2X%.2X%.2X|", dmx_fb[i + 0], dmx_fb[i + 1], dmx_fb[i + 2]);
 
               /* generate a new line after each row */
-              if (i % width == 0)
+              if ((i + 1) % width == 0)
               {
             	  chprintf(chp, "\r\n");
               }
