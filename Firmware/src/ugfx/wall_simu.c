@@ -36,13 +36,16 @@ static msg_t fc_wallsimu(void *p)
     }
 
     PRINT("%s wall %dx%d\r\n", __FILE__, width, height);
+
+    fcwall_init(width, height);
+
     while (gWallSimuRunning)
     {
 		for (row = 0; row < height; row++)
 		{
 		  for (col = 0; col < width; col++)
 			{
-			  offset = (col * DMX_RGB_COLOR_WIDTH) * row;
+			  offset = (col + (row * width)) * DMX_RGB_COLOR_WIDTH;
 			  setBox(col, row, dmx_fb[offset + 0],
 					  	  	   dmx_fb[offset + 1],
 								dmx_fb[offset + 2]);
