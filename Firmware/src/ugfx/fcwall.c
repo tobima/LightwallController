@@ -12,6 +12,7 @@
 #include "ff.h"
 #include "ugfx_cmd.h"
 #include "ugfx_util.h"
+#include "wall_simu.h"
 
 #define INFO_TEXT_HEIGHT        25
 #define WIN_MENU_TOPMARGIN      10
@@ -286,6 +287,11 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                   }
                   else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
                   {
+                      ugfx_wall_simu_stopThread();
+                      while (ugfx_wall_simu_isRunning())
+                      {
+                    	  chThdSleepMilliseconds(50);
+                      }
                       deleteMenuWindow();
                       stopUIUpdate = TRUE;
                       ugfx_cmd_calibrate(pSDU1);

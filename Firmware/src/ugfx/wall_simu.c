@@ -13,6 +13,8 @@
 #include "dmx/dmx.h"
 #include "ugfx_cmd.h"
 
+#define		STATUS_KILLED		5
+
 static uint8_t		gWallSimuRunning = TRUE;
 
 WORKING_AREA(wa_fc_wallsimu, UGFX_WALL_SIMU_THREAD_STACK_SIZE);
@@ -55,7 +57,7 @@ static msg_t fc_wallsimu(void *p)
 		chThdSleep(MS2ST(1000 / fps));
     }
 
-
+    gWallSimuRunning = STATUS_KILLED;
 	return RDY_OK;
 }
 
@@ -78,5 +80,5 @@ void ugfx_wall_simu_stopThread(void)
 
 int ugfx_wall_simu_isRunning(void)
 {
-	return gWallSimuRunning;
+	return (gWallSimuRunning != STATUS_KILLED);
 }
