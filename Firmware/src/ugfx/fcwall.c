@@ -210,6 +210,22 @@ void fcwall_init(int w, int h)
 	boxHeight = ((int) ((gdispGetHeight() - INFO_TEXT_HEIGHT) / h))-1;
 }
 
+static WORKING_AREA(waThreadButton, 128);
+static msg_t buttonThread(void *arg) {
+
+  (void)arg;
+  chRegSetThreadName("ugfxbutton");
+  while (TRUE) {
+		if (palReadPad(GPIOA, GPIOA_BUTTON))
+		{
+			/*FIXME call the GUI stuff from a sepearte thread, will probalby not work */
+			createMenuWindow();
+			gwinSetVisible(GWmenu, TRUE);
+		}
+		chThdSleepMilliseconds(50);
+  }
+  return RDY_OK;
+}
 
 void fcwall_initWindow(void)
 {
@@ -238,6 +254,9 @@ void fcwall_initWindow(void)
   // We want to listen for widget events
   geventListenerInit(&gl);
   gwinAttachListener(&gl);
+
+  // Create a new thread to supervise the button
+  chThdCreateStatic(waThreadButton, sizeof(waThreadButton), NORMALPRIO, buttonThread, NULL);
 }
 
 void fcwall_processEvents(SerialUSBDriver* pSDU1)
