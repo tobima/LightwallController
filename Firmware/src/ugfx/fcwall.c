@@ -319,78 +319,73 @@ void fcwall_initWindow(void)
   chThdCreateStatic(waThreadButton, sizeof(waThreadButton), NORMALPRIO, buttonThread, NULL);
 }
 
-void fcwall_processEvents(SerialUSBDriver* pSDU1)
+static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 {
-  GEvent* 		pe;
   GSourceHandle	mouse;
   GEventMouse	*pem;
-
-  /* Get an Event */
-  pe = geventEventWait(&gl, TIME_INFINITE);
-
   switch(pe->type)
   {
-          case GEVENT_GWIN_BUTTON:
-                  if  (((GEventGWinButton*)pe)->button == ghButton1)
-                  {
-                    /* toggle visibility */
-                    IF_MENU_VISIBLE
-                    {
-                        deleteMenuWindow();
-                    }
-                    else
-                    {
-                        createMenuWindow();
-                        gwinSetVisible(GWmenu, TRUE);
-                    }
-                  }
-                  else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
-                  {
-                      ugfx_wall_simu_stopThread();
-                      while (ugfx_wall_simu_isRunning())
-                      {
-                    	  chThdSleepMilliseconds(50);
-                      }
-                      deleteMenuWindow();
-                      stopUIUpdate = TRUE;
-                      ugfx_cmd_calibrate(pSDU1);
-                      stopUIUpdate = FALSE;
-                  }
-                  else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
-                  {
-                      /* do only something if window is visible */
-                      IF_MENU_VISIBLE
-                      {
-                          deleteMenuWindow();
-
-                          /*** add mouse listener to get the coordinates / box ***/
-                          /* Initialise the first mouse/touch and get its handle */
-                          mouse = ginputGetMouse(0);
-                          /* we want to listen for mouse/touch events */
-                          geventAttachSource(&gl, mouse, GLISTEN_MOUSEDOWNMOVES | GLISTEN_MOUSEMETA);
-
-                          gManualStatus = !gManualStatus;
-                          if (gManualStatus)
-                          {
-                              ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_START);
-                          }
-                          else
-                          {
-                              ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_ENDED);
-                          }
-                      }
-                  }
-                  else if  (((GEventGWinButton*)pe)->button == ghBoxButtonClose)
+		  case GEVENT_GWIN_BUTTON:
+				  if  (((GEventGWinButton*)pe)->button == ghButton1)
 				  {
-                	  deleteMenuWindow();
+					/* toggle visibility */
+					IF_MENU_VISIBLE
+					{
+						deleteMenuWindow();
+					}
+					else
+					{
+						createMenuWindow();
+						gwinSetVisible(GWmenu, TRUE);
+					}
 				  }
-                  else
-                  {
-                      FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
-                  }
-                  break;
-          case GEVENT_TOUCH:
-        	  /* convert event into a MouseEvent */
+				  else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
+				  {
+					  ugfx_wall_simu_stopThread();
+					  while (ugfx_wall_simu_isRunning())
+					  {
+						  chThdSleepMilliseconds(50);
+					  }
+					  deleteMenuWindow();
+					  stopUIUpdate = TRUE;
+					  ugfx_cmd_calibrate(pSDU1);
+					  stopUIUpdate = FALSE;
+				  }
+				  else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
+				  {
+					  /* do only something if window is visible */
+					  IF_MENU_VISIBLE
+					  {
+						  deleteMenuWindow();
+
+						  /*** add mouse listener to get the coordinates / box ***/
+						  /* Initialise the first mouse/touch and get its handle */
+						  mouse = ginputGetMouse(0);
+						  /* we want to listen for mouse/touch events */
+						  geventAttachSource(&gl, mouse, GLISTEN_MOUSEDOWNMOVES | GLISTEN_MOUSEMETA);
+
+						  gManualStatus = !gManualStatus;
+						  if (gManualStatus)
+						  {
+							  ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_START);
+						  }
+						  else
+						  {
+							  ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_ENDED);
+						  }
+					  }
+				  }
+				  else if  (((GEventGWinButton*)pe)->button == ghBoxButtonClose)
+				  {
+					  deleteMenuWindow();
+				  }
+				  else
+				  {
+					  FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
+				  }
+				  break;
+		  case GEVENT_TOUCH:
+			  /* convert event into a MouseEvent */
 			  pem = (GEventMouse *) pe;
 			  if ((pem->current_buttons & GINPUT_MOUSE_BTN_LEFT))
 			  {
@@ -419,10 +414,20 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
 					gwinAttachListener(&gl);
 				}
 			  }
-        	  break;
-          default:
-            FCWALL_UARTPRINT("Input Event %X\r\n", pe->type);
-            FCWALL_USBPRINT("Input Event %X\r\n", pe->type);
-            break;
+			  break;
+		  default:
+			FCWALL_UARTPRINT("Input Event %X\r\n", pe->type);
+			FCWALL_USBPRINT("Input Event %X\r\n", pe->type);
+			break;
   }
+}
+
+void fcwall_processEvents(SerialUSBDriver* pSDU1)
+{
+  GEvent* 		pe;
+
+  /* Get an Event */
+  pe = geventEventWait(&gl, TIME_INFINITE);
+  /* and handle it */
+  processUGFXevent(pe, pSDU1);
 }
