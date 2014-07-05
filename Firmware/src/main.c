@@ -94,8 +94,7 @@ static EventSource inserted_event, removed_event;
  *
  * @notapi
  */
-static void
-tmrfunc(void *p)
+static void tmrfunc(void *p)
 {
   BaseBlockDevice *bbdp = p;
 
@@ -133,8 +132,7 @@ tmrfunc(void *p)
  *
  * @notapi
  */
-static void
-tmr_init(void *p)
+static void tmr_init(void *p)
 {
   chEvtInit(&inserted_event);
   chEvtInit(&removed_event);
@@ -158,8 +156,7 @@ static FATFS SDC_FS;
 /* FS mounted and ready.*/
 static bool_t fs_ready = FALSE;
 
-static void
-print_fsusage(BaseSequentialStream *chp, int argc, char *argv[])
+static void print_fsusage(BaseSequentialStream *chp, int argc, char *argv[])
 {
   uint32_t clusters;
   FATFS *fsp;

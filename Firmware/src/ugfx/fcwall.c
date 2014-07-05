@@ -399,15 +399,8 @@ static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 
 				if (gSelectedX >= 0 && gSelectedY >= 0 && gSelectedX < wallWidth && gSelectedY < wallHeight && !IS_BOX_HIDDEN(gSelectedX))
 				{
-					gdispPrintf(0, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256,
-									"%d x %d", gSelectedX, gSelectedY);
+					gdispPrintf(0, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256, "%d x %d", gSelectedX, gSelectedY);
 
-#if 0 /*FIXME trying to clean the event listening logic first (but not successful) */
-					/**** Activate Buttons again, by removing the mouse listener ***/
-					/* Initialize the first mouse/touch and get its handle */
-					mouse = ginputGetMouse(0);
-					geventDetachSourceListeners(mouse);
-#endif
 					// Attach the mouse input
 					gwinAttachMouse(0);
 
@@ -423,6 +416,7 @@ static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 					/* No Box could be found, probalby a button was pressed -> try this */
 					pe->type = GEVENT_GWIN_BUTTON;
 					processUGFXevent(pe, pSDU1);
+					/*FIXME the button source must also be found -> we have to reimplement the Button event handling :-/ */
 				}
 			  }
 			  break;
