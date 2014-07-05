@@ -210,7 +210,7 @@ void fcwall_init(int w, int h)
 	boxHeight = ((int) ((gdispGetHeight() - INFO_TEXT_HEIGHT) / h))-1;
 }
 
-static WORKING_AREA(waThreadButton, 128);
+static WORKING_AREA(waThreadButton, 8192);
 static msg_t buttonThread(void *arg) {
 
   (void)arg;
