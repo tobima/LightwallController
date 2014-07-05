@@ -47,6 +47,7 @@ static GListener gl;
 static GHandle   ghButton1 = NULL;
 static GHandle   ghButtonCalibrate = NULL;
 static GHandle   ghButtonManualTesting = NULL;
+static GHandle   ghBoxButtonClose = NULL;
 
 /* The handles for our two Windows */
 static GHandle GWmenu = NULL;
@@ -135,6 +136,64 @@ static void createMenuWindow(void)
   ghButtonManualTesting = gwinButtonCreate(0, &widgi);
 
 }
+
+/** @fn static void createMenuWindowSingleBox(void)
+ *  @brief create a menu to edit a box
+ */
+static void createMenuWindowSingleBox(void)
+{
+  GWindowInit     wi;
+  GWidgetInit     widgi;
+
+  /* Create the window for the menu */
+  gwinSetDefaultStyle( &BlackWidgetStyle, FALSE);
+  wi.show = TRUE;
+  if (wallWidth > 0 && wallHeight > 0)
+  { /* calculate dimension for overlay window, that fits between boxes*/
+    wi.x = (((wallWidth / 4) + 1) * (boxWidth + 2));
+    wi.width = ((wallWidth / 2) * boxWidth);
+    wi.y = WIN_MENU_TOPMARGIN;
+    wi.height = (wallHeight * boxHeight) - WIN_MENU_TOPMARGIN;
+  } else { /* use default offsets */
+    wi.width = 150;
+    wi.height = 200;
+    wi.x = (int) ((gdispGetWidth() - wi.width) / 2);
+    wi.y = 10;
+  }
+  GWmenu = gwinWindowCreate(0, &wi);
+  gwinClear(GWmenu);
+
+  /* Create Heading */
+  widgi.customDraw = 0;
+  widgi.customParam = 0;
+  widgi.customStyle = 0;
+  widgi.g.show = TRUE;
+  widgi.g.y = wi.y + 10;
+  widgi.g.x = wi.x + 10;
+  widgi.g.width = 125;
+  widgi.g.height = 20;
+  widgi.text = "Boxes";
+
+  // Create the actual label
+  gwinLabelCreate(NULL, &widgi);
+
+  /* Apply the button parameters */
+  widgi.customDraw = 0;
+  widgi.customParam = 0;
+  widgi.customStyle = 0;
+  widgi.g.width = 125;
+  widgi.g.height = 20;
+  widgi.g.y = wi.y + 40;
+  widgi.g.x = wi.x + 10;
+  widgi.g.show = TRUE;
+  widgi.text = "Close";
+
+  /* Create the first button */
+  ghBoxButtonClose = gwinButtonCreate(0, &widgi);
+
+
+}
+
 
 static void deleteMenuWindow(void)
 {
@@ -321,6 +380,10 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
                           }
                       }
                   }
+                  else if  (((GEventGWinButton*)pe)->button == ghBoxButtonClose)
+				  {
+                	  deleteMenuWindow();
+				  }
                   else
                   {
                       FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
@@ -336,13 +399,24 @@ void fcwall_processEvents(SerialUSBDriver* pSDU1)
 
 				if (gSelectedX != UNSELECTED && gSelectedY != UNSELECTED)
 				{
-					gdispPrintf(5, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256,
+					gdispPrintf(0, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256,
 									"%d x %d", gSelectedX, gSelectedY);
 
+#if 0 /*FIXME trying to clean the event listening logic first (but not successful) */
 					/**** Activate Buttons again, by removing the mouse listener ***/
 					/* Initialize the first mouse/touch and get its handle */
 					mouse = ginputGetMouse(0);
 					geventDetachSourceListeners(mouse);
+#endif
+					// Attach the mouse input
+					gwinAttachMouse(0);
+
+					createMenuWindowSingleBox();
+					gwinSetVisible(GWmenu, TRUE);
+
+					// We want to listen for widget events
+					geventListenerInit(&gl);
+					gwinAttachListener(&gl);
 				}
 			  }
         	  break;
