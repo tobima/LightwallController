@@ -27,6 +27,12 @@
 #define FCWALL_USBPRINT( ... )    if (pSDU1) { chprintf((BaseSequentialStream *) pSDU1,  __VA_ARGS__); }
 #define FCWALL_UARTPRINT( ... )    chprintf((BaseSequentialStream *) &SD6, __VA_ARGS__);
 
+
+#define IS_BOX_HIDDEN(x)		((gwinGetScreenX(GWmenu) < ((x)*(boxWidth+1)) \
+									|| gwinGetScreenX(GWmenu) < (((x) + 1) *(boxWidth+1)) ) \
+									&& ((gwinGetScreenX(GWmenu) + gwinGetWidth(GWmenu)) > ((x)*(boxWidth+1)) \
+									|| (gwinGetScreenX(GWmenu) + gwinGetWidth(GWmenu)) > (((x) + 1) *(boxWidth+1)) ))
+
 /******************************************************************************
  * GLOBAL VARIABLES of this module
  ******************************************************************************/
@@ -234,8 +240,7 @@ void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 	/* some magic calculation, that there are no boxes drawn, where the menu window is shown */
 	if (gwinGetVisible(GWmenu))
 	{
-	      if ((gwinGetScreenX(GWmenu) < xBox || gwinGetScreenX(GWmenu) < (xBox + boxWidth) )
-	          && ((gwinGetScreenX(GWmenu) + gwinGetWidth(GWmenu)) > xBox || (gwinGetScreenX(GWmenu) + gwinGetWidth(GWmenu)) > (xBox + boxWidth) ))
+		  if IS_BOX_HIDDEN(x)
 	      {
 	        return; /* Stooop, there is a window to be shown */
 	      }
@@ -392,7 +397,7 @@ static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 				gdispDrawPixel(pem->x, pem->y, Green);
 				selectBox(pem->x, pem->y);
 
-				if (gSelectedX != UNSELECTED && gSelectedY != UNSELECTED)
+				if (gSelectedX >= 0 && gSelectedY >= 0 && gSelectedX < wallWidth && gSelectedY < wallHeight && !IS_BOX_HIDDEN(gSelectedX))
 				{
 					gdispPrintf(0, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256,
 									"%d x %d", gSelectedX, gSelectedY);
@@ -412,6 +417,12 @@ static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 					// We want to listen for widget events
 					geventListenerInit(&gl);
 					gwinAttachListener(&gl);
+				}
+				else
+				{
+					/* No Box could be found, probalby a button was pressed -> try this */
+					pe->type = GEVENT_GWIN_BUTTON;
+					processUGFXevent(pe, pSDU1);
 				}
 			  }
 			  break;
