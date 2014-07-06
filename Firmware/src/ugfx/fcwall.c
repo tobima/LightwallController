@@ -13,6 +13,7 @@
 #include "ugfx_cmd.h"
 #include "ugfx_util.h"
 #include "wall_simu.h"
+#include "dmx/dmx.h"
 
 #define INFO_TEXT_HEIGHT        25
 #define WIN_MENU_TOPMARGIN      10
@@ -64,6 +65,10 @@ static uint8_t gManualStatus = 0;
 
 static int gSelectedX = UNSELECTED;
 static int gSelectedY = UNSELECTED;
+
+#define MAX_BOXES	((DMX_BUFFER_MAX / DMX_RGB_COLOR_WIDTH) + 1) /**< The maximum is defined by the length of the DMX universe (+1 because we are generous) */
+
+static GHandle ghBoxButtons[MAX_BOXES];
 
 /******************************************************************************
  * LOCAL FUNCTIONS
@@ -215,12 +220,6 @@ static void deleteMenuWindow(void)
   GWmenu = NULL;
 }
 
-static void selectBox(int mouseX, int mouseY)
-{
-	gSelectedX = (int) (mouseX / boxWidth);
-	gSelectedY = wallHeight - ((int) (mouseY / boxHeight));
-}
-
 /******************************************************************************
  * EXTERN FUNCTIONS
  ******************************************************************************/
@@ -246,7 +245,7 @@ void fcwall_setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 	      }
 	}
 
-	/* same orienatation as the pyhsical wall: */
+	/* swap orientation as the pyhsical wall: */
 	y = (wallHeight - 1) - y;
 
 	/* Calculate the wall */
@@ -268,13 +267,35 @@ void fcwall_setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 
 void fcwall_init(int w, int h)
 {
+	GWidgetInit     widgi;
+	int xBox, yBox, x, y, i = 0;
 	wallWidth = w;
 	wallHeight = h;
 
 	boxWidth = ((int) (gdispGetWidth() / w))-1;
 	boxHeight = ((int) ((gdispGetHeight() - INFO_TEXT_HEIGHT) / h))-1;
 
+	/* initialize the buttons, to make the boxes modifiable */
+	for (y=0; y < wallWidth; y++)
+	{
+		for (x=0; x < wallWidth; x++)
+		{
+			xBox = x*(boxWidth+1);
+			yBox = y*(boxHeight+1);
+			i = y * boxWidth + x;
 
+			/* Apply the button parameters */
+			widgi.customDraw = 0;
+			widgi.customParam = 0;
+			widgi.customStyle = 0;
+			widgi.g.width = boxWidth - 1;
+			widgi.g.height = boxHeight - 1;
+			widgi.g.y = yBox;
+			widgi.g.x = xBox;
+			widgi.g.show = TRUE;
+			ghBoxButtons[i] = gwinButtonCreate(0, &widgi);
+		}
+	}
 }
 
 static WORKING_AREA(waThreadButton, 8192);
