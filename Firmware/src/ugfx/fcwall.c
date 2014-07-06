@@ -326,8 +326,6 @@ void fcwall_initWindow(void)
 
 static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 {
-  GSourceHandle	mouse;
-  GEventMouse	*pem;
   switch(pe->type)
   {
 		  case GEVENT_GWIN_BUTTON:
@@ -363,12 +361,6 @@ static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 					  {
 						  deleteMenuWindow();
 
-						  /*** add mouse listener to get the coordinates / box ***/
-						  /* Initialise the first mouse/touch and get its handle */
-						  mouse = ginputGetMouse(0);
-						  /* we want to listen for mouse/touch events */
-						  geventAttachSource(&gl, mouse, GLISTEN_MOUSEDOWNMOVES | GLISTEN_MOUSEMETA);
-
 						  gManualStatus = !gManualStatus;
 						  if (gManualStatus)
 						  {
@@ -389,37 +381,6 @@ static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 					  FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
 				  }
 				  break;
-		  case GEVENT_TOUCH:
-			  /* convert event into a MouseEvent */
-			  pem = (GEventMouse *) pe;
-			  if ((pem->current_buttons & GINPUT_MOUSE_BTN_LEFT))
-			  {
-				gdispDrawPixel(pem->x, pem->y, Green);
-				selectBox(pem->x, pem->y);
-
-				if (gSelectedX >= 0 && gSelectedY >= 0 && gSelectedX < wallWidth && gSelectedY < wallHeight && !IS_BOX_HIDDEN(gSelectedX))
-				{
-					gdispPrintf(0, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256, "%d x %d", gSelectedX, gSelectedY);
-
-					// Attach the mouse input
-					gwinAttachMouse(0);
-
-					createMenuWindowSingleBox();
-					gwinSetVisible(GWmenu, TRUE);
-
-					// We want to listen for widget events
-					geventListenerInit(&gl);
-					gwinAttachListener(&gl);
-				}
-				else
-				{
-					/* No Box could be found, probalby a button was pressed -> try this */
-					pe->type = GEVENT_GWIN_BUTTON;
-					processUGFXevent(pe, pSDU1);
-					/*FIXME the button source must also be found -> we have to reimplement the Button event handling :-/ */
-				}
-			  }
-			  break;
 		  default:
 			FCWALL_UARTPRINT("Input Event %X\r\n", pe->type);
 			FCWALL_USBPRINT("Input Event %X\r\n", pe->type);
