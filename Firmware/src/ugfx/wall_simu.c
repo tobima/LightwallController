@@ -48,7 +48,7 @@ static msg_t fc_wallsimu(void *p)
 		  for (col = 0; col < width; col++)
 			{
 			  offset = (col + (row * width)) * DMX_RGB_COLOR_WIDTH;
-			  setBox(col, row, dmx_fb[offset + 0],
+			  fcwall_setBox(col, row, dmx_fb[offset + 0],
 					  	  	   dmx_fb[offset + 1],
 								dmx_fb[offset + 2]);
 			}

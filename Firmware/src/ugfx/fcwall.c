@@ -225,7 +225,7 @@ static void selectBox(int mouseX, int mouseY)
  * EXTERN FUNCTIONS
  ******************************************************************************/
 
-void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
+void fcwall_setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
 {
 	int hexCol;
 	int xBox = x*(boxWidth+1);
@@ -273,6 +273,8 @@ void fcwall_init(int w, int h)
 
 	boxWidth = ((int) (gdispGetWidth() / w))-1;
 	boxHeight = ((int) ((gdispGetHeight() - INFO_TEXT_HEIGHT) / h))-1;
+
+
 }
 
 static WORKING_AREA(waThreadButton, 8192);
