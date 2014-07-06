@@ -727,6 +727,9 @@ main(void)
   * configuration.
   */
   sdStart(&SD6, NULL);
+  /*
+   * Activates the SDC driver 1 using default configuration.
+   */
   sdcStart(&SDCD1, NULL);
 
   chprintf((BaseSequentialStream *) &SD6,
@@ -752,10 +755,7 @@ main(void)
   /* start the thread for the wrapping module */
   wf_init(NORMALPRIO - 2);
 
-  /*
-   * Activates the SDC driver 1 using default configuration.
-   */
-  sdcStart(&SDCD1, NULL);
+
 
   /*
    * Activates the card insertion monitor.
