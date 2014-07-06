@@ -324,10 +324,17 @@ void fcwall_initWindow(void)
   chThdCreateStatic(waThreadButton, sizeof(waThreadButton), NORMALPRIO, buttonThread, NULL);
 }
 
-static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
+
+void fcwall_processEvents(SerialUSBDriver* pSDU1)
 {
-  switch(pe->type)
-  {
+	GEvent* 		pe;
+
+	/* Get an Event */
+	pe = geventEventWait(&gl, TIME_INFINITE);
+
+	/* and handle it */
+	switch(pe->type)
+	{
 		  case GEVENT_GWIN_BUTTON:
 				  if  (((GEventGWinButton*)pe)->button == ghButton1)
 				  {
@@ -385,15 +392,5 @@ static void processUGFXevent(GEvent* 		pe, SerialUSBDriver* pSDU1)
 			FCWALL_UARTPRINT("Input Event %X\r\n", pe->type);
 			FCWALL_USBPRINT("Input Event %X\r\n", pe->type);
 			break;
-  }
-}
-
-void fcwall_processEvents(SerialUSBDriver* pSDU1)
-{
-  GEvent* 		pe;
-
-  /* Get an Event */
-  pe = geventEventWait(&gl, TIME_INFINITE);
-  /* and handle it */
-  processUGFXevent(pe, pSDU1);
+	}
 }

@@ -21,6 +21,7 @@ extern "C"
 
 
 #define MENU_BUTTON_WIDTH       75     /**< offset for the info text, aka size of the button */
+
 /** @type gGWdefault
  * @brief Window, where the visualization of the complete wall is present
  */
@@ -38,6 +39,7 @@ void fcwall_initWindow(void);
 /**
  * @fn void fcwall_processEvents(SerialUSBDriver* pSDU1)
  * @param[in] pSDU1     (optional) parameter necessary to print debug messages on the serial console
+ * @brief Handle the events from the touchscreen
  */
 void fcwall_processEvents(SerialUSBDriver* pSDU1);
 
