@@ -296,6 +296,12 @@ void fcwall_init(int w, int h)
 			ghBoxButtons[i] = gwinButtonCreate(0, &widgi);
 		}
 	}
+	/* initialize the rest of unused buttons with zero */
+	while (i < MAX_BOXES)
+	{
+		ghBoxButtons[i] = NULL;
+		i++;
+	}
 }
 
 static WORKING_AREA(waThreadButton, 8192);
