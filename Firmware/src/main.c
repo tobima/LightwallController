@@ -724,6 +724,9 @@ main(void)
   * configuration.
   */
   sdStart(&SD6, NULL);
+  /*
+   * Activates the SDC driver 1 using default configuration.
+   */
   sdcStart(&SDCD1, NULL);
 
   chprintf((BaseSequentialStream *) &SD6,
@@ -734,10 +737,7 @@ main(void)
    */
   chprintf((BaseSequentialStream *) &SD6, "Initialazing SDCARD driver ...");
 
-  /*
-   * Activates the SDC driver 1 using default configuration.
-   */
-  sdcStart(&SDCD1, NULL);
+
 
   /* start the thread for the wrapping module */
   wf_init(NORMALPRIO - 2);
