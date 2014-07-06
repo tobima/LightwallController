@@ -13,7 +13,8 @@
 #include "dmx/dmx.h"
 #include "ugfx_cmd.h"
 
-static wallconf_t	wallcfg;
+#define		STATUS_KILLED		5
+
 static uint8_t		gWallSimuRunning = TRUE;
 
 WORKING_AREA(wa_fc_wallsimu, UGFX_WALL_SIMU_THREAD_STACK_SIZE);
@@ -25,39 +26,38 @@ static msg_t fc_wallsimu(void *p)
 	chRegSetThreadName("dmx2ugfx");
 	(void) p;
 
-	/* Load wall configuration */
-    offset = readConfigurationFile(&wallcfg);
+	int width, height, fps = -1, dim;
+	dmx_getScreenresolution(&width, &height);
+	dmx_getDefaultConfiguration(&fps, &dim);
 
-    if (offset != 0)
+    if (width <= 0 || height <= 0 || fps <= 0)
     {
     	PRINT("%s: Could not parse WALL configuration file \r\n", __FILE__);
     	gWallSimuRunning = FALSE;
     	return RDY_OK;
     }
 
-    fcwall_init(wallcfg.width, wallcfg.height);
-    PRINT("%s wall %dx%d\r\n", __FILE__, wallcfg.width, wallcfg.height);
+    PRINT("%s wall %dx%d\r\n", __FILE__, width, height);
+
+    fcwall_init(width, height);
+
     while (gWallSimuRunning)
     {
-		for (row = 0; row < wallcfg.height; row++)
+		for (row = 0; row < height; row++)
 		{
-		  for (col = 0; col < wallcfg.width; col++)
+		  for (col = 0; col < width; col++)
 			{
-			  offset = (row * wallcfg.width + col);
-			  setBox(col, row,
-								dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 0],
-								dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 1],
-								dmx_buffer.buffer[wallcfg.pLookupTable[offset] + 2]);
+			  offset = (col + (row * width)) * DMX_RGB_COLOR_WIDTH;
+			  fcwall_setBox(col, row, dmx_fb[offset + 0],
+					  	  	   dmx_fb[offset + 1],
+								dmx_fb[offset + 2]);
 			}
 		}
 
-		chThdSleep(MS2ST(1000 / wallcfg.fps));
+		chThdSleep(MS2ST(1000 / fps));
     }
 
-    if (wallcfg.pLookupTable)
-    {
-    	chHeapFree(wallcfg.pLookupTable);
-    }
+    gWallSimuRunning = STATUS_KILLED;
 	return RDY_OK;
 }
 
@@ -80,5 +80,5 @@ void ugfx_wall_simu_stopThread(void)
 
 int ugfx_wall_simu_isRunning(void)
 {
-	return gWallSimuRunning;
+	return (gWallSimuRunning != STATUS_KILLED);
 }

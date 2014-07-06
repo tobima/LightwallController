@@ -32,7 +32,6 @@
 #include "ugfx_util.h"
 #endif
 
-#define FCSCHED_WALLCFG_FILE	"fc/conf/wall"
 #define FCSCHED_CONFIG_FILE     "fc/conf/controller"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
@@ -73,7 +72,8 @@ typedef enum
   FCSRC_STATE_NOBODY = 0, /**< Nobody is writing into the DMX buffer  */
   FCSRC_STATE_FILE, /**< Actual sending frames from a file  */
   FCSRC_STATE_FILEENDED, /**< Need to find the next file to play */
-  FCSRC_STATE_NETWORK /**< Someone is streaming dynamic content to us */
+  FCSRC_STATE_NETWORK, /**< Someone is streaming dynamic content to us */
+  FCSRC_STATE_PROCESSENDED /**< State, that is set, only if the thread was stopped */
 } fcsource_state_t;
 
 /******************************************************************************
@@ -87,13 +87,14 @@ Mailbox * gFcMailboxDyn;
  * LOCAL VARIABLES for this module
  ******************************************************************************/
 
+static int configuredFps;
+static int configuredDimmFactor;
+
 static BaseSequentialStream * gDebugShellSched = NULL;
 
 /* Mailbox, checked by the fullcircle scheduler thread */
 static uint32_t buffer4mailbox2[INPUT_MAILBOX_SIZE];
 static MAILBOX_DECL(mailboxIn, buffer4mailbox2, INPUT_MAILBOX_SIZE);
-
-static wallconf_t wallcfg;
 
 static fcsource_state_t gSourceState = FCSRC_STATE_NOBODY;
 
@@ -139,10 +140,10 @@ static int fcsched_handleInputMailbox(void)
                 hwal_init((BaseSequentialStream *) msg2);
                 break;
               case MSG_SETFPS:
-                wallcfg.fps = (int) msg2;
+                configuredFps = (int) msg2;
                 break;
               case MSG_DIMM:
-                wallcfg.dimmFactor = (int) msg2;
+            	  configuredDimmFactor = (int) msg2;
                 break;
               case MSG_STOPP:
                 gSchedulerActive = FALSE;
@@ -228,82 +229,6 @@ static void fcsched_handleFcMailboxDyn(uint32_t sleeptime)
     }
 }
 
-/** @fn static int wall_handler(void* config, const char* section, const char* name, const char* value)
- * @brief Extract the configuration for the wall
- *
- * After using, the memory of this structure must be freed!
- *
- * @param[in]	config	structure, all found values are stored
- * @param[in]	section	section, actual found
- * @param[in]	name	key
- * @param[in]	value	value
- *
- * @return < 0 on errors
- */
-static int
-wall_handler(void* config, const char* section, const char* name,
-    const char* value)
-{
-  wallconf_t* pconfig = (wallconf_t*) config;
-  int row = strtol(section, NULL, 10);
-  int col;
-  int memoryLength = 0;
-  int dmxval;
-
-  if (MATCH("global", "width"))
-    {
-      pconfig->width = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: width: %3d\r\n", pconfig->width);
-    }
-  else if (MATCH("global", "height"))
-    {
-      pconfig->height = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: height: %3d\r\n", pconfig->height);
-    }
-  else if (MATCH("global", "fps"))
-    {
-      pconfig->fps = strtol(value, NULL, 10);
-      FCSCHED_PRINT("Config: fps: %3d\r\n", pconfig->fps);
-    }
-  else if (MATCH("global", "dim"))
-    {
-      pconfig->dimmFactor = strtol(value, NULL, 10);
-    }
-   else if ((row >= 0) && (row < pconfig->height))
-    {
-      /* when the function was called the first time, take some memory */
-      if (pconfig->pLookupTable == NULL)
-        {
-          memoryLength = sizeof(uint32_t) * pconfig->width * pconfig->height;
-          pconfig->pLookupTable = chHeapAlloc(0, memoryLength);
-          if (pconfig->pLookupTable == NULL)
-          {
-        	  FCSCHED_PRINT("%s Not enough memory to allocate %d bytes \r\n", __FILE__, memoryLength);
-          }
-		  /* Clean the whole memory: (dmxval is reused as index) */
-		  for(dmxval=0; dmxval < memoryLength; dmxval++)
-		  {
-			pconfig->pLookupTable[dmxval] = 0;
-		  }
-        }
-      col = strtol(name, NULL, 10);
-      dmxval = (uint32_t) strtol(value, NULL, 10);
-      FCSCHED_PRINT("Updated row: %3d\tcol: %3d\tdmx: %3d\r\n", row, col, dmxval);
-      if ((row * pconfig->width + col) < (pconfig->width * pconfig->height) )
-      {
-        pconfig->pLookupTable[row * pconfig->width + col] = dmxval;
-      }
-      else
-      {
-    	  FCSCHED_PRINT("ERROR could not set dmxvalue %d\r\n", dmxval);
-      }
-    }
-  else
-    {
-      return 0; /* unknown section/name, error */
-    }
-  return 1;
-}
 
 /** @fn static int configuration_handler(void* config, const char* section, const char* name, const char* value)
  * @brief Extract the configuration for the scheduler
@@ -353,6 +278,7 @@ msg_t fc_scheduler(void *p)
     uint32_t filenameLength = 0;
     char* root = FCSCHED_FILE_ROOT;
     schedulerconf_t schedConfiguration;
+    int width, height = -1;
 
   #ifdef UGFX_WALL
     /* Initiaize the font */
@@ -372,14 +298,14 @@ msg_t fc_scheduler(void *p)
 
     hwal_memset(&seq, 0, sizeof(fcsequence_t));
 
+    dmx_getScreenresolution(&width, &height);
+    dmx_getDefaultConfiguration(&configuredFps, &configuredDimmFactor);
+
     chRegSetThreadName("fcscheduler");
     (void) p;
 
-    /* Load wall configuration */
-    readConfigurationFile(&wallcfg);
-
     /* Load the configuration */
-    hwal_memset(&schedConfiguration, 0, sizeof(wallconf_t));
+    hwal_memset(&schedConfiguration, 0, sizeof(schedulerconf_t));
 
     ini_parse(FCSCHED_CONFIG_FILE, configuration_handler, &schedConfiguration);
 
@@ -430,7 +356,7 @@ msg_t fc_scheduler(void *p)
 #ifdef UGFX_WALL
 		gdispPrintf(0, gdispGetHeight() - 30, font, White, 256, 
 			"%d x %d , %d fps [dimmed to %d%%]", 
-			wallcfg.width, wallcfg.height, wallcfg.fps, wallcfg.dimmFactor);
+			width, height, configuredFps, configuredDimmFactor);
 		gdispPrintf(0, gdispGetHeight() - 15, font, White, 256, 
 			"File %s playing.", path);
 #endif
@@ -444,9 +370,10 @@ msg_t fc_scheduler(void *p)
                     /* Allocation some space for the RGB buffer */
                     rgb24 = (uint8_t*) chHeapAlloc(NULL,
                         (seq.width * seq.height * 3));
-                    seq.fps = wallcfg.fps;
+                    seq.fps = configuredFps;
+                    dmx_dim(configuredDimmFactor);
                     FCSCHED_PRINT("Using %d fps and dimmed to %d %.\r\n",
-                        seq.fps, wallcfg.dimmFactor);
+                        seq.fps, configuredDimmFactor);
                     sleeptime = (1000 / seq.fps);
                   }
                 else
@@ -516,7 +443,9 @@ msg_t fc_scheduler(void *p)
         else
           {
             /* Write the DMX buffer */
-            fcsched_printFrame(rgb24, seq.width, seq.height, &wallcfg);
+        	hwal_memcpy(dmx_fb, rgb24, seq.width * seq.height * DMX_RGB_COLOR_WIDTH);
+        	dmx_update(seq.width , seq.height);
+        	FCSCHED_PRINT("%X\r\n", rgb24[0]);
           }
         break;
       case FCSRC_STATE_NETWORK:
@@ -532,8 +461,7 @@ msg_t fc_scheduler(void *p)
         break;
       default:
         /*FIXME check dynamic fullcircle for a new client */
-        FCSCHED_PRINT("Unkown status: %d\r\n", gSourceState)
-        ;
+        FCSCHED_PRINT("Unkown status: %d\r\n", gSourceState);
         break;
         }
 
@@ -556,83 +484,10 @@ msg_t fc_scheduler(void *p)
     	FCSCHED_PRINT("File closed\r\n");
     }
 
-  /* clean the memory of the configuration */
-  if (wallcfg.pLookupTable)
-    {
-      hwal_free(wallcfg.pLookupTable);
-      wallcfg.pLookupTable = NULL;
-    }
-
+  gSchedulerActive = FCSRC_STATE_PROCESSENDED;
   FCSCHED_PRINT("Scheduler stopped!\r\n");
 
   return RDY_OK;
-}
-
-static uint8_t
-dimmValue(uint8_t incoming, int factor)
-{
-  uint32_t tmp = incoming;
-  tmp = tmp * factor / 100;
-  if (tmp > 255)
-    tmp = 255;
-  return (uint8_t) tmp;
-}
-
-extern int
-readConfigurationFile(wallconf_t* pConfiguration)
-{
-	if (pConfiguration == NULL)
-	{
-		FCSCHED_PRINT("ERROR! No configuration memory given\r\n");
-		return 1;
-	}
-
-  FCSCHED_PRINT("Reading configuration file\r\n");
-  hwal_memset(pConfiguration, 0, sizeof(wallconf_t));
-  pConfiguration->dimmFactor = 100;
-  pConfiguration->fps = -1;
-
-  /* Load the configuration */
-  return ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
-}
-
-extern void
-fcsched_printFrame(uint8_t* pBuffer, int width, int height,
-    wallconf_t* pWallcfg)
-{
-  int row, col, offset;
-  dmx_buffer.length = width * height * 3;
-
-  
-  if (pWallcfg && pWallcfg->height == height && pWallcfg->width == width)
-    {
-      for (row = 0; row < pWallcfg->height; row++)
-        {
-          for (col = 0; col < pWallcfg->width; col++)
-            {
-              offset = (row * pWallcfg->width + col);
-              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 0] = dimmValue(
-                  pBuffer[offset * 3 + 0], pWallcfg->dimmFactor);
-              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 1] = dimmValue(
-                  pBuffer[offset * 3 + 1], pWallcfg->dimmFactor);
-              dmx_buffer.buffer[pWallcfg->pLookupTable[offset] + 2] = dimmValue(
-                  pBuffer[offset * 3 + 2], pWallcfg->dimmFactor);
-            }
-        }
-    }
-  else
-    {
-	
-#ifdef UGFX_WALL
-	font_t font = gdispOpenFont("DejaVu*");
-	gdispPrintf(0, gdispGetHeight() - 15, font, Red, 512, 
-			"WRONG Resolution: Wall has %d x %d, but file is %d x %d", 
-			wallcfg.width, wallcfg.height, width, height);
-                
-#endif
-      /* Set the DMX buffer directly */
-      memcpy(dmx_buffer.buffer, pBuffer, dmx_buffer.length);
-    }
 }
 
 void
@@ -696,22 +551,11 @@ fcscheduler_cmdline(BaseSequentialStream *chp, int argc, char *argv[])
 		chprintf(chp, "Start server again\r\n");
 		fcscheduler_startThread();
 	}
-	else if (strcmp(argv[0], "config") == 0)
+	else if (strcmp(argv[0], "status") == 0 )
 	{
-	  wallconf_t demo;
-	  int retConfig;
-
-	  if ( !gSchedulerActive )
-	  {
-		  chprintf(chp, "Scheduler is stopped, you need to start:\r\nfcsched start\r\n" );
-		return;
-	  }
-
-	  /* Load wall configuration */
-	  retConfig = readConfigurationFile(&demo);
-          
-          chprintf(chp, "Width and height are %dx%d (parsing returned %d, 0: success, all other values indicate problems)\r\n", demo.width, demo.height, retConfig);
+		chprintf(chp, "Server status is %d\r\n", gSchedulerActive);
 	}
+
     }
 
 }
@@ -737,5 +581,5 @@ fcscheduler_stopThread(void)
 int fcscheduler_isRunning(void)
 {
 	/* check the last variable, that is cleared in the threads (@see fc_scheduler()) */
-	return (wallcfg.pLookupTable != NULL);
+	return (gSchedulerActive == FCSRC_STATE_PROCESSENDED);
 }

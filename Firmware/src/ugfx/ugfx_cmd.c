@@ -10,6 +10,7 @@
 #include "fcscheduler.h"
 #include "flash.h"
 #include "hwal.h"	/* necessary for custom created memset */
+#include "wall_simu.h"
 #include <string.h>
 
 
@@ -213,12 +214,17 @@ void ugfx_cmd_shell(BaseSequentialStream *chp, int argc, char *argv[])
 			}
 			chprintf(chp, "Erased at 0x%x %d bytes \r\n", FLASH_CONFIG_BASEADDR, CALIBRATION_SIZE);
 		}
+		else if (PARAM_CMP(argv[0], "stop")) == 0)
+		{
+			ugfx_wall_simu_stopThread();
+		}
 	}
 	else
 	{
 		chprintf(chp, "GUI UTIL\r\n"
 				"Possible arguments are:\r\n"
 				"- calibrate\tCalibrate the touchscreen\r\n"
-				"- erase\tErase the necessary flash for the calibration data\r\n");
+				"- erase\tErase the necessary flash for the calibration data\r\n"
+				"- stop\tStop visualization thread of the boxes\r\n");
 	}
 }

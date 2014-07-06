@@ -21,13 +21,29 @@ extern "C"
 
 
 #define MENU_BUTTON_WIDTH       75     /**< offset for the info text, aka size of the button */
+
 /** @type gGWdefault
- * @brief Window, where the visualization of the complete wall is present
+ * @brief Window, where the visualization of the complete wall is taking place
  */
 extern GHandle gGWdefault;
 
-void setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue);
+/** @fn void fcwall_setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue)
+ * @brief Draw the given box on the LCD
+ * @param[in] x		position from the left side in a row	range: 0 - width of the wall (exclusive the amount itself)
+ * @param[in] y		row	to use range: 0 - height of the wall (exclusive the amount itself)
+ * @param[in] red	range: 0 - 255
+ * @param[in] green	range: 0 - 255
+ * @param[in] blue	range: 0 - 255
+ */
+void fcwall_setBox(int x, int y, uint8_t red, uint8_t green, uint8_t blue);
 
+/** @fn void fcwall_init(int width, int height)
+ * @brief Initialize the resolution of the wall to display on the LCD
+ * @param[in]	width	of the wall in boxes
+ * @param[in]	height	of the wall in boxes
+ *
+ * This function MUST be called before @see fcwall_setBox can be used.
+ */
 void fcwall_init(int width, int height);
 
 /** @fn void fcwall_initWindow(void)
@@ -37,7 +53,8 @@ void fcwall_initWindow(void);
 
 /**
  * @fn void fcwall_processEvents(SerialUSBDriver* pSDU1)
- * @param[in] pSDU1     (optinal) parameter necessary to print debug messages on the serial console
+ * @param[in] pSDU1     (optional) parameter necessary to print debug messages on the serial console
+ * @brief Handle the events from the touchscreen
  */
 void fcwall_processEvents(SerialUSBDriver* pSDU1);
 

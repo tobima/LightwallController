@@ -10,41 +10,22 @@
 #include "fcscheduler.h"
 #include "fcwall.h"
 #include "dmx/dmx.h"
+#include <string.h> /* Necessary for "memset" */
 
-static wallconf_t* pWallconfig;
 static int activated = 0;
 
 void ugfx_cmd_manualtesting_init()
 {
-	int row, col, offset, retStatus;
 
-	pWallconfig = chHeapAlloc(0, sizeof(wallconf_t));
+	/* clear the DMX buffer */
+	memset(dmx_fb, 0, DMX_BUFFER_MAX);
 
-	/* Load wall configuration */
-	retStatus = readConfigurationFile(pWallconfig);
-
-	if (retStatus == 0)
-	{
-		/* clear the DMX buffer */
-		for (row = 0; row < pWallconfig->height; row++)
-		{
-			for (col = 0; col < pWallconfig->width; col++)
-			{
-				offset = (row * pWallconfig->width + col);
-				dmx_buffer.buffer[pWallconfig->pLookupTable[offset] + 0] = 0;
-				dmx_buffer.buffer[pWallconfig->pLookupTable[offset] + 1] = 0;
-				dmx_buffer.buffer[pWallconfig->pLookupTable[offset] + 2] = 0;
-			}
-		}
-		PRINT("%s DMX buffer cleaned, wall resolution is %dx%d\r\n", __FILE__, pWallconfig->width, pWallconfig->height);
-	}
 	activated = TRUE;
 }
 
 void ugfx_cmd_manualtesting_stop()
 {
 	activated = FALSE;
-	chHeapFree(pWallconfig->pLookupTable);
-	chHeapFree(pWallconfig);
+
 }
 

@@ -34,7 +34,7 @@
 #include "lwip/api.h"
 
 #include "web.h"
-#include "ff.h"
+#include "fatfsWrapper.h"
 
 #if LWIP_NETCONN
 

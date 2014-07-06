@@ -94,8 +94,7 @@ static EventSource inserted_event, removed_event;
  *
  * @notapi
  */
-static void
-tmrfunc(void *p)
+static void tmrfunc(void *p)
 {
   BaseBlockDevice *bbdp = p;
 
@@ -133,8 +132,7 @@ tmrfunc(void *p)
  *
  * @notapi
  */
-static void
-tmr_init(void *p)
+static void tmr_init(void *p)
 {
   chEvtInit(&inserted_event);
   chEvtInit(&removed_event);
@@ -158,8 +156,7 @@ static FATFS SDC_FS;
 /* FS mounted and ready.*/
 static bool_t fs_ready = FALSE;
 
-static void
-print_fsusage(BaseSequentialStream *chp, int argc, char *argv[])
+static void print_fsusage(BaseSequentialStream *chp, int argc, char *argv[])
 {
   uint32_t clusters;
   FATFS *fsp;
@@ -591,15 +588,15 @@ static const ShellCommand commands[] =
     { "threads", cmd_threads },
     { "dmx", cmd_dmx_modify },
     { "rgb" , dmx_rgb_modify },
-#ifndef FILESYSTEM_ONLY
+#ifndef DISABLE_FILESYSTEM
     { "tree", cmd_tree },
     { "cat", cmd_cat },
     { "ifconfig", cmd_ifconfig },
     { "fcdyn", fcserverImpl_cmdline },
     { "fcsched", fcscheduler_cmdline },
-#endif
 #ifdef UGFX_WALL
     { "ugfx", ugfx_cmd_shell },
+#endif
 #endif
     { "flash", cmd_flash },
     { NULL, NULL } };
@@ -735,27 +732,15 @@ main(void)
   chprintf((BaseSequentialStream *) &SD6,
       "\x1b[1J\x1b[0;0HStarting ChibiOS\r\n");
 
-
-  chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
-
-  /* test only the initialization */
-  DMXInit();
-
-  /*************************************
-   * Creates the DMX thread.
-   */
-  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-
   /*************************************
    * SDCard
    */
   chprintf((BaseSequentialStream *) &SD6, "Initialazing SDCARD driver ...");
 
+
+
   /* start the thread for the wrapping module */
   wf_init(NORMALPRIO - 2);
-
-
 
   /*
    * Activates the card insertion monitor.
@@ -816,14 +801,14 @@ main(void)
 
       if (use_config)
         {
-          chprintf((BaseSequentialStream *) &SD6, "\x1b[32m OK\r\n\x1b[0m");
+          chprintf((BaseSequentialStream *) &SD6, "\x1b[32m OK\r\n\x1b[0m ");
         }
       else
         {
           chprintf((BaseSequentialStream *) &SD6,
               "\x1b[31m Failed!\r\n\x1b[0m");
         }
-
+      chprintf((BaseSequentialStream *) &SD6, "\r\n");
     }
 
 
@@ -834,17 +819,29 @@ main(void)
       lwip_thread, (use_config) ? &(config.network) : NULL);
 
   /**************************************
-   * Creates the Fullcircle server thread.
-   */
-  chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
-      fc_server, NULL);
-
-  /**************************************
    * Creates the HTTP thread.
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
+#endif
 
+  chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
+
+  /* test only the initialization */
+  DMXInit();
+
+  /*************************************
+   * Creates the DMX thread.
+   */
+  chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+
+#ifndef DISABLE_FILESYSTEM
+  /**************************************
+   * Creates the Fullcircle server thread.
+   */
+  chThdCreateStatic(wa_fc_server, sizeof(wa_fc_server), NORMALPRIO + 1,
+      fc_server, NULL);
   /**************************************
    * Creates the scheduler thread.
    */
@@ -857,6 +854,8 @@ main(void)
   //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
   //                server_thread, NULL);
 
+#endif
+
 #ifdef UGFX_WALL
 
   /**************************************
@@ -866,8 +865,6 @@ main(void)
   ugfx_wall_simu_startThread();
 #endif
 
-#endif
-
   chprintf((BaseSequentialStream *) &SD6, "Initializing Shell...");
 
   /**************************************
@@ -875,11 +872,7 @@ main(void)
    */
   shellInit();
 
-
-  chprintf((BaseSequentialStream *) &SD6, "Create new Shell\r\n");
-
   shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
-  chprintf((BaseSequentialStream *) &SD6, "Done\r\n");
 
   /*
    * Normal main() thread activity, in this demo it does nothing except

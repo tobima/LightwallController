@@ -36,7 +36,7 @@ extern void ugfx_wall_simu_startThread(void);
 extern void ugfx_wall_simu_stopThread(void);
 
 /** @fn int WALL_SIMU_isRunning(void)
- * @brief status information, if the scheduler is running
+ * @brief status information, if the visualization is running
  *@return TRUE: if the scheduler is runnning
  *@return FALSE: no files will be automatically displayed
  */
