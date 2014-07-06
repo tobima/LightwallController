@@ -214,8 +214,18 @@ static void deleteMenuWindow(void)
   gwinDrawBox (gGWdefault, gwinGetScreenX(GWmenu), gwinGetScreenY(GWmenu),
       gwinGetWidth(GWmenu), gwinGetHeight(GWmenu));
 
-  gwinDestroy(ghButtonCalibrate);
-  ghButtonCalibrate = NULL;
+  if (ghButtonCalibrate)
+  {
+	  gwinDestroy(ghButtonCalibrate);
+	  ghButtonCalibrate = NULL;
+  }
+
+  if (ghBoxButtonClose)
+  {
+	  gwinDestroy(ghBoxButtonClose);
+	  ghBoxButtonClose = NULL;
+  }
+
   gwinDestroy(GWmenu);
   GWmenu = NULL;
 }
@@ -276,13 +286,12 @@ void fcwall_init(int w, int h)
 	boxHeight = ((int) ((gdispGetHeight() - INFO_TEXT_HEIGHT) / h))-1;
 
 	/* initialize the buttons, to make the boxes modifiable */
-	for (y=0; y < wallWidth; y++)
+	for (y=0; y < wallHeight; y++)
 	{
 		for (x=0; x < wallWidth; x++)
 		{
 			xBox = x*(boxWidth+1);
 			yBox = y*(boxHeight+1);
-			i = y * boxWidth + x;
 
 			/* Apply the button parameters */
 			widgi.customDraw = 0;
@@ -293,7 +302,7 @@ void fcwall_init(int w, int h)
 			widgi.g.y = yBox;
 			widgi.g.x = xBox;
 			widgi.g.show = TRUE;
-			ghBoxButtons[i] = gwinButtonCreate(0, &widgi);
+			ghBoxButtons[i++] = gwinButtonCreate(0, &widgi);
 		}
 	}
 	/* initialize the rest of unused buttons with zero */
@@ -357,69 +366,86 @@ void fcwall_initWindow(void)
 void fcwall_processEvents(SerialUSBDriver* pSDU1)
 {
 	GEvent* 		pe;
-
+	int i;
 	/* Get an Event */
 	pe = geventEventWait(&gl, TIME_INFINITE);
 
 	/* and handle it */
 	switch(pe->type)
 	{
-		  case GEVENT_GWIN_BUTTON:
-				  if  (((GEventGWinButton*)pe)->button == ghButton1)
-				  {
-					/* toggle visibility */
-					IF_MENU_VISIBLE
-					{
-						deleteMenuWindow();
-					}
-					else
-					{
-						createMenuWindow();
-						gwinSetVisible(GWmenu, TRUE);
-					}
-				  }
-				  else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
-				  {
-					  ugfx_wall_simu_stopThread();
-					  while (ugfx_wall_simu_isRunning())
-					  {
-						  chThdSleepMilliseconds(50);
-					  }
-					  deleteMenuWindow();
-					  stopUIUpdate = TRUE;
-					  ugfx_cmd_calibrate(pSDU1);
-					  stopUIUpdate = FALSE;
-				  }
-				  else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
-				  {
-					  /* do only something if window is visible */
-					  IF_MENU_VISIBLE
-					  {
-						  deleteMenuWindow();
+	  case GEVENT_GWIN_BUTTON:
+		  if  (((GEventGWinButton*)pe)->button == ghButton1)
+		  {
+			/* toggle visibility */
+			IF_MENU_VISIBLE
+			{
+				deleteMenuWindow();
+			}
+			else
+			{
+				createMenuWindow();
+				gwinSetVisible(GWmenu, TRUE);
+			}
+		  }
+		  else if  (((GEventGWinButton*)pe)->button == ghButtonCalibrate)
+		  {
+			  ugfx_wall_simu_stopThread();
+			  while (ugfx_wall_simu_isRunning())
+			  {
+				  chThdSleepMilliseconds(50);
+			  }
+			  deleteMenuWindow();
+			  stopUIUpdate = TRUE;
+			  ugfx_cmd_calibrate(pSDU1);
+			  stopUIUpdate = FALSE;
+		  }
+		  else if  (((GEventGWinButton*)pe)->button == ghButtonManualTesting)
+		  {
+			  /* do only something if window is visible */
+			  IF_MENU_VISIBLE
+			  {
+				  deleteMenuWindow();
 
-						  gManualStatus = !gManualStatus;
-						  if (gManualStatus)
-						  {
-							  ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_START);
-						  }
-						  else
-						  {
-							  ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_ENDED);
-						  }
-					  }
-				  }
-				  else if  (((GEventGWinButton*)pe)->button == ghBoxButtonClose)
+				  gManualStatus = !gManualStatus;
+				  if (gManualStatus)
 				  {
-					  deleteMenuWindow();
+					  ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_START);
 				  }
 				  else
 				  {
-					  FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
+					  ugfx_cmd_manualtesting(UGFX_CMD_MANUAL_ENDED);
 				  }
-				  break;
-		  default:
-			FCWALL_UARTPRINT("Input Event %X\r\n", pe->type);
-			FCWALL_USBPRINT("Input Event %X\r\n", pe->type);
-			break;
+			  }
+		  }
+		  else if  (((GEventGWinButton*)pe)->button == ghBoxButtonClose)
+		  {
+			  deleteMenuWindow();
+		  }
+		  else
+		  {
+			for(i=0; i < MAX_BOXES; i++)
+			{
+			  if  (((GEventGWinButton*)pe)->button == ghBoxButtons[i])
+			  {
+				  gSelectedX = i % wallWidth;
+				  gSelectedY = wallHeight - (int) (i / wallWidth); /* swap wall horizontal as in reality */
+				  gdispPrintf(0, gdispGetHeight() - 15, gdispOpenFont("DejaVu*"), Red, 256, "%d x %d Box selected", gSelectedX, gSelectedY);
+				  if (gManualStatus)
+				  {
+					  createMenuWindowSingleBox();
+				  }
+
+				  return; /* stop this parsing function! We found a button :-) */
+			  }
+			}
+
+			/* Damn, something unexpected occurred */
+			FCWALL_USBPRINT("Other button clicked, window %X\r\n", ((GEventGWinButton*)pe)->button);
+		  }
+		  break;
+	  default:
+		FCWALL_UARTPRINT("Input Event %X\r\n", pe->type);
+		FCWALL_USBPRINT("Input Event %X\r\n", pe->type);
+		break;
 	}
 }
