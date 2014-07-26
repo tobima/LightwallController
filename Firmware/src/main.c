@@ -847,13 +847,14 @@ main(void)
    */
   chThdSleep(MS2ST(50));
   fcscheduler_startThread();
+#endif
 
-  /**************************************
-   * Creates the Net Shell thread.
-   */
-  //chThdCreateStatic(wa_net_shell_server, sizeof(wa_net_shell_server), NORMALPRIO + 1,
-  //                server_thread, NULL);
-
+#if WITH_TELNET
+    /*
+	* Creates the Telnet Server thread (it changes priority internally).
+	*/
+    chThdCreateStatic(wa_telnet_server, sizeof(wa_telnet_server), NORMALPRIO + 1,
+                      telnet_server, (void *) commands);
 #endif
 
 #ifdef UGFX_WALL

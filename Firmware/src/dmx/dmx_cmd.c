@@ -23,7 +23,7 @@
 void
 cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 {
-#define DMX_USAGE_HELP "Possible commands are:\r\nshow\tprint content\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\nfill (start offset) (hex to send, without spaces!)\r\nshrink (size)\tUpdate the length of the universe\r\n"
+#define DMX_USAGE_HELP "Possible commands are:\r\nshow\tprint content\r\nwrite (offset) (value)\r\nfill (start offset) (end) (value)\r\nfill (start offset) (hex to send, without spaces!)\r\n"
 
   if (argc < 1)
     {
@@ -34,6 +34,9 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
 
   if (argc >= 1)
     {
+	  /* Always deactivate the mapping logic to convert framebuffer offsets to DMX offsets */
+	  dmx_update(0, 0);
+
       if (strcmp(argv[0], "write") == 0)
         {
           if (argc < 3)
@@ -137,34 +140,32 @@ cmd_dmx_modify(BaseSequentialStream *chp, int argc, char *argv[])
         {
           int i, width, height = 0;
           dmx_getScreenresolution(&width, &height);
-          chprintf(chp, "DMX is filled with %d x %d pixel\r\n", width, height);
-          for (i = 0; i < width * height; i++)
-          {
-              chprintf(chp, "%.2X%.2X%.2X|", dmx_fb[i + 0], dmx_fb[i + 1], dmx_fb[i + 2]);
 
-              /* generate a new line after each row */
-              if ((i + 1) % width == 0)
-              {
-            	  chprintf(chp, "\r\n");
-              }
+          if (width == 0 && height == 0)
+          { /* Display the complete DMX universe */
+        	  for (i = 0; i < DMX_BUFFER_MAX; i++)
+			  {
+				  chprintf(chp, "%.2X%", dmx_fb[i]);
+			  }
           }
-          chprintf(chp, "\r\n");
-        }
-      else if (strcmp(argv[0], "shrink") == 0)
-        {
-          if (argc < 2)
-            {
-              chprintf(chp, "Usage: dmx shrink (universe size)\r\n");
-            }
           else
-            {
-              int size = atoi(argv[1]);
+          {	  /* We have valid information! Let's display the wall on the shell */
+			  chprintf(chp, "DMX is filled with %d x %d pixel\r\n", width, height);
+			  for (i = 0; i < width * height; i++)
+			  {
+				  chprintf(chp, "%.2X%.2X%.2X|",
+						  dmx_fb[i * DMX_RGB_COLOR_WIDTH + 0],
+						  dmx_fb[i * DMX_RGB_COLOR_WIDTH + 1],
+						  dmx_fb[i * DMX_RGB_COLOR_WIDTH + 2]);
 
-              dmx_update(1, size / DMX_RGB_COLOR_WIDTH);
-              chprintf(chp,
-                  "Update size of the universe %d bytes (%d x %d ).\r\n",
-                  size, 1, (size / DMX_RGB_COLOR_WIDTH) );
-            }
+				  /* generate a new line after each row */
+				  if ((i + 1) % width == 0)
+				  {
+					  chprintf(chp, "\r\n");
+				  }
+			  }
+			  chprintf(chp, "\r\n");
+          }
         }
       else if (strcmp(argv[0], "help") == 0)
         {

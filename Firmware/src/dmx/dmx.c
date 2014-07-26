@@ -401,9 +401,17 @@ static void updateDMXbuffer()
 {
 	int row, col, offset;
 
+	/* The given width and height are both set to zero -> deactivate the mapping logic */
+	if (dmx_buffer.length)
+	{
+		/* Set the DMX buffer directly */
+		memcpy(dmx_buffer.buffer, dmx_fb, DMX_BUFFER_MAX);
+		return;
+	}
 
+	  /* no configuration is present, the mapping could not be done */
 	  if (wallcfg.pLookupTable)
-	    {
+	  {
 	      for (row = 0; row < wallcfg.height; row++)
 	        {
 	          for (col = 0; col < wallcfg.width; col++)
@@ -417,9 +425,9 @@ static void updateDMXbuffer()
 	            		  dmx_fb[offset * 3 + 2]);
 	            }
 	        }
-	    }
+	  }
 	  else
-	    {
+	  {
 
 		  /*
 				"WRONG Resolution: Wall has %d x %d, but file is %d x %d",

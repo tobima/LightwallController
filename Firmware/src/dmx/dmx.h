@@ -75,6 +75,8 @@ extern "C"
 
   /** @fn void dmx_update(int width, int height)
    * @brief Update the resolution of the frame to display.
+   * If both parameter (width and height) are set to zero, the mapping functionality is deactivate.
+   * The DMX universe is set to the maximum.
    *
    * @param[in] width	of the current frame
    * @param[in] height	of the current frame

@@ -103,6 +103,8 @@ uint32_t gFcConnectedClients = 0;
 static uint32_t gDynamicServerTimeout = FCSCHED_DYNSERVER_RESETVALUE;
 static uint8_t  gSchedulerActive = TRUE;
 
+static char path[FILENAME_LENGTH];	/**< Path of the actual played file */
+
 /******************************************************************************
  * LOCAL FUNCTIONS
  ******************************************************************************/
@@ -273,7 +275,6 @@ msg_t fc_scheduler(void *p)
   int sleeptime = FCSERVER_IMPL_SLEEPTIME;
     /* File handling variables: */
     int res, resOpen;
-    char path[FILENAME_LENGTH];
     char *filename = NULL;
     uint32_t filenameLength = 0;
     char* root = FCSCHED_FILE_ROOT;
@@ -581,5 +582,19 @@ fcscheduler_stopThread(void)
 int fcscheduler_isRunning(void)
 {
 	/* check the last variable, that is cleared in the threads (@see fc_scheduler()) */
-	return (gSchedulerActive == FCSRC_STATE_PROCESSENDED);
+	return (gSchedulerActive != FCSRC_STATE_PROCESSENDED);
+}
+
+int fcscheduler_getActualFile(char* pPathToFile, int* pLengthOfFile)
+{
+	if ((strlen(path) + 1) > (*pLengthOfFile) )
+	{
+		return 1;
+	}
+
+	chSysLock();
+	(*pLengthOfFile) = strlen(path) + 1 /* also copy the ending zero */;
+	memcpy(pPathToFile, path, strlen(path));
+	chSysUnlock();
+	return 0; /* Success */
 }

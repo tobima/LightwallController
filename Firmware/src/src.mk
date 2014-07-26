@@ -17,7 +17,6 @@ APPSRC = src/web/web.c \
        src/fullcircle/fcserverImpl.c \
        src/fullcircle/fcscheduler.c 
 
-
 # Required include directories
 APPINC = ${APP} \
        src/fullcircle
@@ -29,7 +28,7 @@ APPDEFS =
 # Debugging for the underling library
 #APPDEFS += -DPRINT_DEBUG
 
-#APPDEFS += -DWITH_TELNET
+APPDEFS += -DWITH_TELNET
 #APPDEFS += -DDISABLE_FILESYSTEM
 
 # Append the WALL
