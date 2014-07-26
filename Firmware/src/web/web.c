@@ -105,6 +105,7 @@ static void http_server_serve(struct netconn *conn)
             {
             	netconn_write(conn, http_index_html_running, sizeof(http_index_html_running)-1, NETCONN_NOCOPY);
             	int length = FILENAME_LENGTH;
+            	memset(actualPlayingFile, 0, FILENAME_LENGTH); /* clear old files */
             	if (!fcscheduler_getActualFile(actualPlayingFile, length))
             	{
             		netconn_write(conn, http_index_html_playingfile_start, sizeof(http_index_html_playingfile_start)-1, NETCONN_NOCOPY);
