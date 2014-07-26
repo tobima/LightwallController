@@ -39,9 +39,9 @@
 #if LWIP_NETCONN
 
 static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
-static const char http_index_html[] = "<html><head><title>Congrats!</title></head><body><h1>Welcome to Lightwallcontroller</h1><p>This is a small test page.<ul>";
+static const char http_index_html[] = "<html><head><title>Lightwall Controller</title></head><body><h1>Welcome to Lightwallcontroller</h1><p>This is a small test page.<ul>";
 static const char http_index_html1[] = "</ul></body></html>";
-static const char http_index_html2[] = "</ul><p>Your sended:<ul>";
+static const char http_index_html2[] = "</ul><p>You sended:<ul>";
 static const char list_start[] = "<li>";
 static const char list_end[] = "</li>";
 
