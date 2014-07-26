@@ -80,4 +80,14 @@ void fcscheduler_stopThread(void);
  */
 int fcscheduler_isRunning(void);
 
+/**
+ *@fn int fcscheduler_getActualFile(char* pPathToFile)
+ *@brief Get the file including its path of the actual played file.
+ *@param[out]	pPathToFile Memory, where the actual played file is stored into
+ *@param[in|out]	length in bytes, that fit at maximum in the given memory (pPathToFile); Later it returns the length of the found path
+ *@return 1 on failure
+ *@return 0 on success
+ */
+int fcscheduler_getActualFile(char* pPathToFile, int* pLengthOfFile);
+
 #endif /* End of _FCSCHEDULER_H */

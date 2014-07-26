@@ -35,15 +35,26 @@
 
 #include "web.h"
 #include "fatfsWrapper.h"
+#include "fcscheduler.h"
 
 #if LWIP_NETCONN
+
+#ifndef FILENAME_LENGTH
+#define FILENAME_LENGTH		100
+#endif
 
 static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 static const char http_index_html[] = "<html><head><title>Lightwall Controller</title></head><body><h1>Welcome to Lightwallcontroller</h1><p>This is a small test page.<ul>";
 static const char http_index_html1[] = "</ul></body></html>";
 static const char http_index_html2[] = "</ul><p>You sended:<ul>";
+static const char http_index_html_running[] = "<font color=\"green\">Deamon is running</font><br />";
+static const char http_index_html_stopped[] = "<font color=\"red\">Deamon is stopped</font><br />";
+static const char http_index_html_playingfile_start[] = "<font color=\"blue\">Playing ";
+static const char http_index_html_playingfile_end[] = "</font><br />";
 static const char list_start[] = "<li>";
 static const char list_end[] = "</li>";
+static char actualPlayingFile[FILENAME_LENGTH];
+
 
 static void http_server_serve(struct netconn *conn)
   {
@@ -90,26 +101,22 @@ static void http_server_serve(struct netconn *conn)
             /* Send our HTML page */
             netconn_write(conn, http_index_html, sizeof(http_index_html)-1, NETCONN_NOCOPY);
 
-            res = wf_opendir(&dir, "/");
-            if (res == FR_OK)
-              {
-                for (;;)
-                  {
-                    res = wf_readdir(&dir, &fno);
-                    if (res != FR_OK || fno.fname[0] == 0)
-                    break;
-                    if (fno.fname[0] == '.')
-                    continue;
-#if _USE_LFN
-                    fn = *fno.lfname ? fno.lfname : fno.fname;
-#else
-                    fn = fno.fname;
-#endif
-                    netconn_write(conn, list_start, sizeof(list_start) -1, NETCONN_NOCOPY);
-                    netconn_write(conn, fn, strlen(fn), NETCONN_COPY);
-                    netconn_write(conn, list_end, sizeof(list_end) -1, NETCONN_NOCOPY);
-                  }
-              }
+            if (fcscheduler_isRunning())
+            {
+            	netconn_write(conn, http_index_html_running, sizeof(http_index_html_running)-1, NETCONN_NOCOPY);
+            	int length = FILENAME_LENGTH;
+            	if (!fcscheduler_getActualFile(actualPlayingFile, length))
+            	{
+            		netconn_write(conn, http_index_html_playingfile_start, sizeof(http_index_html_playingfile_start)-1, NETCONN_NOCOPY);
+            		netconn_write(conn, actualPlayingFile, length-1, NETCONN_NOCOPY);
+            		netconn_write(conn, http_index_html_playingfile_end, sizeof(http_index_html_playingfile_end)-1, NETCONN_NOCOPY);
+            	}
+            }
+            else
+            {
+            	netconn_write(conn, http_index_html_stopped, sizeof(http_index_html_stopped)-1, NETCONN_NOCOPY);
+            }
+
             netconn_write(conn, http_index_html2, sizeof(http_index_html1)-1, NETCONN_NOCOPY);
             netconn_write(conn, list_start, sizeof(list_start) -1, NETCONN_NOCOPY);
 			netconn_write(conn, buf, buflen, NETCONN_COPY); /* Send back the request */
