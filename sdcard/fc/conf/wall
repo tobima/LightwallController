@@ -2,7 +2,11 @@
 [global]
 width = 10
 height = 12
+fps = 24
+# Do not dimm at default, use the full 100%
+dim = 100
 
+####################################
 # every section is one row, every entry in a section is a box. The first channel of the box is entered.
 # use channel 0 if box does not exist
 [11]

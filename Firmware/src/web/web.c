@@ -39,8 +39,9 @@
 #if LWIP_NETCONN
 
 static const char http_html_hdr[] = "HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
-static const char http_index_html[] = "<html><head><title>Congrats!</title></head><body><h1>Welcome to our lwIP HTTP server!</h1><p>This is a small test page.<ul>";
+static const char http_index_html[] = "<html><head><title>Congrats!</title></head><body><h1>Welcome to Lightwallcontroller</h1><p>This is a small test page.<ul>";
 static const char http_index_html1[] = "</ul></body></html>";
+static const char http_index_html2[] = "</ul><p>Your sended:<ul>";
 static const char list_start[] = "<li>";
 static const char list_end[] = "</li>";
 
@@ -81,7 +82,7 @@ static void http_server_serve(struct netconn *conn)
           {
 
             /* Send the HTML header
-             * subtract 1 from the size, since we dont send the \0 in the string
+             * subtract 1 from the size, since we don't send the \0 in the string
              * NETCONN_NOCOPY: our data is const static, so no need to copy it
              */
             netconn_write(conn, http_html_hdr, sizeof(http_html_hdr)-1, NETCONN_NOCOPY);
@@ -109,7 +110,12 @@ static void http_server_serve(struct netconn *conn)
                     netconn_write(conn, list_end, sizeof(list_end) -1, NETCONN_NOCOPY);
                   }
               }
-            netconn_write(conn, http_index_html1, sizeof(http_index_html1)-1, NETCONN_NOCOPY);
+            netconn_write(conn, http_index_html2, sizeof(http_index_html1)-1, NETCONN_NOCOPY);
+            netconn_write(conn, list_start, sizeof(list_start) -1, NETCONN_NOCOPY);
+			netconn_write(conn, buf, buflen, NETCONN_COPY); /* Send back the request */
+			netconn_write(conn, list_end, sizeof(list_end) -1, NETCONN_NOCOPY);
+
+            netconn_write(conn, http_index_html1, sizeof(http_index_html1)-1, NETCONN_NOCOPY); /*footer of html */
           }
       }
     /* Close the connection (server closes in HTTP) */
