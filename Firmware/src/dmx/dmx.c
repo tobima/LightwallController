@@ -101,8 +101,7 @@ txend2(UARTDriver *uartp)
 {
   (void) uartp;
 
-  chSysLockFromIsr()
-  ;
+  chSysLockFromIsr();
   if (chSemGetCounterI(&sem) < 0)
     chSemSignalI(&sem);
   chSysUnlockFromIsr();
