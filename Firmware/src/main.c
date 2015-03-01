@@ -54,6 +54,10 @@
 
 #include "fatfsWrapper.h"
 
+#ifdef WS2811_WALL
+#include "ledstripe/ledstripe.h"
+#endif
+
 /*===========================================================================*/
 /* Command line related.                                                     */
 /*===========================================================================*/
@@ -685,6 +689,7 @@ int
 main(void)
 {
     static Thread *shelltp = NULL;
+    int i, red, green, blue;
 
     /*
    * System initializations.
@@ -836,6 +841,15 @@ main(void)
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
+#ifdef WS2811_WALL
+  chprintf((BaseSequentialStream *) &SD6, "Initialazing WS2811 driver ...");
+  /*
+   * Initialize LedDriver
+   */
+  ledstripe_init();
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+#endif
+
 #ifndef DISABLE_FILESYSTEM
   /**************************************
    * Creates the Fullcircle server thread.
@@ -894,6 +908,50 @@ main(void)
 #ifdef UGFX_WALL
       fcwall_processEvents(&SDU1);
 #endif
+
+        int offset=0;
+		if (palReadPad(GPIOA, GPIOA_BUTTON))
+		{
+			if (ledstripe_framebuffer[offset].red > 0
+					&& ledstripe_framebuffer[offset].green >0
+					&& ledstripe_framebuffer[offset].blue >0)
+			{
+				red = 255;
+				green = 0;
+				blue = 0;
+			}
+			else if (ledstripe_framebuffer[offset].red > 0)
+			{
+				red = 0;
+				green = 255;
+				blue = 0;
+			}
+			else if (ledstripe_framebuffer[offset].green > 0)
+			{
+				red = 0;
+				green = 0;
+				blue = 255;
+			}
+			else if (ledstripe_framebuffer[offset].blue > 0)
+			{
+				red = 0;
+				green = 0;
+				blue = 0;
+			}
+			else
+			{
+				red = green = blue = 255;
+			}
+			chprintf((BaseSequentialStream *) &SD6, "Set %2X%2X%2X (RRGGBB)\r\n", red, green, blue);
+
+			/* Update the end of the stripe */
+			for(i=offset; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
+				ledstripe_framebuffer[i].red = red;
+				ledstripe_framebuffer[i].green = green;
+				ledstripe_framebuffer[i].blue = blue;
+			}
+
+		}
     }
 }
 
