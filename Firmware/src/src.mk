@@ -3,6 +3,7 @@ APPSRC = src/web/web.c \
        src/dmx/dmx.c \
        src/dmx/rgb.c \
        src/dmx/dmx_cmd.c \
+	   src/ledstripe/ledstripe.c \
        src/main.c \
        src/fullcircle/fcstatic.c \
        src/netstream/netstream.c \
@@ -30,13 +31,3 @@ APPDEFS =
 
 APPDEFS += -DWITH_TELNET
 #APPDEFS += -DDISABLE_FILESYSTEM
-
-# Append the WALL
-APPSRC += src/ugfx/fcwall.c \
-	src/ugfx/wall_simu.c \
-	src/ugfx/ugfx_cmd.c \
-	src/ugfx/ugfx_cmd_manual.c \
-	src/ugfx/ugfx_util.c
-	
-APPINC += src/ugfx
-APPDEFS += -DUGFX_WALL
