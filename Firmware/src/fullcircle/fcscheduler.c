@@ -32,6 +32,10 @@
 #include "ugfx_util.h"
 #endif
 
+#ifdef WS2811_WALL
+#include "ledstripe/ledstripe.h"
+#endif
+
 #define FCSCHED_CONFIG_FILE     "fc/conf/controller"
 #define FCSCHED_FILE_ROOT			"fc/static\0"	/**< Folder on the sdcard to check */
 
@@ -446,6 +450,11 @@ msg_t fc_scheduler(void *p)
             /* Write the DMX buffer */
         	hwal_memcpy(dmx_fb, rgb24, seq.width * seq.height * DMX_RGB_COLOR_WIDTH);
         	dmx_update(seq.width , seq.height);
+
+#ifdef WS2811_WALL
+        	hwal_memcpy(ledstripe_framebuffer, rgb24, seq.width * seq.height * DMX_RGB_COLOR_WIDTH);
+#endif
+
         	FCSCHED_PRINT("%X\r\n", rgb24[0]);
           }
         break;
