@@ -58,6 +58,17 @@ static wallconf_t wallcfg;
  * LOCAL FUNCTIONS
  ******************************************************************************/
 
+
+static uint8_t
+dimmValue(uint8_t incoming)
+{
+  uint32_t tmp = incoming;
+  tmp = tmp * wallcfg.dimmFactor / 100;
+  if (tmp > 255)
+    tmp = 255;
+  return (uint8_t) tmp;
+}
+
 /** @fn static int wall_handler(void* config, const char* section, const char* name, const char* value)
  * @brief Extract the configuration for the wall
  *
@@ -204,5 +215,27 @@ void ledstripe_util_button_demo(BaseSequentialStream * chp)
 
 void ledstripe_util_update(uint8_t* rgb24, int width  , int height)
 {
-	hwal_memcpy(ledstripe_framebuffer, rgb24, width * height * 3 /* FIXE remove the dirty hack */);
+	int row, col, offset;
+	/* no configuration is present, the mapping could not be done */
+	if (wallcfg.pLookupTable)
+	{
+	  for (row = 0; row < wallcfg.height; row++)
+		{
+		  for (col = 0; col < wallcfg.width; col++)
+			{
+			  offset = (row * wallcfg.width + col);
+			  ledstripe_framebuffer[offset].red = dimmValue(
+					  rgb24[offset * 3 + 0]);
+			  ledstripe_framebuffer[offset].green = dimmValue(
+					  rgb24[offset * 3 + 1]);
+			  ledstripe_framebuffer[offset].blue = dimmValue(
+					  rgb24[offset * 3 + 2]);
+			}
+		}
+	}
+	else
+	{
+	  /* Set the LED buffer directly */
+	  hwal_memcpy(ledstripe_framebuffer, rgb24, width * height * 3 /* FIXE remove the dirty hack */);
+	}
 }
