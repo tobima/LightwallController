@@ -586,6 +586,69 @@ cmd_tree(BaseSequentialStream *chp, int argc, char *argv[])
   scan_files(chp, (char *) fbuff);
 }
 
+
+void cmd_ledctrl(BaseSequentialStream *chp, int argc, char *argv[]) {
+	int i;
+	if (argc >= 1 && strcmp(argv[0], "test1") == 0) {
+		chprintf(chp,"Red ...\r\n");
+		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
+			ledstripe_framebuffer[i].red = 255;
+			ledstripe_framebuffer[i].green = 0;
+			ledstripe_framebuffer[i].blue = 0;
+		}
+		chThdSleepMilliseconds(5000);
+		chprintf(chp,"Green ...\r\n");
+		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
+			ledstripe_framebuffer[i].green = 255;
+			ledstripe_framebuffer[i].red = 0;
+			ledstripe_framebuffer[i].blue = 0;
+		}
+		chThdSleepMilliseconds(5000);
+		chprintf(chp,"Blue ...\r\n");
+		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
+			ledstripe_framebuffer[i].blue = 255;
+			ledstripe_framebuffer[i].red = 0;
+			ledstripe_framebuffer[i].green = 0;
+		}
+		chThdSleepMilliseconds(5000);
+	}
+	else if (argc >= 1 && strcmp(argv[0], "on") == 0) {
+		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
+			ledstripe_framebuffer[i].red = 255;
+			ledstripe_framebuffer[i].green = 255;
+			ledstripe_framebuffer[i].blue = 255;
+		}
+	} else if (argc >= 1 && strcmp(argv[0], "off") == 0) {
+		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
+			ledstripe_framebuffer[i].red = 0;
+			ledstripe_framebuffer[i].green = 0;
+			ledstripe_framebuffer[i].blue = 0;
+		}
+	} else if (argc >= 4 && strcmp(argv[0], "all") == 0) {
+		int red = atoi(argv[1]);
+		int green = atoi(argv[2]);
+		int blue = atoi(argv[3]);
+		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
+			ledstripe_framebuffer[i].red = red;
+			ledstripe_framebuffer[i].green = green;
+			ledstripe_framebuffer[i].blue = blue;
+		}
+	}
+	else /* Usage */
+	{
+		chprintf(chp, "possible arguments are:\r\n"
+				"- test1\r\n"
+				"- all (red) (green) (blue)\tSet the last box\r\n"
+				"- on\r\n"
+				"- off\r\n");
+	}
+}
+
+
+/*===========================================================================*/
+/* Manage all possible commands		*/
+/*===========================================================================*/
+
 static const ShellCommand commands[] =
   {
     { "mem", cmd_mem },
@@ -601,6 +664,9 @@ static const ShellCommand commands[] =
 #ifdef UGFX_WALL
     { "ugfx", ugfx_cmd_shell },
 #endif
+#endif
+#ifdef WS2811_WALL
+    { "led", cmd_ledctrl },
 #endif
     { "flash", cmd_flash },
     { NULL, NULL } };
