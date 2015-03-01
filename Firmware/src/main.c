@@ -55,7 +55,7 @@
 #include "fatfsWrapper.h"
 
 #ifdef WS2811_WALL
-#include "ledstripe/ledstripe.h"
+#include "ledstripe/ledstripe_util.h"
 #endif
 
 /*===========================================================================*/
@@ -586,96 +586,6 @@ cmd_tree(BaseSequentialStream *chp, int argc, char *argv[])
   scan_files(chp, (char *) fbuff);
 }
 
-
-void cmd_ledctrl(BaseSequentialStream *chp, int argc, char *argv[]) {
-	int i;
-	if (argc >= 1 && strcmp(argv[0], "test1") == 0) {
-		chprintf(chp,"Red ...\r\n");
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = 255;
-			ledstripe_framebuffer[i].green = 0;
-			ledstripe_framebuffer[i].blue = 0;
-		}
-		chThdSleepMilliseconds(5000);
-		chprintf(chp,"Green ...\r\n");
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].green = 255;
-			ledstripe_framebuffer[i].red = 0;
-			ledstripe_framebuffer[i].blue = 0;
-		}
-		chThdSleepMilliseconds(5000);
-		chprintf(chp,"Blue ...\r\n");
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].blue = 255;
-			ledstripe_framebuffer[i].red = 0;
-			ledstripe_framebuffer[i].green = 0;
-		}
-		chThdSleepMilliseconds(5000);
-	}
-	else if (argc >= 1 && strcmp(argv[0], "on") == 0) {
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = 255;
-			ledstripe_framebuffer[i].green = 255;
-			ledstripe_framebuffer[i].blue = 255;
-		}
-	} else if (argc >= 1 && strcmp(argv[0], "off") == 0) {
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = 0;
-			ledstripe_framebuffer[i].green = 0;
-			ledstripe_framebuffer[i].blue = 0;
-		}
-	} else if (argc >= 4 && strcmp(argv[0], "all") == 0) {
-		int red = atoi(argv[1]);
-		int green = atoi(argv[2]);
-		int blue = atoi(argv[3]);
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = red;
-			ledstripe_framebuffer[i].green = green;
-			ledstripe_framebuffer[i].blue = blue;
-		}
-	}
-	else if (strcmp(argv[0], "show") == 0)
-	{
-	  int i, width, height = 0;
-	  dmx_getScreenresolution(&width, &height);
-
-	  if (width == 0 && height == 0)
-	  { /* Display the complete DMX universe */
-		  for (i = 0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++)
-		  {
-			  chprintf(chp, "%.2X%", dmx_fb[i]);
-		  }
-	  }
-	  else
-	  {	  /* We have valid information! Let's display the wall on the shell */
-		  chprintf(chp, "LED is filled with %d x %d pixel\r\n", width, height);
-		  for (i = 0; i < width * height; i++)
-		  {
-			  chprintf(chp, "%.2X%.2X%.2X|",
-					  ledstripe_framebuffer[i].red,
-					  ledstripe_framebuffer[i].green,
-					  ledstripe_framebuffer[i].blue);
-
-			  /* generate a new line after each row */
-			  if ((i + 1) % width == 0)
-			  {
-				  chprintf(chp, "\r\n");
-			  }
-		  }
-		  chprintf(chp, "\r\n");
-	  }
-	}
-	else /* Usage */
-	{
-		chprintf(chp, "possible arguments are:\r\n"
-				"- test1\r\n"
-				"- all (red) (green) (blue)\tSet the last box\r\n"
-				"- on\r\n"
-				"- off\r\n");
-	}
-}
-
-
 /*===========================================================================*/
 /* Manage all possible commands		*/
 /*===========================================================================*/
@@ -695,9 +605,6 @@ static const ShellCommand commands[] =
 #ifdef UGFX_WALL
     { "ugfx", ugfx_cmd_shell },
 #endif
-#endif
-#ifdef WS2811_WALL
-    { "led", cmd_ledctrl },
 #endif
     { "flash", cmd_flash },
     { NULL, NULL } };
@@ -786,7 +693,6 @@ int
 main(void)
 {
     static Thread *shelltp = NULL;
-    int i, red, green, blue;
 
     /*
    * System initializations.
@@ -943,7 +849,7 @@ main(void)
   /*
    * Initialize LedDriver
    */
-  ledstripe_init();
+  ledstripe_util_Init();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 
@@ -1006,48 +912,9 @@ main(void)
       fcwall_processEvents(&SDU1);
 #endif
 
-        int offset=0;
 		if (palReadPad(GPIOA, GPIOA_BUTTON))
 		{
-			if (ledstripe_framebuffer[offset].red > 0
-					&& ledstripe_framebuffer[offset].green >0
-					&& ledstripe_framebuffer[offset].blue >0)
-			{
-				red = 255;
-				green = 0;
-				blue = 0;
-			}
-			else if (ledstripe_framebuffer[offset].red > 0)
-			{
-				red = 0;
-				green = 255;
-				blue = 0;
-			}
-			else if (ledstripe_framebuffer[offset].green > 0)
-			{
-				red = 0;
-				green = 0;
-				blue = 255;
-			}
-			else if (ledstripe_framebuffer[offset].blue > 0)
-			{
-				red = 0;
-				green = 0;
-				blue = 0;
-			}
-			else
-			{
-				red = green = blue = 255;
-			}
-			chprintf((BaseSequentialStream *) &SD6, "Set %2X%2X%2X (RRGGBB)\r\n", red, green, blue);
-
-			/* Update the end of the stripe */
-			for(i=offset; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-				ledstripe_framebuffer[i].red = red;
-				ledstripe_framebuffer[i].green = green;
-				ledstripe_framebuffer[i].blue = blue;
-			}
-
+			ledstripe_util_button_demo((BaseSequentialStream *) &SD6);
 		}
     }
 }

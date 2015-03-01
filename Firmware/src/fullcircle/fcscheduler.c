@@ -33,7 +33,7 @@
 #endif
 
 #ifdef WS2811_WALL
-#include "ledstripe/ledstripe.h"
+#include "ledstripe/ledstripe_util.h"
 #endif
 
 #define FCSCHED_CONFIG_FILE     "fc/conf/controller"
@@ -452,7 +452,7 @@ msg_t fc_scheduler(void *p)
         	dmx_update(seq.width , seq.height);
 
 #ifdef WS2811_WALL
-        	hwal_memcpy(ledstripe_framebuffer, rgb24, seq.width * seq.height * DMX_RGB_COLOR_WIDTH);
+        	ledstripe_util_update(rgb24, seq.width , seq.height);
 #endif
           }
         break;
