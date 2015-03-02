@@ -64,7 +64,7 @@
 #include "chprintf.h"
 #include "shell.h"
 
-#define SHELL_WA_SIZE   THD_WA_SIZE(2048)       /**< Memory for the SHELL connected via USB */
+#define SHELLUSB_WA_SIZE   THD_WA_SIZE(2048)       /**< Memory for the SHELL connected via USB */
 
 #ifdef __cplusplus
 extern "C"

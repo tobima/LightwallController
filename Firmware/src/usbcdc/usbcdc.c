@@ -368,7 +368,7 @@ void usbcdc_init(const ShellCommand * commands)
 void usbcdc_process(void)
 {
         if (!shelltp && (SDU1.config->usbp->state == USB_ACTIVE))
-                  shelltp = shellCreate(&shell_cfg2, SHELL_WA_SIZE, NORMALPRIO);
+                  shelltp = shellCreate(&shell_cfg2, SHELLUSB_WA_SIZE, NORMALPRIO);
           else if (chThdTerminated(shelltp)) {
                   chThdRelease(shelltp); /* Recovers memory of the previous shell. */
                   shelltp = NULL; /* Triggers spawning of a new shell. */
