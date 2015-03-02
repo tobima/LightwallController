@@ -587,7 +587,7 @@ int fcscheduler_isRunning(void)
 
 int fcscheduler_getActualFile(char* pPathToFile, int* pLengthOfFile)
 {
-	if ((strlen(path) + 1) > (*pLengthOfFile) )
+	if (((int) (strlen(path) + 1)) > (*pLengthOfFile) )
 	{
 		return 1;
 	}
