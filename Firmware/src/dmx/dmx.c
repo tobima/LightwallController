@@ -167,9 +167,11 @@ DMXInit(void)
   /* Set the initial length of DMX to one */
   dmx_buffer.length = 1;
 
+#ifdef DISABLE_FILESYSTEM
   /* Load wall configuration */
   memset(&wallcfg, 0, sizeof(wallconf_t));
   readConfigurationFile(&wallcfg);
+#endif
 
   dmx_buffer.length = wallcfg.width * wallcfg.height * DMX_RGB_COLOR_WIDTH;
 }
@@ -311,6 +313,7 @@ static int
 wall_handler(void* config, const char* section, const char* name,
     const char* value)
 {
+#ifndef DISABLE_FILESYSTEM
   wallconf_t* pconfig = (wallconf_t*) config;
   int row = strtol(section, NULL, 10);
   int col;
@@ -364,6 +367,9 @@ wall_handler(void* config, const char* section, const char* name,
       return 0; /* unknown section/name, error */
     }
   return 1;
+#else
+  return 0; /* Not used */
+#endif
 }
 
 

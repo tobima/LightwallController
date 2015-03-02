@@ -286,9 +286,9 @@ static const ShellCommand commands[] =
     { "ifconfig", cmd_ifconfig },
     { "fcdyn", fcserverImpl_cmdline },
     { "fcsched", fcscheduler_cmdline },
+#endif
 #ifdef UGFX_WALL
     { "ugfx", ugfx_cmd_shell },
-#endif
 #endif
     { "flash", cmd_flash },
     { NULL, NULL } };
@@ -495,6 +495,7 @@ main(void)
       http_server, NULL);
 #endif
 
+#ifdef DMX_WALL
   chprintf((BaseSequentialStream *) &SD6, "Initialazing DMX driver ...");
 
   /* test only the initialization */
@@ -505,6 +506,7 @@ main(void)
    */
   chThdCreateStatic(wa_dmx, sizeof(wa_dmx), NORMALPRIO - 1, dmxthread, NULL);
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+#endif
 
 #ifdef WS2811_WALL
   chprintf((BaseSequentialStream *) &SD6, "Initialazing WS2811 driver ...");
@@ -545,14 +547,13 @@ main(void)
   ugfx_wall_simu_startThread();
 #endif
 
-  chprintf((BaseSequentialStream *) &SD6, "Initializing Shell...");
-
   /**************************************
    * Shell manager initialization.
    */
+  chprintf((BaseSequentialStream *) &SD6, "Initializing Shell...");
   shellInit();
-
   shellCreate(&shell_cfg1, SHELL_WA_SIZE, NORMALPRIO);
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
   /*
    * Normal main() thread activity, in this demo it does nothing except
@@ -571,10 +572,10 @@ main(void)
       fcwall_processEvents(NULL /*FIXME Debugging the GUI no longer possible */);
 #endif
 
-		if (palReadPad(GPIOA, GPIOA_BUTTON))
-		{
-			ledstripe_util_button_demo((BaseSequentialStream *) &SD6);
-		}
+      if (palReadPad(GPIOA, GPIOA_BUTTON))
+      {
+              ledstripe_util_button_demo((BaseSequentialStream *) &SD6);
+      }
     }
 }
 
