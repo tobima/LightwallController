@@ -3,6 +3,7 @@ APPSRC = src/web/web.c \
        src/dmx/dmx.c \
        src/dmx/rgb.c \
        src/dmx/dmx_cmd.c \
+       src/usbcdc/usbcdc.c \
        src/main.c \
        src/fullcircle/fcstatic.c \
        src/netstream/netstream.c \
