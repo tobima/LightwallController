@@ -524,15 +524,16 @@ main(void)
    */
   chThdSleep(MS2ST(50));
   fcscheduler_startThread();
-#endif
 
 #if WITH_TELNET
     /*
-	* Creates the Telnet Server thread (it changes priority internally).
-	*/
+        * Creates the Telnet Server thread (it changes priority internally).
+        */
     chThdCreateStatic(wa_telnet_server, sizeof(wa_telnet_server), NORMALPRIO + 1,
                       telnet_server, (void *) commands);
 #endif
+#endif
+
 
 #ifdef UGFX_WALL
 
