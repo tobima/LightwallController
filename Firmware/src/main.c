@@ -429,9 +429,9 @@ main(void)
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
   chprintf((BaseSequentialStream *) &SD6, "Searching filesystem ...");
-
-  chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
   chThdSleepMilliseconds(500);
+  chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
+  chThdSleepMilliseconds(1000);
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
 
   if (!fs_ready)
