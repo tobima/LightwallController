@@ -387,20 +387,26 @@ main(void)
   usbcdc_init(commands);
 
   /*
-  * Shell manager initialization.
-  */
-  shellInit();
-  chThdCreateStatic(waThreadBlink, sizeof(waThreadBlink), NORMALPRIO, blinkerThread, NULL);
-
-
-  /*
   * Activates the serial driver 6 and SDC driver 1 using default
   * configuration.
   */
   sdStart(&SD6, NULL);
 
+  /*
+  * Shell manager initialization.
+  */
+  shellInit();
+
+
   chprintf((BaseSequentialStream *) &SD6,
       "\x1b[1J\x1b[0;0HStarting ChibiOS\r\n");
+
+  chprintf((BaseSequentialStream *) &SD6, "Start blinker thread ...");
+  chThdCreateStatic(waThreadBlink, sizeof(waThreadBlink), NORMALPRIO, blinkerThread, NULL);
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
+
+
+#ifndef DISABLE_FILESYSTEM
 
   /*************************************
    * SDCard
@@ -422,28 +428,6 @@ main(void)
 
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 
-  /**************************************
-   * Screen and Touchscr.-Driver
-   */
-#ifdef UGFX_WALL
-  chprintf((BaseSequentialStream *) &SD6, "Wait for SD card ...");
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\nInitialazing GFX driver ...");
-  gfxInit();
-
-  fcwall_initWindow();
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-#endif
-
-
-  chprintf((BaseSequentialStream *) &SD6, "Start blinker thread ...");
-
-  /**************************************
-   * Booting ...
-   * - search for configuration on SD-card
-   */
-  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
-
-#ifndef DISABLE_FILESYSTEM
   chprintf((BaseSequentialStream *) &SD6, "Searching filesystem ...");
 
   chEvtDispatch(evhndl, chEvtWaitOneTimeout(ALL_EVENTS, MS2ST(500)));
@@ -493,6 +477,18 @@ main(void)
    */
   chThdCreateStatic(wa_http_server, sizeof(wa_http_server), NORMALPRIO + 3,
       http_server, NULL);
+#endif
+
+  /**************************************
+   * Screen and Touchscr.-Driver
+   */
+#ifdef UGFX_WALL
+  chprintf((BaseSequentialStream *) &SD6, "Wait for SD card ...");
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\nInitialazing GFX driver ...");
+  gfxInit();
+
+  fcwall_initWindow();
+  chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 
 #ifdef DMX_WALL

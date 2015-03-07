@@ -375,11 +375,12 @@ wall_handler(void* config, const char* section, const char* name,
 
 static int readConfigurationFile(wallconf_t* pConfiguration)
 {
-	if (pConfiguration == NULL)
-	{
-		/* ERROR! No configuration memory given */
-		return 1;
-	}
+#ifndef DISABLE_FILESYSTEM
+  if (pConfiguration == NULL)
+  {
+          /* ERROR! No configuration memory given */
+          return 1;
+  }
 
   memset(pConfiguration, 0, sizeof(wallconf_t));
   pConfiguration->dimmFactor = 100;
@@ -387,6 +388,9 @@ static int readConfigurationFile(wallconf_t* pConfiguration)
 
   /* Load the configuration */
   return ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
+#else
+  return 0; /* Not used */
+#endif
 }
 
 
