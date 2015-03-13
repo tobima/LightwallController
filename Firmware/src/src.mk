@@ -6,6 +6,7 @@ APPSRC = src/web/web.c \
 	   src/ledstripe/ledstripe.c \
 	   src/ledstripe/ledstripe_util.c \
        src/main.c \
+       src/usbcdc/usbcdc.c \
        src/fullcircle/fcstatic.c \
        src/netstream/netstream.c \
        src/netshell/netshell.c \
