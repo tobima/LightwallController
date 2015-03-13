@@ -252,5 +252,5 @@ include $(CHIBIOS)/os/ports/GCC/ARMCMx/rules.mk
 # Added a target for programming the STM32
 OPENOCD=openocd
 
-flash:	build/ch.bin
-	$(OPENOCD) -f interface/stlink-v2.cfg -c "set WORKAREASIZE 0x2000" -f target/stm32f4x_stlink.cfg -c "program build/ch.elf verify reset"	
+flash:	build/$(PROJECT).elf
+	$(OPENOCD) -f interface/stlink-v2.cfg -c "set WORKAREASIZE 0x2000" -f target/stm32f4x_stlink.cfg -c "program build/$(PROJECT).elf verify reset"	
