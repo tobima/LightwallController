@@ -365,7 +365,7 @@ msg_t fc_scheduler(void *p)
 		gdispPrintf(0, gdispGetHeight() - 15, font, White, 256, 
 			"File %s playing.", path);
 #endif
-                FCSCHED_PRINT("%s ...\r\n", path);
+		 	 	FCSCHED_PRINT("%s [%d x %d] ...\r\n", path, width, height);
 
                 /* Initialize the file for playback */
                 seqRet = fcseq_load(path, &seq);

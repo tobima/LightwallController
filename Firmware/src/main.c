@@ -634,6 +634,38 @@ void cmd_ledctrl(BaseSequentialStream *chp, int argc, char *argv[]) {
 			ledstripe_framebuffer[i].blue = blue;
 		}
 	}
+	else if (strcmp(argv[0], "show") == 0)
+	{
+		int i, width, height = 0;
+		dmx_getScreenresolution(&width, &height);
+
+		if (width == 0 && height == 0)
+		{ /* Display the complete DMX universe */
+			for (i = 0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++)
+			{
+				chprintf(chp, "%.2X%", dmx_fb[i]);
+			}
+		}
+		else
+		{
+			/* We have valid information! Let's display the wall on the shell */
+			chprintf(chp, "LED is filled with %d x %d pixel\r\n", width, height);
+			for (i = 0; i < width * height; i++)
+			{
+				chprintf(chp, "%.2X%.2X%.2X|",
+				ledstripe_framebuffer[i].red,
+				ledstripe_framebuffer[i].green,
+				ledstripe_framebuffer[i].blue);
+
+				/* generate a new line after each row */
+				if ((i + 1) % width == 0)
+				{
+					chprintf(chp, "\r\n");
+				}
+			}
+			chprintf(chp, "\r\n");
+		}
+	}
 	else /* Usage */
 	{
 		chprintf(chp, "possible arguments are:\r\n"
