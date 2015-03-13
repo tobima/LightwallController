@@ -38,6 +38,7 @@ typedef struct
  * PROTOTYPE
  ******************************************************************************/
 
+#ifndef DISABLE_FILESYSTEM
 /** @fn void readConfigurationFile( extern wallconf_t )
  * @brief Read configuration file
  *
@@ -47,6 +48,7 @@ typedef struct
  * @return 0 on success,
  */
 static int readConfigurationFile(wallconf_t* pConfiguration);
+#endif
 
 /******************************************************************************
  * LOCAL VARIABLES
@@ -69,6 +71,8 @@ dimmValue(uint8_t incoming)
   return (uint8_t) tmp;
 }
 
+
+#ifndef DISABLE_FILESYSTEM
 /** @fn static int wall_handler(void* config, const char* section, const char* name, const char* value)
  * @brief Extract the configuration for the wall
  *
@@ -139,6 +143,9 @@ wall_handler(void* config, const char* section, const char* name,
     }
   return 1;
 }
+#endif
+
+#ifndef DISABLE_FILESYSTEM
 static int readConfigurationFile(wallconf_t* pConfiguration)
 {
 	if (pConfiguration == NULL)
@@ -154,6 +161,7 @@ static int readConfigurationFile(wallconf_t* pConfiguration)
   /* Load the configuration */
   return ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
 }
+#endif
 
 /******************************************************************************
  * GLOBAL FUNCTIONS
@@ -162,10 +170,11 @@ static int readConfigurationFile(wallconf_t* pConfiguration)
 void ledstripe_util_Init(void)
 {
   ledstripe_init();
-
+#ifndef DISABLE_FILESYSTEM
   /* Load wall configuration */
   memset(&wallcfg, 0, sizeof(wallconf_t));
   readConfigurationFile(&wallcfg);
+#endif
 }
 
 

@@ -11,10 +11,6 @@
 #include <stdint.h>
 #include "ch.h"
 
-#ifndef WS2811_WALL
-#error "The WS2811 Library is needed to use this util"
-#endif
-
 #define FCSCHED_WALLCFG_FILE	"fc/conf/stripewall"
 
 void ledstripe_util_Init(void);

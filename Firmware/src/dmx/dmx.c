@@ -101,8 +101,7 @@ txend2(UARTDriver *uartp)
 {
   (void) uartp;
 
-  chSysLockFromIsr()
-  ;
+  chSysLockFromIsr();
   if (chSemGetCounterI(&sem) < 0)
     chSemSignalI(&sem);
   chSysUnlockFromIsr();
@@ -167,9 +166,11 @@ DMXInit(void)
   /* Set the initial length of DMX to one */
   dmx_buffer.length = 1;
 
+#ifdef DISABLE_FILESYSTEM
   /* Load wall configuration */
   memset(&wallcfg, 0, sizeof(wallconf_t));
   readConfigurationFile(&wallcfg);
+#endif
 
   dmx_buffer.length = wallcfg.width * wallcfg.height * DMX_RGB_COLOR_WIDTH;
 }
@@ -311,6 +312,7 @@ static int
 wall_handler(void* config, const char* section, const char* name,
     const char* value)
 {
+#ifndef DISABLE_FILESYSTEM
   wallconf_t* pconfig = (wallconf_t*) config;
   int row = strtol(section, NULL, 10);
   int col;
@@ -364,16 +366,20 @@ wall_handler(void* config, const char* section, const char* name,
       return 0; /* unknown section/name, error */
     }
   return 1;
+#else
+  return 0; /* Not used */
+#endif
 }
 
 
 static int readConfigurationFile(wallconf_t* pConfiguration)
 {
-	if (pConfiguration == NULL)
-	{
-		/* ERROR! No configuration memory given */
-		return 1;
-	}
+#ifndef DISABLE_FILESYSTEM
+  if (pConfiguration == NULL)
+  {
+          /* ERROR! No configuration memory given */
+          return 1;
+  }
 
   memset(pConfiguration, 0, sizeof(wallconf_t));
   pConfiguration->dimmFactor = 100;
@@ -381,6 +387,9 @@ static int readConfigurationFile(wallconf_t* pConfiguration)
 
   /* Load the configuration */
   return ini_parse(FCSCHED_WALLCFG_FILE, wall_handler, pConfiguration);
+#else
+  return 0; /* Not used */
+#endif
 }
 
 

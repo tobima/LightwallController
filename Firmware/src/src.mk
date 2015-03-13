@@ -5,6 +5,7 @@ APPSRC = src/web/web.c \
        src/dmx/dmx_cmd.c \
 	   src/ledstripe/ledstripe.c \
 	   src/ledstripe/ledstripe_util.c \
+       src/usbcdc/usbcdc.c \
        src/main.c \
        src/fullcircle/fcstatic.c \
        src/netstream/netstream.c \
@@ -30,6 +31,7 @@ APPDEFS =
 # Debugging for the underling library
 #APPDEFS += -DPRINT_DEBUG
 
-APPDEFS += -DWITH_TELNET
-#APPDEFS += -DDISABLE_FILESYSTEM
+#APPDEFS += -DWITH_TELNET
+APPDEFS += -DDISABLE_FILESYSTEM
 APPDEFS += -DWS2811_WALL
+#APPDEFS += -DDMX_WALL
