@@ -5,9 +5,11 @@ Board configuration for STM32F4DIS-BB board from element14
 
 * USBUART
 * Debug LED: PA8
+* USB UART
 * WS2811 on PB0
 
-Integrated from Submodule into Chibios-Project
+## Integrated from Submodule into Chibios-Project
+
 
 1. Delete the relevant 'Firmware/board' from the `.gitmodules` file.
 2. Stage the .gitmodules changes `git add .gitmodules`

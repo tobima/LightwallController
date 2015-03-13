@@ -30,7 +30,7 @@
 //#define BOARD_PHY_ID 0x0007C0F0
 #define BOARD_PHY_ADDRESS 0x00
 #define BOARD_PHY_RMII    1
-#define BOARD_PHY_RESET  boardEthRst 
+#define BOARD_PHY_RESET  boardEthRst
 
 /*
  * Board oscillators-related settings.
@@ -371,7 +371,6 @@
  * PB14 - PIN14                     (input pullup).
  * PB15 - PIN15                     (input pullup).
  */
-
 #define VAL_GPIOB_MODER             (PIN_MODE_ALTERNATE(GPIOB_LEDSTRIP_OUT) |           \
                                      PIN_MODE_INPUT(GPIOB_PIN1) |           \
                                      PIN_MODE_INPUT(GPIOB_PIN2) |           \
@@ -452,7 +451,6 @@
                                      PIN_ODR_HIGH(GPIOB_ETH_RMII_TXD1) |            \
                                      PIN_ODR_HIGH(GPIOB_PIN14) |            \
                                      PIN_ODR_HIGH(GPIOB_SD_NCD))
-
 #define VAL_GPIOB_AFRL              (PIN_AFIO_AF(GPIOB_LEDSTRIP_OUT, 2) |           \
                                      PIN_AFIO_AF(GPIOB_PIN1, 0) |           \
                                      PIN_AFIO_AF(GPIOB_PIN2, 0) |           \
