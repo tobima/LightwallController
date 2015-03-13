@@ -55,7 +55,7 @@
 #include "fatfsWrapper.h"
 
 #ifdef WS2811_WALL
-#include "ledstripe/ledstripe.h"
+#include "ledstripe/ledstripe_util.h"
 #endif
 
 /*===========================================================================*/
@@ -944,7 +944,7 @@ main(void)
   /*
    * Initialize LedDriver
    */
-  ledstripe_init();
+  ledstripe_util_Init();
   chprintf((BaseSequentialStream *) &SD6, " Done\r\n");
 #endif
 
