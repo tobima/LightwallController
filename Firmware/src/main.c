@@ -284,96 +284,6 @@ cmd_tree(BaseSequentialStream *chp, int argc, char *argv[])
 }
 
 
-void cmd_ledctrl(BaseSequentialStream *chp, int argc, char *argv[]) {
-	int i;
-	if (argc >= 1 && strcmp(argv[0], "test1") == 0) {
-		chprintf(chp,"Red ...\r\n");
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = 255;
-			ledstripe_framebuffer[i].green = 0;
-			ledstripe_framebuffer[i].blue = 0;
-		}
-		chThdSleepMilliseconds(5000);
-		chprintf(chp,"Green ...\r\n");
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].green = 255;
-			ledstripe_framebuffer[i].red = 0;
-			ledstripe_framebuffer[i].blue = 0;
-		}
-		chThdSleepMilliseconds(5000);
-		chprintf(chp,"Blue ...\r\n");
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].blue = 255;
-			ledstripe_framebuffer[i].red = 0;
-			ledstripe_framebuffer[i].green = 0;
-		}
-		chThdSleepMilliseconds(5000);
-	}
-	else if (argc >= 1 && strcmp(argv[0], "on") == 0) {
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = 255;
-			ledstripe_framebuffer[i].green = 255;
-			ledstripe_framebuffer[i].blue = 255;
-		}
-	} else if (argc >= 1 && strcmp(argv[0], "off") == 0) {
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = 0;
-			ledstripe_framebuffer[i].green = 0;
-			ledstripe_framebuffer[i].blue = 0;
-		}
-	} else if (argc >= 4 && strcmp(argv[0], "all") == 0) {
-		int red = atoi(argv[1]);
-		int green = atoi(argv[2]);
-		int blue = atoi(argv[3]);
-		for(i=0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++) {
-			ledstripe_framebuffer[i].red = red;
-			ledstripe_framebuffer[i].green = green;
-			ledstripe_framebuffer[i].blue = blue;
-		}
-	}
-	else if (strcmp(argv[0], "show") == 0)
-	{
-		int i, width, height = 0;
-		dmx_getScreenresolution(&width, &height);
-
-		if (width == 0 && height == 0)
-		{ /* Display the complete DMX universe */
-			for (i = 0; i < LEDSTRIPE_FRAMEBUFFER_SIZE; i++)
-			{
-				chprintf(chp, "%.2X%", dmx_fb[i]);
-			}
-		}
-		else
-		{
-			/* We have valid information! Let's display the wall on the shell */
-			chprintf(chp, "LED is filled with %d x %d pixel\r\n", width, height);
-			for (i = 0; i < width * height; i++)
-			{
-				chprintf(chp, "%.2X%.2X%.2X|",
-				ledstripe_framebuffer[i].red,
-				ledstripe_framebuffer[i].green,
-				ledstripe_framebuffer[i].blue);
-
-				/* generate a new line after each row */
-				if ((i + 1) % width == 0)
-				{
-					chprintf(chp, "\r\n");
-				}
-			}
-			chprintf(chp, "\r\n");
-		}
-	}
-	else /* Usage */
-	{
-		chprintf(chp, "possible arguments are:\r\n"
-				"- test1\r\n"
-				"- all (red) (green) (blue)\tSet the last box\r\n"
-				"- on\r\n"
-				"- off\r\n");
-	}
-}
-
-
 /*===========================================================================*/
 /* Manage all possible commands		*/
 /*===========================================================================*/
@@ -393,9 +303,6 @@ static const ShellCommand commands[] =
 #ifdef UGFX_WALL
     { "ugfx", ugfx_cmd_shell },
 #endif
-#endif
-#ifdef WS2811_WALL
-    { "led", cmd_ledctrl },
 #endif
     { "flash", cmd_flash },
     { NULL, NULL } };
